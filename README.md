@@ -16,7 +16,7 @@ If you use IntLIM, please cite the following work:
 
 Siddiqui JK, Baskin E, Liu M, Cantemir-Stone CZ, Zhang B, Bonneville R, McElroy JP, Coombes KR, Mathé EA. IntLIM: integration using linear models of metabolomics and gene expression data. BMC Bioinformatics. 2018 Mar 5;19(1):81. doi: 10.1186/s12859-018-2085-6.
 
-PMID: 229506475; PMCID: PMC5838881 DOI: 10.1186/s12859-018-2085-6
+PMID: 29506475; PMCID: PMC5838881 DOI: 10.1186/s12859-018-2085-6
 
 To access, [click here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5838881/)
 
