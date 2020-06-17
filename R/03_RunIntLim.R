@@ -51,7 +51,7 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, cla
     ptm <- proc.time()
 
     myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, continuous = continuous)
-
+    
     print(proc.time() - ptm)
     myres@stype=stype
     myres@outcome=outcome

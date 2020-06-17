@@ -262,6 +262,7 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
                         interaction.coefficients=mat.list$mat.coefficients,
+                        interaction.rsquared = mat.list$mat.rsquared,
                         warnings=mymessage)
   return(myres)
 }
@@ -307,6 +308,13 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
         stderror.coeff <- sapply(mse,function(x){sqrt(diag(ixtx)*x)})
         t.coeff <- bhat/stderror.coeff
         p.val.coeff <- 2*stats::pt(-abs(t.coeff),df = (N-p))
+        y.dev <- lapply(1:(dim(YY)[2]), function(i){
+          return(YY[,i]-EY[i])
+        })
+        var.y <- unlist(lapply(y.dev, function(i){
+          return(sum(i^2))
+        }))
+        r.squared <- 1 - (sse / var.y)
         #methods::new('IntLimModel', call=call, model=form,
          list(# call=call, model=form,
                 coefficients=bhat,
@@ -318,7 +326,8 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
                 #F.p.values=pfval
                 #std.error.coeff = stderror.coeff,
                 #t.value.coeff = t.coeff,
-                p.value.coeff = p.val.coeff # interaction p-value
+                p.value.coeff = p.val.coeff, # interaction p-value
+                r.squared.val = r.squared # r-squared value
     )
 }
 
@@ -347,6 +356,7 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
     }
     list.pvals <- list()
     list.coefficients <- list()
+    list.rsquared <- list()
     for (i in 1:num) {
       g <- as.numeric(gene[i, ])
       if (is.null(covar)) {
@@ -370,6 +380,9 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('g:type', term.coefficient)
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+      
+      term.rsquared <- rownames(mlin$r.squared.val)
+      r.squared.vector <- as.vector(mlin$r.squared.val)
 
       if (numprog != 0){
         if (i %% numprog == 0) {
@@ -379,6 +392,7 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       }
       list.pvals[[i]] <-  p.val.vector
       list.coefficients[[i]] <- coefficient.vector
+      list.rsquared[[i]] <- r.squared.vector
     }
   } else if (outcome=="gene") {
     arraydata <- data.frame(gene)
@@ -411,6 +425,9 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('m:type', term.coefficient)
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+      
+      term.rsquared <- rownames(mlin$r.squared.val)
+      r.squared.vector <- as.vector(mlin$r.squared.val)
 
       if (numprog != 0){
         if (i %% numprog == 0) {
@@ -420,12 +437,13 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       }
       list.pvals[[i]] <-  p.val.vector
       list.coefficients[[i]] <- coefficient.vector
+      list.rsquared[[i]] <- r.squared.vector
     }
   }
-  list.pvals
-  list.coefficients
   mat.pvals <- do.call(rbind, list.pvals)
   mat.coefficients <- do.call(rbind, list.coefficients)
+  mat.rsquared <- do.call(rbind, list.rsquared)
+
   # adjust p-values
   row.pvt <- dim(mat.pvals)[1]
   col.pvt <- dim(mat.pvals)[2]
@@ -437,17 +455,22 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
     colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(metab)
     rownames(mat.coefficients) <- rownames(gene)
     colnames(mat.coefficients) <- rownames(metab)
+    rownames(mat.rsquared) <- rownames(gene)
+    colnames(mat.rsquared) <- rownames(metab)
   } else if (outcome=="gene") {
     rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(metab)
     colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(gene)
     rownames(mat.coefficients) <- rownames(metab)
     colnames(mat.coefficients) <- rownames(gene)
+    rownames(mat.rsquared) <- rownames(metab)
+    colnames(mat.rsquared) <- rownames(gene)
   }
   list.mat <- list()
   list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
   list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
-  list.mat
+  list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
+  return(list.mat)
 }
 
 #' Function that gets numeric cutoffs from percentile

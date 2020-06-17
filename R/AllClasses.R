@@ -35,6 +35,7 @@ methods::setClass(
 	representation(interaction.pvalues="matrix",
 		interaction.adj.pvalues="matrix",
 		interaction.coefficients="matrix",
+		interaction.rsquared = "matrix",
 		corr="data.frame",
 		filt.results="data.frame",
 		warnings="character",
