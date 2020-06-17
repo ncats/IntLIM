@@ -1,6 +1,6 @@
 # IntLIM:  Integration through LInear Modeling
-[![Build Status](https://travis-ci.org/Mathelab/IntLIM.svg?branch=master)](https://travis-ci.org/Mathelab/IntLIM)
-[![Build status](https://ci.appveyor.com/api/projects/status/1y05oo8y4v7r28bf?svg=true)](https://ci.appveyor.com/project/Mathelab/IntLIM/branch/master)
+[![Build Status](https://travis-ci.org/ncats/IntLIM.svg?branch=master)](https://travis-ci.org/ncats/IntLIM)
+[![Build status](https://ci.appveyor.com/api/projects/status/1y05oo8y4v7r28bf?svg=true)](https://ci.appveyor.com/project/ncats/IntLIM/branch/master)
 
 # New!  IntLIM app is accessible via a server (no installation needed!).
 Please [click here](https://intlim.bmi.osumc.edu/).  And let us know if additional functionalities would be useful (see contact info below).
