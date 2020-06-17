@@ -3,6 +3,7 @@
 export(CorrHeatmap)
 export(CorrHeatmap_pdf)
 export(DistPvalues)
+export(DistRSquared)
 export(FilterData)
 export(HistogramGMPairs)
 export(InteractionCoefficientGraph)

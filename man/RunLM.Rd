@@ -4,8 +4,13 @@
 \alias{RunLM}
 \title{Function that runs linear models and returns interaction p-values.}
 \usage{
-RunLM(incommon, outcome = "metabolite", type = NULL, covar = NULL,
-  continuous = FALSE)
+RunLM(
+  incommon,
+  outcome = "metabolite",
+  type = NULL,
+  covar = NULL,
+  continuous = FALSE
+)
 }
 \arguments{
 \item{incommon}{MultiDataSet object (output of ReadData()) with gene}

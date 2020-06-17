@@ -4,8 +4,12 @@
 \alias{MarginalEffectsGraphDataframe}
 \title{Creates a dataframe of the marginal effect of phenotype}
 \usage{
-MarginalEffectsGraphDataframe(inputResults, inputData, geneOfInterest,
-  metaboliteOfInterest)
+MarginalEffectsGraphDataframe(
+  inputResults,
+  inputData,
+  geneOfInterest,
+  metaboliteOfInterest
+)
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}

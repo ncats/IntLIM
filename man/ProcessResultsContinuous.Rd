@@ -4,8 +4,11 @@
 \alias{ProcessResultsContinuous}
 \title{Retrieve significant gene-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model}
 \usage{
-ProcessResultsContinuous(inputResults, interactionCoeffPercentile = 0.1,
-  pvalCutoff = 0.05)
+ProcessResultsContinuous(
+  inputResults,
+  interactionCoeffPercentile = 0.1,
+  pvalCutoff = 0.05
+)
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results: output of RunIntLim}

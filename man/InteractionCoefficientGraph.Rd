@@ -4,8 +4,11 @@
 \alias{InteractionCoefficientGraph}
 \title{Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient for the gene-metabolite pair}
 \usage{
-InteractionCoefficientGraph(inputResults,
-  interactionCoeffPercentile = 0.1, percentageToPlot = 0.01)
+InteractionCoefficientGraph(
+  inputResults,
+  interactionCoeffPercentile = 0.1,
+  percentageToPlot = 0.01
+)
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}

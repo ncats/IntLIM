@@ -4,8 +4,14 @@
 \alias{PlotGMPair}
 \title{scatter plot of gene-metabolite pairs (based on user selection)}
 \usage{
-PlotGMPair(inputData, stype = NULL, geneName, metabName,
-  palette = "Set1", viewer = T)
+PlotGMPair(
+  inputData,
+  stype = NULL,
+  geneName,
+  metabName,
+  palette = "Set1",
+  viewer = T
+)
 }
 \arguments{
 \item{inputData}{IntLimObject output of ReadData() or FilterData()}

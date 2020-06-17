@@ -354,6 +354,28 @@ DistPvalues<- function(IntLimResults,breaks=100) {
 	main="Histogram of Interaction P-values")
 }
 
+#' Visualize the distribution of unadjusted p-values from linear models
+#'
+#' @include IntLimResults_extendedfunctions.R
+#'
+#' @param IntLimResults output of RunIntLim()
+#' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
+#' DistPvalues(myres)
+#' }
+#' @export
+DistRSquared<- function(IntLimResults,breaks=100) {
+  
+  hist(IntLimResults@interaction.rsquared,breaks=breaks,
+       main="Histogram of Interaction R-Squared Values")
+}
+
 
 #' Plot correlation heatmap
 #'
