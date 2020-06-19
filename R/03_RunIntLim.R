@@ -21,7 +21,7 @@
 #' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
 #' }
 #' @export
-RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, class.covar=NULL, continuous = FALSE){
+RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, class.covar=NULL, continuous = FALSE, metabolite.pairs=FALSE){
 
 
     if (class(inputData) != "MultiDataSet") {
@@ -50,8 +50,13 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, cla
 
     ptm <- proc.time()
 
-    myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, continuous = continuous)
-    
+    myres <- NULL
+    if(!metabolite.pairs){
+        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, continuous = continuous)
+    }
+    else{
+        myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, continuous = continuous)
+    }
     print(proc.time() - ptm)
     myres@stype=stype
     myres@outcome=outcome

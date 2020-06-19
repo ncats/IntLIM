@@ -215,6 +215,8 @@ getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL) {
    return(out)
 }
 
+
+
 #' Function that runs linear models and returns interaction p-values.
 #'
 #' @include MetaboliteSet_addMetabolite.R
@@ -258,6 +260,47 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
     }
 
   mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = type, covar = covar, covarMatrix = incommon$covar_matrix, continuous = continuous)
+  myres <- methods::new('IntLimResults',
+                        interaction.pvalues=mat.list$mat.pvals,
+                        interaction.adj.pvalues = mat.list$mat.pvalsadj,
+                        interaction.coefficients=mat.list$mat.coefficients,
+                        interaction.rsquared = mat.list$mat.rsquared,
+                        warnings=mymessage)
+  return(myres)
+}
+
+#' Function that runs linear models and returns interaction p-values for all metabolite pairs.
+#'
+#' @include MetaboliteSet_addMetabolite.R
+#' @include AllClasses.R
+#'
+#' @param incommon MultiDataSet object (output of ReadData()) with gene
+#' @param type vector of sample type (by default, it will be used in the interaction term).
+#' Only 2 categories are currently supported.
+#' @param covar vector of additional vectors to consider
+#' @param continuous boolean to indicate whether the data is continuous or discrete
+RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE) {
+  metab <- incommon$metab
+  mymessage=""
+  
+  if(!continuous){
+    uniqtypes <- unique(type)
+    if(length(uniqtypes)!=2) {
+      stop("The number of unique categores is not 2.")
+    }
+    
+    metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
+    metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
+
+    if(length(which(metabsd1==0))>0 || length(which(metabsd2==0))>0) {
+      toremove <- c(which(metabsd1==0),which(metabsd2==0))
+      metab <- metab[-toremove,]
+      mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites that had a standard deviation of 0:"))
+      mymessage <- c(mymessage,rownames(metab)[toremove])
+    }
+  }
+  
+  mat.list <- getStatsAllLMMetabolitePairs(outcome = outcome, metab = metab, type = type, covar = covar, covarMatrix = incommon$covar_matrix, continuous = continuous)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -473,6 +516,110 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
   return(list.mat)
 }
 
+#' Function that runs Linear Models for all pairs of metabolites
+#' @include AllClasses.R
+#' @param outcome 'metabolite' must be set as outcome/independent variable
+#' @param metab metabolite dataset in incommon MultiDataSet object (incommon$metab)
+#' @param type vector of sample type (by default, it will be used in the interaction term).
+#' @param covar vector of additional vectors to consider
+#' @param covarMatrix covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)
+#' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
+#' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
+getStatsAllLMMetabolitePairs <- function(outcome, metab, type, covar, covarMatrix, continuous) {
+  arraydata <- data.frame(metab)
+  num <- nrow(metab)
+  numprog <- round(num*0.1)
+  form.add <- "Y ~ m + type + m:type"
+  if (!is.null(covar)) {
+    len.covar <- length(covar)
+    for (i in 1:len.covar) {
+      form.add <- paste(form.add, '+', covar[i])
+    }
+  }
+  list.pvals <- list()
+  list.coefficients <- list()
+  list.rsquared <- list()
+  for (i in 1:num) {
+    m <- as.numeric(metab[i, ])
+    if (is.null(covar)) {
+      clindata <- data.frame(m, type)
+    } else {
+      clindata <- data.frame(m, type, covarMatrix)
+    }
+    
+    #change type for continuous data (factor to numeric)
+    if(continuous){
+      clindata[2] <- lapply(clindata[2], as.character)
+      clindata[2] <- lapply(clindata[2], as.numeric)
+    }
+    
+    mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
+                          arraydata = arraydata)
+    term.pvals <- rownames(mlin$p.value.coeff)
+    index.interac <- grep('m:type', term.pvals)
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+    
+    term.coefficient <- rownames(mlin$coefficients)
+    index.coefficient <-  grep('m:type', term.coefficient)
+    coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+    
+    term.rsquared <- rownames(mlin$r.squared.val)
+    r.squared.vector <- as.vector(mlin$r.squared.val)
+    
+    if (numprog != 0){
+      if (i %% numprog == 0) {
+        progX <- round(i/num*100)
+        print(paste(progX,"% complete"))
+      }
+    }
+    list.pvals[[i]] <-  p.val.vector
+    list.coefficients[[i]] <- coefficient.vector
+    list.rsquared[[i]] <- r.squared.vector
+  }
+  mat.pvals <- do.call(rbind, list.pvals)
+  mat.coefficients <- do.call(rbind, list.coefficients)
+  mat.rsquared <- do.call(rbind, list.rsquared)
+  
+  # adjust p-values
+  row.pvt <- dim(mat.pvals)[1]
+  col.pvt <- dim(mat.pvals)[2]
+  myps <- as.vector(mat.pvals)
+  mypsadj <- stats::p.adjust(myps, method = 'fdr')
+  mat.pvalsadj <- matrix(mypsadj, row.pvt, col.pvt)
+  rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(metab)
+  colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(metab)
+  rownames(mat.coefficients) <- rownames(metab)
+  colnames(mat.coefficients) <- rownames(metab)
+  rownames(mat.rsquared) <- rownames(metab)
+  colnames(mat.rsquared) <- rownames(metab)
+
+  # Find locations where the upper triangular value is higher than the lower triangular.
+  mat.pvals.t <- t(mat.pvals)
+  mat.pvalsadj.t <- t(mat.pvalsadj)
+  mat.coefficients.t <- t(mat.coefficients)
+  mat.rsquared.t <- t(mat.rsquared)
+  where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
+  
+  # Replace those locations with values from the lower triangular.
+  mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
+  mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
+  mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
+  mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
+  
+  # Remove the lower triangular.
+  mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
+  mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
+  mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
+  mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
+
+  list.mat <- list()
+  list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
+  list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
+  list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
+  list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
+  return(list.mat)
+}
+
 #' Function that gets numeric cutoffs from percentile
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
 #' @param tofilter dataframe for percentile filtering
@@ -485,8 +632,8 @@ getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercent
 
   #get top and bottom cutoffs (need highest positive and highest negative coeffs)
   other_half = 1-interactionCoeffPercentile
-  first_half = as.numeric(quantile(tofilter, interactionCoeffPercentile))
-  second_half = as.numeric(quantile(tofilter, other_half))
+  first_half = as.numeric(quantile(tofilter, interactionCoeffPercentile, na.rm = TRUE))
+  second_half = as.numeric(quantile(tofilter, other_half, na.rm = TRUE))
 
   return(c(first_half, second_half))
 

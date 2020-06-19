@@ -10,7 +10,8 @@ RunIntLim(
   outcome = "metabolite",
   covar = NULL,
   class.covar = NULL,
-  continuous = FALSE
+  continuous = FALSE,
+  metabolite.pairs = FALSE
 )
 }
 \arguments{

@@ -734,7 +734,7 @@ PlotGMPair<- function(inputData,stype=NULL,geneName,metabName,palette = "Set1",
     mycols[which(mytypes==unique(mytypes)[2])] <- cols[2]
 
     data<-data.frame(x=sGene,y=sMetab,z=colnames(gene),label=mytypes,color=mycols)
-
+    
     # Get points to draw the lines for each phenotype by hand
 
     uniqtypes=as.character(unique(mytypes))
@@ -769,7 +769,6 @@ PlotGMPair<- function(inputData,stype=NULL,geneName,metabName,palette = "Set1",
                           pointFormat=paste("{point.label}","{point.z}")),
                         showInLegend=FALSE)
 
-
     hc <- hc %>%
         highcharter::hc_add_series(name = uniqtypes[1],
 		data=line1,type='line',#name=sprintf("regression line %s",type1),
@@ -779,6 +778,129 @@ PlotGMPair<- function(inputData,stype=NULL,geneName,metabName,palette = "Set1",
 		color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
 
     hc
+}
+
+#' scatter plot of metabolite-metabolite pairs (based on user selection)
+#'
+#' @import magrittr
+#' @import highcharter
+#'
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param stype category to color-code by
+##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
+##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
+#' @param metab1Name string of select metab1Name
+#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
+#' in Shiny/Knittr (F)
+#' @param metab2Name string of select metab2Name
+#' @return a highcharter object
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' PlotMMPair(mydata,stype="PBO_vs_Leukemia","arginine","(p-Hydroxyphenyl)lactic acid")
+#'
+#' }
+#' @export
+PlotMMPair<- function(inputData,stype=NULL,metab1Name,metab2Name,palette = "Set1",
+                      viewer=T) {
+  
+  if(is.null(stype)) {
+    stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
+  }
+  if (length(palette) == 2) {
+    cols <- c(palette)
+  } else if (length(palette) == 1) {
+    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+  } else {
+    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
+  }
+  
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  
+  incommon <- getCommon(inputData,stype)
+  
+  if(is.null(stype)) {
+    stop("A category to colorcode by (e.g. stype) must be provided")
+  } else if (length(intersect(colnames(Biobase::pData(inputData[["metabolite"]])),stype))!=1) {
+    stop(paste0("You provided ",stype, "as your stype variable but it does not exist in your data"))
+  } else {
+    mytypes <- incommon$p
+  }
+  
+  metab<-incommon$metab
+  if(length(which(rownames(metab)==metab1Name))>0) {
+    sMetab1<-as.numeric(metab[metab1Name,])
+  } else {
+    stop(paste0("The metabolite ",metab1Name," was not found in your data"))
+  }
+  
+  metab<-incommon$metab
+  if(length(which(rownames(metab)==metab2Name))>0) {
+    sMetab2<-as.numeric(metab[metab2Name,])
+  } else {
+    stop(paste0("The metabolite ",metab2Name," was not found in your data"))
+  }
+  
+  if(length(unique(mytypes))!=2) {
+    stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
+  }
+  
+  mycols <- as.character(mytypes)
+  mycols[which(mytypes==unique(mytypes)[1])] <- cols[1]
+  mycols[which(mytypes==unique(mytypes)[2])] <- cols[2]
+  
+  data<-data.frame(x=sMetab1,y=sMetab2,z=colnames(metab),label=mytypes,color=mycols)
+
+  # Get points to draw the lines for each phenotype by hand
+  
+  uniqtypes=as.character(unique(mytypes))
+  
+  # Starting with phenotype 1, get min and max x values constrained to the values of y
+  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
+  # when slopes are really steep (abline does this automatically but not highcharter)
+  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
+    y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
+    min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
+    max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
+    
+    m1<-stats::glm(y ~ x)
+    line1<-data.frame(x=c(max,min),
+                      y=c(stats::predict(m1,data.frame(x=c(max,min)))))
+    return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
+  }
+  
+  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
+  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
+  
+  ds <- highcharter::list_parse(data)
+
+  #cols=c("blue","pink")
+  
+  hc <- highcharter::highchart(width = 350, height = 350 ) %>%
+    highcharter::hc_title(text=paste(metab1Name,' vs. ', metab2Name, sep = '')) %>%
+    highcharter::hc_xAxis(title=list(text=metab1Name)) %>%
+    highcharter::hc_yAxis(title=list(text=metab2Name)) %>%
+    hc_chart(zoomType = "xy") %>%
+    highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
+                               tooltip = list(headerFormat="",
+                                              pointFormat=paste("{point.label}","{point.z}")),
+                               showInLegend=FALSE)
+  
+  
+  hc <- hc %>%
+    highcharter::hc_add_series(name = uniqtypes[1],
+                               data=line1,type='line',#name=sprintf("regression line %s",type1),
+                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
+    highcharter::hc_add_series(name = uniqtypes[2],
+                               data=line2,type='line',#name=sprintf("regression line %s",type2),
+                               color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
+  
+  hc
 }
 
 
@@ -817,6 +939,43 @@ pvalCorrVolcano <- function(inputResults, inputData,nrpoints=10000,diffcorr=0.5,
                 main = 'Volcano Plot')
     graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
     graphics::abline(v=c(diffcorr,-diffcorr),lty=2,col="blue")
+}
+
+#' 'volcano' plot (difference in correlations vs p-values)
+#' of all metabolite-metabolite pairs
+#'
+#' @param inputResults IntLimResults object with model results (output of RunIntLim())
+#' @param inputData MultiDataSet object (output of ReadData()) with metabolite abundance,
+#' @param nrpoints number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)
+#' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
+#' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
+#' @return a smoothScatter plot
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
+#' pvalCorrVolcano(inputResults=myres,inputData=mydata)
+#' }
+#' @export
+pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=10000,diffcorr=0.5,pvalcutoff=0.05){
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  if(class(inputResults) != "IntLimResults") {
+    stop("input data is not a IntLim class")
+  }
+  volc.results <- IntLIM::ProcessResultsMetabolitePairs(inputResults,  inputData, diffcorr = 0, pvalcutoff = 1)
+  volc.table <- volc.results@filt.results
+  Corrdiff <- volc.table[,4] - volc.table[,3]
+  pval <- -log10(volc.table$FDRadjPval)
+  graphics::smoothScatter(x = Corrdiff, pval, xlab = 'Difference in Correlation between Phenotypes',
+                          ylab = '-log10(FDR-adjusted p-value)', nrpoints=nrpoints,
+                          main = 'Volcano Plot')
+  graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
+  graphics::abline(v=c(diffcorr,-diffcorr),lty=2,col="blue")
 }
 
 #' Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient for the gene-metabolite pair

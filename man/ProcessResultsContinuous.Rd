@@ -8,7 +8,8 @@ ProcessResultsContinuous(
   inputResults,
   interactionCoeffPercentile = 0.1,
   pvalCutoff = 0.05,
-  rsquaredCutoff = 0
+  rsquaredCutoff = 0,
+  metabolite.pairs = FALSE
 )
 }
 \arguments{
