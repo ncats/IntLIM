@@ -35,7 +35,7 @@ PlotDistributions <- function(inputData,viewer=T,
 
 	mygene <- as.data.frame(Biobase::assayDataElement(inputData[["expression"]],'exprs'))
 	toplot <- suppressMessages(reshape2::melt(mygene))
-        df <- dplyr::tibble(value = toplot$value, by = toplot$variable) %>% dplyr::group_by_("by") %>%
+        df <- dplyr::tibble(value = toplot$value, by = toplot$variable) %>% dplyr::group_by_at("by") %>%
  	       dplyr::do(data = grDevices::boxplot.stats(.$value))
 #	names(df$data) <- df$by
 #        df$color <- df$by
@@ -87,7 +87,7 @@ PlotDistributions <- function(inputData,viewer=T,
 	mymetab <- Biobase::assayDataElement(inputData[["metabolite"]],'metabData')
 	toplot <- suppressMessages(reshape2::melt(mymetab))
         df <- dplyr::data_frame(value = toplot$value, by = toplot$variable) %>%
-		dplyr::group_by_("by") %>%
+		dplyr::group_by_at("by") %>%
                dplyr::do(data = grDevices::boxplot.stats(.$value))
         bxps <- purrr::map(df$data, "stats")
         outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
