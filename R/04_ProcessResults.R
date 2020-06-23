@@ -225,12 +225,14 @@ ProcessResultsMetabolitePairs <- function(inputResults,
   return(inputResults)
 }
 
-#' Retrieve significant gene-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
+#' Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
 #'
 #' @param inputResults IntLimResults object with model results: output of RunIntLim
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient
 #' default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients)
 #' @param pvalCutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
+#' @param rsquaredCutoff cutoff of R-squared value for filtering (default 0, no filtering)
+#' @param metabolite.pairs boolean value representing whether to retrieve metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
 ProcessResultsContinuous<- function(inputResults,
                          interactionCoeffPercentile=0.1,
                          pvalCutoff=0.05,

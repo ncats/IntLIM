@@ -11,6 +11,8 @@
 #' @param covar Additional variables from the phenotypic data that be integrated into linear model
 #' @param class.covar Describing whether additional variables are 'numeric' or 'categorial'
 #' @param continuous boolean to indicate whether the data is continuous or discrete
+#' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
+#' 
 #' @return IntLimModel object with model results
 #'
 #' @examples

@@ -29,6 +29,8 @@ in the interaction term). Only 2 categories are currently supported.}
 \item{class.covar}{Describing whether additional variables are 'numeric' or 'categorial'}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
+
+\item{metabolite.pairs}{boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)}
 }
 \value{
 IntLimModel object with model results

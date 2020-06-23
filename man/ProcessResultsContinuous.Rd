@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResultsContinuous}
 \alias{ProcessResultsContinuous}
-\title{Retrieve significant gene-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model}
+\title{Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model}
 \usage{
 ProcessResultsContinuous(
   inputResults,
@@ -19,7 +19,11 @@ ProcessResultsContinuous(
 default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients)}
 
 \item{pvalCutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
+
+\item{rsquaredCutoff}{cutoff of R-squared value for filtering (default 0, no filtering)}
+
+\item{metabolite.pairs}{boolean value representing whether to retrieve metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)}
 }
 \description{
-Retrieve significant gene-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
+Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
 }

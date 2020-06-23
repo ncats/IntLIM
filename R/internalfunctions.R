@@ -300,7 +300,7 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FAL
     }
   }
   
-  mat.list <- getStatsAllLMMetabolitePairs(outcome = outcome, metab = metab, type = type, covar = covar, covarMatrix = incommon$covar_matrix, continuous = continuous)
+  mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = covar, covarMatrix = incommon$covar_matrix, continuous = continuous)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -518,14 +518,13 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
 
 #' Function that runs Linear Models for all pairs of metabolites
 #' @include AllClasses.R
-#' @param outcome 'metabolite' must be set as outcome/independent variable
 #' @param metab metabolite dataset in incommon MultiDataSet object (incommon$metab)
 #' @param type vector of sample type (by default, it will be used in the interaction term).
 #' @param covar vector of additional vectors to consider
 #' @param covarMatrix covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
-getStatsAllLMMetabolitePairs <- function(outcome, metab, type, covar, covarMatrix, continuous) {
+getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, continuous) {
   arraydata <- data.frame(metab)
   num <- nrow(metab)
   numprog <- round(num*0.1)

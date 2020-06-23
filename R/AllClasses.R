@@ -24,7 +24,9 @@ methods::setClass (
 #' @slot interaction.pvalues matrix of interaction p-values
 #' @slot interaction.adj.pvalues matrix of adjusted interaction pvalues
 #' @slot interaction.coefficients matrix of interaction coefficients
+#' @slot model.rsquared matrix of r-squared values
 #' @slot corr matrix of correlations in group 1 and 2
+#' @slot filt.results data frame of filtered results
 #' @slot warnings a message of whether genes and metabolites have 0 standard deviation
 #' @slot stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.

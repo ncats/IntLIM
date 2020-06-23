@@ -16,7 +16,11 @@ IntLimResults class
 
 \item{\code{interaction.coefficients}}{matrix of interaction coefficients}
 
+\item{\code{model.rsquared}}{matrix of r-squared values}
+
 \item{\code{corr}}{matrix of correlations in group 1 and 2}
+
+\item{\code{filt.results}}{data frame of filtered results}
 
 \item{\code{warnings}}{a message of whether genes and metabolites have 0 standard deviation}
 

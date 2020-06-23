@@ -4,18 +4,9 @@
 \alias{getStatsAllLMMetabolitePairs}
 \title{Function that runs Linear Models for all pairs of metabolites}
 \usage{
-getStatsAllLMMetabolitePairs(
-  outcome,
-  metab,
-  type,
-  covar,
-  covarMatrix,
-  continuous
-)
+getStatsAllLMMetabolitePairs(metab, type, covar, covarMatrix, continuous)
 }
 \arguments{
-\item{outcome}{'metabolite' must be set as outcome/independent variable}
-
 \item{metab}{metabolite dataset in incommon MultiDataSet object (incommon$metab)}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).}
