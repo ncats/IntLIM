@@ -372,7 +372,7 @@ DistPvalues<- function(IntLimResults,breaks=100) {
 #' @export
 DistRSquared<- function(IntLimResults,breaks=100) {
   
-  hist(IntLimResults@interaction.rsquared,breaks=breaks,
+  hist(IntLimResults@model.rsquared,breaks=breaks,
        main="Histogram of Interaction R-Squared Values")
 }
 

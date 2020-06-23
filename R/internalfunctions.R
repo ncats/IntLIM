@@ -264,7 +264,7 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
                         interaction.coefficients=mat.list$mat.coefficients,
-                        interaction.rsquared = mat.list$mat.rsquared,
+                        model.rsquared = mat.list$mat.rsquared,
                         warnings=mymessage)
   return(myres)
 }
@@ -305,7 +305,7 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FAL
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
                         interaction.coefficients=mat.list$mat.coefficients,
-                        interaction.rsquared = mat.list$mat.rsquared,
+                        model.rsquared = mat.list$mat.rsquared,
                         warnings=mymessage)
   return(myres)
 }

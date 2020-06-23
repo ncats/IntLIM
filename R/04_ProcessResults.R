@@ -245,7 +245,7 @@ ProcessResultsContinuous<- function(inputResults,
   gene_metabolite_format_coeff = reshape2::melt(inputResults@interaction.coefficients)
   gene_metabolite_format_pval = reshape2::melt(inputResults@interaction.pvalues)
   gene_metabolite_format_adjp = reshape2::melt(inputResults@interaction.adj.pvalues)
-  gene_metabolite_format_rsquared = reshape2::melt(inputResults@interaction.rsquared)
+  gene_metabolite_format_rsquared = reshape2::melt(inputResults@model.rsquared)
   tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, gene_metabolite_format_adjp$value, gene_metabolite_format_rsquared$value)
   if(!metabolite.pairs){
     colnames(tofilter) = c("gene", "metab", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
