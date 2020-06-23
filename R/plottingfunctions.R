@@ -35,15 +35,15 @@ PlotDistributions <- function(inputData,viewer=T,
 
 	mygene <- as.data.frame(Biobase::assayDataElement(inputData[["expression"]],'exprs'))
 	toplot <- suppressMessages(reshape2::melt(mygene))
-        df <- dplyr::data_frame(value = toplot$value, by = toplot$variable) %>% dplyr::group_by_("by") %>%
+        df <- dplyr::tibble(value = toplot$value, by = toplot$variable) %>% dplyr::group_by_("by") %>%
  	       dplyr::do(data = grDevices::boxplot.stats(.$value))
 #	names(df$data) <- df$by
 #        df$color <- df$by
 	bxps <- purrr::map(df$data, "stats")
 	outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
             if (length(y$out) > 0)
-                d <- dplyr::data_frame(x = x - 1, y = y$out)
-            else d <- dplyr::data_frame()
+                d <- dplyr::tibble(x = x - 1, y = y$out)
+            else d <- dplyr::tibble()
             d
         })
         outs <- data.frame(outs, 'z' = colnames(mygene)[outs$x + 1])
