@@ -233,6 +233,7 @@ ProcessResultsMetabolitePairs <- function(inputResults,
 #' @param pvalCutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
 #' @param rsquaredCutoff cutoff of R-squared value for filtering (default 0, no filtering)
 #' @param metabolite.pairs boolean value representing whether to retrieve metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
+#' @export
 ProcessResultsContinuous<- function(inputResults,
                          interactionCoeffPercentile=0.1,
                          pvalCutoff=0.05,
