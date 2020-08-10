@@ -233,7 +233,6 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
     gene <- incommon$gene
     metab <- incommon$metab
     mymessage=""
-
     if(!continuous){
          uniqtypes <- unique(type)
         if(length(uniqtypes)!=2) {
@@ -265,6 +264,7 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
                         interaction.coefficients=mat.list$mat.coefficients,
                         model.rsquared = mat.list$mat.rsquared,
+                        covariate.pvalues = mat.list$covariate.pvals,
                         warnings=mymessage)
   return(myres)
 }
@@ -306,6 +306,7 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FAL
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
                         interaction.coefficients=mat.list$mat.coefficients,
                         model.rsquared = mat.list$mat.rsquared,
+                        covariate.pvalues = mat.list$covariate.pvals,
                         warnings=mymessage)
   return(myres)
 }
@@ -400,6 +401,7 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
     list.pvals <- list()
     list.coefficients <- list()
     list.rsquared <- list()
+    list.covariate.pvals <- list()
     for (i in 1:num) {
       g <- as.numeric(gene[i, ])
       if (is.null(covar)) {
@@ -413,13 +415,18 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
         clindata[2] <- lapply(clindata[2], as.character)
         clindata[2] <- lapply(clindata[2], as.numeric)
       }
-
       mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                             arraydata = arraydata)
       term.pvals <- rownames(mlin$p.value.coeff)
       index.interac <- grep('g:type', term.pvals)
       p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                            rownames(gene)[i], sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('g:type', term.coefficient)
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
@@ -436,6 +443,7 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       list.pvals[[i]] <-  p.val.vector
       list.coefficients[[i]] <- coefficient.vector
       list.rsquared[[i]] <- r.squared.vector
+      list.covariate.pvals[[i]] <- covariate.pvals.df
     }
   } else if (outcome=="gene") {
     arraydata <- data.frame(gene)
@@ -464,6 +472,13 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       term.pvals <- rownames(mlin$p.value.coeff)
       index.interac <- grep('m:type', term.pvals)
       p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                            rownames(gene)[i], sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
 
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('m:type', term.coefficient)
@@ -481,11 +496,13 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       list.pvals[[i]] <-  p.val.vector
       list.coefficients[[i]] <- coefficient.vector
       list.rsquared[[i]] <- r.squared.vector
+      list.covariate.pvals[[i]] <- covariate.pvals.df
     }
   }
   mat.pvals <- do.call(rbind, list.pvals)
   mat.coefficients <- do.call(rbind, list.coefficients)
   mat.rsquared <- do.call(rbind, list.rsquared)
+  covariate.pvals <- do.call(rbind, list.covariate.pvals)
 
   # adjust p-values
   row.pvt <- dim(mat.pvals)[1]
@@ -513,6 +530,7 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
   list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
   list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
+  list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
   return(list.mat)
 }
 
@@ -538,6 +556,7 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
   list.pvals <- list()
   list.coefficients <- list()
   list.rsquared <- list()
+  list.covariate.pvals <- list()
   for (i in 1:num) {
     m <- as.numeric(metab[i, ])
     if (is.null(covar)) {
@@ -557,6 +576,14 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
     term.pvals <- rownames(mlin$p.value.coeff)
     index.interac <- grep('m:type', term.pvals)
     p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+    covariate.pvals <- lapply(term.pvals, function(covariate){
+      covar = as.data.frame(mlin$p.value.coeff[covariate,])
+      colnames(covar) = c(covariate)
+      return(covar)
+    })
+    covariate.pvals.df <- do.call("cbind", covariate.pvals)
+    rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                          rownames(metab)[i], sep="__")
     
     term.coefficient <- rownames(mlin$coefficients)
     index.coefficient <-  grep('m:type', term.coefficient)
@@ -574,6 +601,7 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
     list.pvals[[i]] <-  p.val.vector
     list.coefficients[[i]] <- coefficient.vector
     list.rsquared[[i]] <- r.squared.vector
+    list.covariate.pvals[[i]] <- covariate.pvals.df
   }
   mat.pvals <- do.call(rbind, list.pvals)
   mat.coefficients <- do.call(rbind, list.coefficients)
@@ -598,14 +626,38 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
   mat.coefficients.t <- t(mat.coefficients)
   mat.rsquared.t <- t(mat.rsquared)
   where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
-  
+
   # Replace those locations with values from the lower triangular.
   mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
   mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
   mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
   mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
+  covariate.pvals <- do.call(rbind, list.covariate.pvals)
   
-  # Remove the lower triangular.
+  # Remove the highest p-values and store the result in the upper triangular.
+  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
+    ret_val = FALSE
+    pieces = strsplit(name, "__")[[1]]
+    pval_1 = covariate.pvals[name,"m:type"]
+    pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),"m:type"]
+    if(pieces[1] == pieces[2]){
+      ret_val = TRUE
+    }
+    else if(pval_2 < pval_1){
+      ret_val = TRUE
+    }
+    else if(pval_2 == pval_1){
+      pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
+      pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
+                                                               pieces[1], 
+                                                               sep = "__"))
+      if(pos_pval_1 > pos_pval_2){
+        ret_val = TRUE
+      }
+    }
+    return(ret_val)
+  }))
+  covariate.pvals = covariate.pvals[which(should_remove == FALSE),]
   mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
   mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
   mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
@@ -616,6 +668,7 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
   list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
   list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
+  list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
   return(list.mat)
 }
 

@@ -347,11 +347,33 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,common=T,
 #' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
 #' DistPvalues(myres)
 #' }
+#' @importFrom graphics boxplot par
 #' @export
 DistPvalues<- function(IntLimResults,breaks=100) {
 
     hist(IntLimResults@interaction.pvalues,breaks=breaks,
 	main="Histogram of Interaction P-values")
+}
+
+#' Visualize the distribution of unadjusted p-values for all covariates
+#' from linear models using a bar chart.
+#'
+#' @include IntLimResults_extendedfunctions.R
+#'
+#' @param IntLimResults output of RunIntLim()
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
+#' DistPvalues(myres)
+#' }
+#' @export
+PValueBoxPlots<- function(IntLimResults) {
+  par(mar=c(8, 4.1, 4.1, 2.1))
+  boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
 }
 
 #' Visualize the distribution of unadjusted p-values from linear models

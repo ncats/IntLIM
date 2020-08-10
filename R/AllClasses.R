@@ -24,6 +24,7 @@ methods::setClass (
 #' @slot interaction.pvalues matrix of interaction p-values
 #' @slot interaction.adj.pvalues matrix of adjusted interaction pvalues
 #' @slot interaction.coefficients matrix of interaction coefficients
+#' @slot covariate.pvalues data frame of p-values for each covariate
 #' @slot model.rsquared matrix of r-squared values
 #' @slot corr matrix of correlations in group 1 and 2
 #' @slot filt.results data frame of filtered results
@@ -38,6 +39,7 @@ methods::setClass(
 		interaction.adj.pvalues="matrix",
 		interaction.coefficients="matrix",
 		model.rsquared = "matrix",
+		covariate.pvalues = "data.frame",
 		corr="data.frame",
 		filt.results="data.frame",
 		warnings="character",
