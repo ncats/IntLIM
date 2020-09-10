@@ -1,7 +1,7 @@
 # IntLIM:  Integration through LInear Modeling
 
 # New!  IntLIM app is accessible via a server (no installation needed!).
-Please [click here](https://intlim.bmi.osumc.edu/).  And let us know if additional functionalities would be useful (see contact info below).
+Please [click here](https://intlim.ncats.io/).  And let us know if additional functionalities would be useful (see contact info below).
 
 ## IntLIM
 
