@@ -53,12 +53,12 @@ To install IntLIM, simply type the following in the R terminal:
 ```
 install.packages("devtools")
 library(devtools)
-devtools::install_github("mathelab/IntLIM")
+devtools::install_github("ncats/IntLIM")
 ```
 ## Vignette
 
 A detailed vignette can be found here:
-https://mathelab.github.io/IntLIM/IntLIMVignette.html
+https://ncats.github.io/IntLIM/IntLIMVignette.html
 
 ## Formatted Data and Analysis Codes
 
