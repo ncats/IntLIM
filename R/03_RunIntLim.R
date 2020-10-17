@@ -42,7 +42,6 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, cla
 
     incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
 
-
     if(!continuous & length(unique(stats::na.omit(incommon$p))) != 2) {
 	    stop(paste("IntLim currently requires only two categories.  Make sure the column",stype,"only has two unique values"))
     }
