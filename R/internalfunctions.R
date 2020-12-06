@@ -638,8 +638,10 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
   should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
     ret_val = FALSE
     pieces = strsplit(name, "__")[[1]]
-    pval_1 = covariate.pvals[name,"m:type"]
-    pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),"m:type"]
+    m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
+                                                   fixed = TRUE) == TRUE)]
+    pval_1 = covariate.pvals[name, m_type]
+    pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
     if(pieces[1] == pieces[2]){
       ret_val = TRUE
     }

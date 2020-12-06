@@ -6,6 +6,7 @@
 \usage{
 CorrHeatmap(
   inputResults,
+  inputData,
   viewer = T,
   top_pairs = 1200,
   treecuts = 2,
@@ -17,6 +18,8 @@ CorrHeatmap(
 }
 \arguments{
 \item{inputResults}{IntLimResults object (output of ProcessResults())}
+
+\item{inputData}{IntLimObject output of ReadData() or FilterData()}
 
 \item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
 in Shiny/Knittr (F)}

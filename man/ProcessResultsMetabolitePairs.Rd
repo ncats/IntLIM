@@ -14,24 +14,32 @@ ProcessResultsMetabolitePairs(
   pvalcutoff = 0.05,
   diffcorr = 0.5,
   corrtype = "spearman",
-  interactionCoeffPercentile = NULL,
+  interactionCoeffPercentile = 0.5,
+  rsquaredCutoff = 0,
   treecuts = 0
 )
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,metabolite abundances, and associated meta-data}
+\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression
+,metabolite abundances, and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
 \item{diffcorr}{cutoff of differences in correlations for filtering (default 0.5)}
 
-\item{corrtype}{spearman or pearson or other parameters allowed by cor() function (default spearman)}
+\item{corrtype}{spearman or pearson or other parameters allowed by cor() function 
+(default spearman)}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))}
+\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
+(default bottom 10 percent (high negative coefficients) and top 10 percent 
+(high positive coefficients))}
 
-\item{treecuts}{user-selected number of clusters (of gene-metabolite pairs) to cut the tree into}
+\item{rsquaredCutoff}{cutoff for lowest r-squared value}
+
+\item{treecuts}{user-selected number of clusters (of gene-metabolite pairs) 
+to cut the tree into}
 }
 \value{
 IntResults object with model results (now includes correlations)

@@ -2,26 +2,39 @@
 % Please edit documentation in R/plottingfunctions.R
 \name{InteractionCoefficientGraph}
 \alias{InteractionCoefficientGraph}
-\title{Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient for the gene-metabolite pair}
+\title{Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
+for the gene-metabolite pair}
 \usage{
 InteractionCoefficientGraph(
   inputResults,
   interactionCoeffPercentile = 0.1,
-  percentageToPlot = 0.01
+  percentageToPlot = 0.01,
+  independent.var.type = "gene",
+  outcome = "metabolite"
 )
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))}
+\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
+(default bottom 10 percent (high negative coefficients) and top 10 percent 
+(high positive coefficients))}
 
-\item{percentageToPlot}{percentage of points to plot (the points will be randomly selected) -- plotting all points will likely overwhelm plotting function.}
+\item{percentageToPlot}{percentage of points to plot (the points will be 
+randomly selected) -- plotting all points will likely overwhelm plotting function.}
+
+\item{independent.var.type}{type of analyte used as the independent variable 
+("gene" or "metabolite")}
+
+\item{outcome}{type of analyte used as the outcome/dependent variable ("gene"
+or "metabolite")}
 }
 \value{
 a scatterplot
 }
 \description{
-Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient for the gene-metabolite pair
+Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
+for the gene-metabolite pair
 }
 \examples{
 \dontrun{

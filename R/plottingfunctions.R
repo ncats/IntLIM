@@ -405,6 +405,7 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #' @import heatmaply
 #'
 #' @param inputResults IntLimResults object (output of ProcessResults())
+#' @param inputData IntLimObject output of ReadData() or FilterData()
 #' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)
 #' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
 #' in Shiny/Knittr (F)
@@ -425,216 +426,48 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #' CorrHeatmap(myres)
 #' }
 #' @export
-CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, palette = NULL, static = FALSE,
+CorrHeatmap <- function(inputResults,inputData, viewer=T,top_pairs=1200,treecuts=2, palette = NULL, static = FALSE,
                         html.file=NULL, pdf.file=NULL) {
 type <- cor <- c()
 
 	if(nrow(inputResults@filt.results)==0) {
 		stop("Make sure you run ProcessResults before making the heatmap")
 	}
-
-		allres <- inputResults@filt.results
-		if(nrow(allres)>top_pairs) {
-			allp <- inputResults@filt.results[,"FDRadjPval"]
-			allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
-		}
-
-                toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
-                        allres[,3:4])
-                suppressMessages(
-                        meltedtoplot <- tidyr::gather(
-                                toplot,
-                                type,cor,colnames(toplot)[2],colnames(toplot)[3]))
-
-                #all possible values of X (type) and Y (name)
-                theXAxis <- as.character(meltedtoplot[, "type"])
-                theYAxis <- as.character(meltedtoplot[, "name"])
-
-                  #unique values of X and Y
-                  theUniqueY <- as.character(unique(theYAxis))
-                  theUniqueX <- as.character(unique(theXAxis))
-
-                  # Substitute words with position on the meatrix
-                  for (i in 1:length(theUniqueY)){
-                    num <- which(theYAxis == theUniqueY[i])
-                    theYAxis[num] <- i
-                  }
-                  for (i in 1:length(theUniqueX)) {
-                    num <- which(theXAxis == theUniqueX[i])
-                    theXAxis[num] <- i
-                  }
-                  # New package heatmaply here
-                  type <- unique(meltedtoplot[,'type'])
-                  num <- nrow(meltedtoplot[meltedtoplot[,'type'] == type[1],])
-                  heat_data <- matrix(data = 0, nrow =num,ncol = 2)
-                  row.names(heat_data) <- meltedtoplot[1:num,1]
-                  colnames(heat_data) <- gsub("_cor","",c(type[1],type[2]))
-                  heat_data[,1] <- meltedtoplot[1:num,3]
-
-                  heat_data[,2] <- meltedtoplot[-1:-num,3]
-                if (is.null(palette)){
-			palette=grDevices::colorRampPalette(c("#D01C8B", "#F1B6DA", "#F7F7F7", "#B8E186", "#4DAC26")) (255)[255:1]
-                }
-
-                  if(static == FALSE){
-                  hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                               k_row = treecuts,#k_col = 2,
-                                               margins = c(80,5),
-                                               dendrogram = "row",
-                                               y_axis_font_size ="1px",
-                                               colors = palette,
-                                               key.title = 'Correlation \n differences',
-					       file=html.file)
-                  hm
-
-                  if(!is.null(pdf.file)){
-
-                      hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
-                                                 k_row = treecuts,#k_col = 2,
-                                                 margins = c(80,5),
-                                                 dendrogram = "row",
-                                                 y_axis_font_size ="1px",
-                                                 colors = palette,
-                                                 key.title = 'Correlation \n differences' )
-                      #distance = stats::dist(heat_data)
-                      #hcluster = stats::hclust(distance)
-                      #dend1 = stats::as.dendrogram(hcluster)
-                      #dend1 = dendextend::set(dend1, "branches_k_color", k = treecuts)
-                      #dend1 = dendextend::set(dend1, "branches_lwd", c(1,treecuts))
-                      #dend1 = dendextend::ladderize(dend1)
-                      #row_dend  <-dend1
-
-                      row_dend = hmr$rows
-                      grDevices::pdf(file=pdf.file, width=12, height=6.3)
-                      gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                                        #k_row = treecuts,#k_col = 2,
-                                        #margins = c(80,5),
-                                        dendrogram = "row",
-                                        #y_axis_font_size ="1px",
-                                        col = palette,
-                                        density.info = 'none',
-                                        key.title = 'Correlation \n differences',
-                                        labRow = rep('',nrow(heat_data)),
-                                        cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                                        trace = 'none', Rowv = row_dend)
-                      grDevices::dev.off()
-                  }
-                  return(hm)
-                  }else{
-
-                      hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
-                                                 k_row = treecuts,#k_col = 2,
-                                                 margins = c(80,5),
-                                                 dendrogram = "row",
-                                                 y_axis_font_size ="1px",
-                                                 colors = palette,
-                                                 key.title = 'Correlation \n differences' )
-                      #distance = stats::dist(heat_data)
-                      #hcluster = stats::hclust(distance)
-                      #dend1 = stats::as.dendrogram(hcluster)
-                      #dend1 = dendextend::set(dend1, "branches_k_color", k = treecuts)
-                      #dend1 = dendextend::set(dend1, "branches_lwd", c(1,treecuts))
-                      #dend1 = dendextend::ladderize(dend1)
-                      #row_dend  <-dend1
-
-                      row_dend = hmr$rows
-                      gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                                                 #k_row = treecuts,#k_col = 2,
-                                                 #margins = c(80,5),
-                                                 dendrogram = "row",
-                                                 #y_axis_font_size ="1px",
-                                                 col = palette,
-                                                 density.info = 'none',
-                                                 key.title = 'Correlation \n differences',
-                                                labRow = rep('',nrow(heat_data)),
-                                              cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                                                trace = 'none', Rowv = row_dend)
-
-                      if(!is.null(pdf.file)){
-                          grDevices::pdf(file=pdf.file, width=12, height=6.3)
-                          gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                                            #k_row = treecuts,#k_col = 2,
-                                            #margins = c(80,5),
-                                            dendrogram = "row",
-                                            #y_axis_font_size ="1px",
-                                            col = palette,
-                                            density.info = 'none',
-                                            key.title = 'Correlation \n differences',
-                                            labRow = rep('',nrow(heat_data)),
-                                            cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                                            trace = 'none', Rowv = row_dend)
-                          grDevices::dev.off()
-                      }
-
-
-                  }
-
-
-                  if(!is.null(html.file) & static==TRUE){
-                      hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                                 k_row = treecuts,#k_col = 2,
-                                                 margins = c(80,5),
-                                                 dendrogram = "row",
-                                                 y_axis_font_size ="1px",
-                                                 colors = palette,
-                                                 key.title = 'Correlation \n differences',
-                                                 file=html.file)
-                  }
-
-}
-
-
-
-#' Plot correlation heatmap in pdf
-#'
-#'
-#' @param inputResults IntLimResults object (output of ProcessResults())
-#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
-#' @param treecuts number of clusters (of gene-metabolite pairs) to cut the tree into for color-coding
-#' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-#' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @return a highcharter object
-#'
-#' @export
-CorrHeatmap_pdf <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, palette = NULL) {
-
-    type <- cor <- c()
-
-    if(nrow(inputResults@filt.results)==0) {
-        stop("Make sure you run ProcessResults before making the heatmap")
-    }
-
+  incommon <- getCommon(inputData,inputResults@stype)
+  p <- incommon$p
+  if(length(unique(p)) !=2){
+    stop("CorrHeatmap requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
+  }
+  else{
     allres <- inputResults@filt.results
     if(nrow(allres)>top_pairs) {
-        allp <- inputResults@filt.results[,"FDRadjPval"]
-        allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
+      allp <- inputResults@filt.results[,"FDRadjPval"]
+      allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
     }
-
+    
     toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
                          allres[,3:4])
     suppressMessages(
-        meltedtoplot <- tidyr::gather(
-            toplot,
-            type,cor,colnames(toplot)[2],colnames(toplot)[3]))
-
+      meltedtoplot <- tidyr::gather(
+        toplot,
+        type,cor,colnames(toplot)[2],colnames(toplot)[3]))
+    
     #all possible values of X (type) and Y (name)
     theXAxis <- as.character(meltedtoplot[, "type"])
     theYAxis <- as.character(meltedtoplot[, "name"])
-
+    
     #unique values of X and Y
     theUniqueY <- as.character(unique(theYAxis))
     theUniqueX <- as.character(unique(theXAxis))
-
+    
     # Substitute words with position on the meatrix
     for (i in 1:length(theUniqueY)){
-        num <- which(theYAxis == theUniqueY[i])
-        theYAxis[num] <- i
+      num <- which(theYAxis == theUniqueY[i])
+      theYAxis[num] <- i
     }
     for (i in 1:length(theUniqueX)) {
-        num <- which(theXAxis == theUniqueX[i])
-        theXAxis[num] <- i
+      num <- which(theXAxis == theUniqueX[i])
+      theXAxis[num] <- i
     }
     # New package heatmaply here
     type <- unique(meltedtoplot[,'type'])
@@ -643,21 +476,32 @@ CorrHeatmap_pdf <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, pal
     row.names(heat_data) <- meltedtoplot[1:num,1]
     colnames(heat_data) <- gsub("_cor","",c(type[1],type[2]))
     heat_data[,1] <- meltedtoplot[1:num,3]
-
+    
     heat_data[,2] <- meltedtoplot[-1:-num,3]
     if (is.null(palette)){
-        palette=grDevices::colorRampPalette(c("#D01C8B", "#F1B6DA", "#F7F7F7", "#B8E186", "#4DAC26")) (255)[255:1]
+      palette=grDevices::colorRampPalette(c("#D01C8B", "#F1B6DA", "#F7F7F7", "#B8E186", "#4DAC26")) (255)[255:1]
     }
-
-
-
+    
+    if(static == FALSE){
+      hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
+                                 k_row = treecuts,#k_col = 2,
+                                 margins = c(80,5),
+                                 dendrogram = "row",
+                                 y_axis_font_size ="1px",
+                                 colors = palette,
+                                 key.title = 'Correlation \n differences',
+                                 file=html.file)
+      hm
+      
+      if(!is.null(pdf.file)){
+        
         hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
                                    k_row = treecuts,#k_col = 2,
                                    margins = c(80,5),
                                    dendrogram = "row",
                                    y_axis_font_size ="1px",
                                    colors = palette,
-                                   key.title = 'Correlation \n differences')
+                                   key.title = 'Correlation \n differences' )
         #distance = stats::dist(heat_data)
         #hcluster = stats::hclust(distance)
         #dend1 = stats::as.dendrogram(hcluster)
@@ -665,19 +509,85 @@ CorrHeatmap_pdf <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, pal
         #dend1 = dendextend::set(dend1, "branches_lwd", c(1,treecuts))
         #dend1 = dendextend::ladderize(dend1)
         #row_dend  <-dend1
-
+        
         row_dend = hmr$rows
+        grDevices::pdf(file=pdf.file, width=12, height=6.3)
         gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                                #k_row = treecuts,#k_col = 2,
-                                #margins = c(80,5),
-                                dendrogram = "row",
-                                #y_axis_font_size ="1px",
-                                col = palette,
-                                density.info = 'none',
-                                key.title = 'Correlation \n differences',
-                                labRow = rep('',nrow(heat_data)),
-                                cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                                trace = 'none', Rowv = row_dend)
+                          #k_row = treecuts,#k_col = 2,
+                          #margins = c(80,5),
+                          dendrogram = "row",
+                          #y_axis_font_size ="1px",
+                          col = palette,
+                          density.info = 'none',
+                          key.title = 'Correlation \n differences',
+                          labRow = rep('',nrow(heat_data)),
+                          cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
+                          trace = 'none', Rowv = row_dend)
+        grDevices::dev.off()
+      }
+      return(hm)
+    }else{
+      
+      hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
+                                 k_row = treecuts,#k_col = 2,
+                                 margins = c(80,5),
+                                 dendrogram = "row",
+                                 y_axis_font_size ="1px",
+                                 colors = palette,
+                                 key.title = 'Correlation \n differences' )
+      #distance = stats::dist(heat_data)
+      #hcluster = stats::hclust(distance)
+      #dend1 = stats::as.dendrogram(hcluster)
+      #dend1 = dendextend::set(dend1, "branches_k_color", k = treecuts)
+      #dend1 = dendextend::set(dend1, "branches_lwd", c(1,treecuts))
+      #dend1 = dendextend::ladderize(dend1)
+      #row_dend  <-dend1
+      
+      row_dend = hmr$rows
+      gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
+                        #k_row = treecuts,#k_col = 2,
+                        #margins = c(80,5),
+                        dendrogram = "row",
+                        #y_axis_font_size ="1px",
+                        col = palette,
+                        density.info = 'none',
+                        key.title = 'Correlation \n differences',
+                        labRow = rep('',nrow(heat_data)),
+                        cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
+                        trace = 'none', Rowv = row_dend)
+      
+      if(!is.null(pdf.file)){
+        grDevices::pdf(file=pdf.file, width=12, height=6.3)
+        gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
+                          #k_row = treecuts,#k_col = 2,
+                          #margins = c(80,5),
+                          dendrogram = "row",
+                          #y_axis_font_size ="1px",
+                          col = palette,
+                          density.info = 'none',
+                          key.title = 'Correlation \n differences',
+                          labRow = rep('',nrow(heat_data)),
+                          cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
+                          trace = 'none', Rowv = row_dend)
+        grDevices::dev.off()
+      }
+      
+      
+    }
+    
+    
+    if(!is.null(html.file) & static==TRUE){
+      hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
+                                          k_row = treecuts,#k_col = 2,
+                                          margins = c(80,5),
+                                          dendrogram = "row",
+                                          y_axis_font_size ="1px",
+                                          colors = palette,
+                                          key.title = 'Correlation \n differences',
+                                          file=html.file)
+    }
+  }
+		
 
 }
 
@@ -951,7 +861,14 @@ pvalCorrVolcano <- function(inputResults, inputData,nrpoints=10000,diffcorr=0.5,
 	}
     if(class(inputResults) != "IntLimResults") {
 	stop("input data is not a IntLim class")
-        }
+    }
+  incommon <- getCommon(inputData,inputResults@stype)
+  p <- incommon$p
+  
+  if (length(unique(p)) !=2){
+    stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
+               with more than two categories."))
+  }
     volc.results <- IntLIM::ProcessResults(inputResults,  inputData, diffcorr = 0, pvalcutoff = 1)
     volc.table <- volc.results@filt.results
     Corrdiff <- volc.table[,4] - volc.table[,3]
@@ -989,6 +906,13 @@ pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=1000
   if(class(inputResults) != "IntLimResults") {
     stop("input data is not a IntLim class")
   }
+  incommon <- getCommon(inputData,inputResults@stype)
+  p <- incommon$p
+  
+  if (length(unique(p)) !=2){
+    stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
+               with more than two categories."))
+  }
   volc.results <- IntLIM::ProcessResultsMetabolitePairs(inputResults,  inputData, diffcorr = 0, pvalcutoff = 1)
   volc.table <- volc.results@filt.results
   Corrdiff <- volc.table[,4] - volc.table[,3]
@@ -1000,10 +924,18 @@ pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=1000
   graphics::abline(v=c(diffcorr,-diffcorr),lty=2,col="blue")
 }
 
-#' Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient for the gene-metabolite pair
+#' Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
+#' for the gene-metabolite pair
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
-#' @param percentageToPlot percentage of points to plot (the points will be randomly selected) -- plotting all points will likely overwhelm plotting function.
+#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
+#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
+#' (high positive coefficients))
+#' @param percentageToPlot percentage of points to plot (the points will be 
+#' randomly selected) -- plotting all points will likely overwhelm plotting function.
+#' @param independent.var.type type of analyte used as the independent variable 
+#' ("gene" or "metabolite")
+#' @param outcome type of analyte used as the outcome/dependent variable ("gene"
+#' or "metabolite")
 #' @return a scatterplot
 #'
 #' @export
@@ -1017,7 +949,9 @@ pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=1000
 #' }
 InteractionCoefficientGraph<-function(inputResults,
                                       interactionCoeffPercentile=0.10,
-                                      percentageToPlot = 0.01){
+                                      percentageToPlot = 0.01, 
+                                      independent.var.type = "gene",
+                                      outcome = "metabolite"){
 
 
     if(class(inputResults) != "IntLimResults") {
@@ -1028,13 +962,16 @@ InteractionCoefficientGraph<-function(inputResults,
     gene_metabolite_format_coeff = reshape2::melt(inputResults@interaction.coefficients)
     gene_metabolite_format_pval = reshape2::melt(inputResults@interaction.pvalues)
     gene_metabolite_format_adjp = reshape2::melt(inputResults@interaction.adj.pvalues)
-    tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, gene_metabolite_format_adjp$value)
+    tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, 
+                     gene_metabolite_format_adjp$value)
     colnames(tofilter) = c("gene", "metab", "interaction_coeff", "Pval","FDRadjPval")
 
 
     #get top and bottom cutoffs (need highest positive and highest negative coeffs)
-    first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, interactionCoeffPercentile)[1]
-    second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, interactionCoeffPercentile)[2]
+    first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+                                                      interactionCoeffPercentile)[1]
+    second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+                                                       interactionCoeffPercentile)[2]
 
 
     toplot = data.frame(tofilter$interaction_coeff)
@@ -1043,13 +980,24 @@ InteractionCoefficientGraph<-function(inputResults,
     toplot_sort = toplot[order(toplot$interaction_coeff),]
     colnames(toplot_sort) = c("interaction_coeff", "adjpval")
     toplot_sort$color = "black"
-    toplot_sort$color[(toplot_sort$interaction_coeff > second_half | toplot_sort$interaction_coeff <first_half)]="red"
+    toplot_sort$color[(toplot_sort$interaction_coeff > second_half | toplot_sort$
+                         interaction_coeff <first_half)]="red"
     randomize = function(x) sample(1:nrow(toplot_sort),x,replace=F)
     random_rows_to_keep = sort(randomize(nrow(toplot_sort)*percentageToPlot))
     toplot_sort = toplot_sort[random_rows_to_keep,]
-
-    plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, col=toplot_sort$color, xlab = "Gene Metabolite Pairs", ylab = "Interaction Coefficient", pch=16)
-
+    if((independent.var.type == "gene" && outcome == "metabolite") || 
+       (independent.var.type == "metabolite" && outcome == "gene"))
+    {
+      plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
+           col=toplot_sort$color, xlab = "Gene Metabolite Pairs", ylab = 
+             "Interaction Coefficient", pch=16)
+    }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
+      toplot_sort = toplot_sort[which(!is.na(toplot_sort$interaction_coeff)),]
+      plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
+           col=toplot_sort$color, xlab = "Metabolite Pairs", ylab = 
+             "Interaction Coefficient", pch=16)
+    }
+    
 }
 
 
@@ -1062,9 +1010,11 @@ InteractionCoefficientGraph<-function(inputResults,
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
 #' @param metaboliteOfInterest metabolite in gene-metabolite pair
 #' @param geneOfInterest gene in gene-metabolite pair
+#' @param continuous whether the outcome is continuous
 #' @return dataframe for further analysis
 #' @export
-MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest, metaboliteOfInterest){
+MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest, 
+                                        metaboliteOfInterest, continuous = FALSE){
 
   if (class(inputData) != "MultiDataSet") {
     stop("input data is not a MultiDataSet class")
@@ -1094,12 +1044,75 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest,
   #Add gene, phenotype and metabolite data for glm
   forglm  = data.frame(row.names = 1:length(gene_data))
   forglm$g = gene_data
-  forglm$type = as.numeric(as.character(pheno))
+  if(continuous == TRUE){
+    forglm$g = as.numeric(as.character(gene_data))
+  }
+  forglm$type = pheno
   forglm$Y = as.numeric(metab_data)
 
 
   if (!is.null(covariates)) {
 
+    #Add all covariates to dataframe for glm()
+    i=3
+    for(each in covariates){
+      names = colnames(forglm)
+      i = i+1
+      forglm[,i] = incommon$covar_matrix[,each]
+      colnames(forglm) = c(names, each)
+    }
+  }
+  return(forglm)
+}
+
+#' Creates a dataframe of the marginal effect of phenotype
+#'
+#' @import stats
+#' @import margins
+#'
+#' @param inputResults IntLimResults object with model results (output of RunIntLim())
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
+#' @param metaboliteOfInterest1 outcome metabolite in metabolite pair
+#' @param metaboliteOfInterest2 independent metabolite in metabolite pair
+#' @return dataframe for further analysis
+#' @export
+MarginalEffectsGraphDataframeMetabolitePairs<-function(inputResults, inputData, 
+                                                       metaboliteOfInterest1, 
+                                                       metaboliteOfInterest2){
+  
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  if(class(inputResults) != "IntLimResults") {
+    stop("input data is not a IntLim class")
+  }
+  
+  #get covariates
+  covariates = as.character(inputResults@covar$covariate)
+  covariates_class = as.character(inputResults@covar$class.var)
+  
+  #get dataframes
+  if(length(covariates) == 0){
+    incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+  }else{
+    incommon <- getCommon(inputData,inputResults@stype,covar=covariates,class.covar=covariates_class)
+  }
+  pheno <- incommon$p
+  metab <- incommon$metab
+  
+  #get two metabolites
+  metab1_data = metab[metaboliteOfInterest1,]
+  metab2_data = metab[metaboliteOfInterest2,]
+  
+  #Add phenotype and metabolite data for glm
+  forglm  = data.frame(row.names = 1:length(metab1_data))
+  forglm$g = as.numeric(metab1_data)
+  forglm$type = pheno
+  forglm$Y = as.numeric(metab2_data)
+  
+  
+  if (!is.null(covariates)) {
+    
     #Add all covariates to dataframe for glm()
     i=3
     for(each in covariates){
@@ -1119,7 +1132,6 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest,
 #' @return values used for graphing
 #' @export
 MarginalEffectsGraph<-function(dataframe, title){
-
   form = "Y ~ g + type + g:type"
   if (ncol(dataframe) > 3) {
 
@@ -1130,12 +1142,8 @@ MarginalEffectsGraph<-function(dataframe, title){
     }
   }
   model = glm(formula = form, data=dataframe)
-  p = list(type=seq(min(dataframe$type),max(dataframe$type),by=0.1))
-  margins_output=margins(model,at=p)
-  cplot(model, "type", what = "prediction", main = title)
-  return_value = list(model, margins_output)
-  names(return_value) = c("model", "margins")
-  return(return_value)
+  cplot(model, "type", data = dataframe, what = "prediction", main = title)
+  return(model)
 
 }
 
@@ -1176,4 +1184,45 @@ hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", 
 }else{
     stop("Only two valid types:  gene or metabolite.  Invalid type entered")
     }
+}
+
+#' histogram of gene-metabolite pairs
+#' depending upon metabolite or gene
+#'
+#' @param inputResults IntLimResults object with model results (output of RunIntLim() and ProcessResults())
+#' @param type 'outcome' or 'independent'.  'outcome' set as default
+#' @param breaks Number of breaks selected for histogram
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
+#' myres <- ProcessResults(inputResults=myres,inputData=mydata)
+#' HistogramGMPairs(inputResults=myres)
+#' }
+#' @export
+HistogramMMPairs <- function(inputResults, type = 'outcome', breaks = 50){
+  
+  x <- inputResults@filt.results
+  if(is.null(x)){
+    stop('Please run ProcessResults() before inputting into HistogramGMPairs')
+  }
+  if (type == 'outcome'){
+    metab1.pairs <- data.frame(table(x$metab1))
+    metab1.pairs.number <- as.vector(metab1.pairs$Freq)
+    hist(metab1.pairs.number, breaks = breaks, 
+         main = "Number of metabolite pairs based on outcome metabolite", 
+         xlab = 'Metabolite pairs based on outcome metabolite')
+  }else if (type == 'independent'){
+    
+    metab2.pairs <- data.frame(table(x$metab2))
+    metab2.pairs.number <- as.vector(metab2.pairs$Freq)
+    hist(metab2.pairs.number, 
+         main = "Number of metabolite pairs based on independent metabolite", 
+         breaks = breaks, xlab = 'Metabolite pairs based on independent metabolite')
+  }else{
+    stop("Only two valid types:  outcome or independent.  Invalid type entered")
+  }
 }

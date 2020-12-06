@@ -7,12 +7,18 @@
 #' @include internalfunctions.R
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,metabolite abundances, and associated meta-data
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
+#' metabolite abundances, and associated meta-data
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
 #' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
-#' @param corrtype spearman or pearson or other parameters allowed by cor() function (default spearman)
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
-#' @param treecuts user-selected number of clusters (of gene-metabolite pairs) to cut the tree into
+#' @param corrtype spearman or pearson or other parameters allowed by cor() function 
+#' (default spearman)
+#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
+#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
+#' (high positive coefficients))
+#' @param treecuts user-selected number of clusters (of gene-metabolite pairs) 
+#' to cut the tree into
+#' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @return IntResults object with model results (now includes correlations)
 #'
 #' @examples
@@ -29,17 +35,19 @@ ProcessResults <- function(inputResults,
 				pvalcutoff=0.05,
 				diffcorr=0.5,
 				corrtype="spearman",
-				interactionCoeffPercentile=NULL,
+				interactionCoeffPercentile=0.5,
+				rsquaredCutoff = 0.0,
 				treecuts = 0){
-
 	if(inputResults@outcome == "metabolite") {
 		mydat <-inputResults@interaction.adj.pvalues
 		mydat.interac <- inputResults@interaction.coefficients
+		mydat.rsq <- inputResults@model.rsquared 
 	}
 		#mydat <- reshape2::melt(inputResults@interaction.adj.pvalues)}
 	else if (inputResults@outcome == "gene") {
 		mydat <-t(inputResults@interaction.adj.pvalues)
 		mydat.interac <- t(inputResults@interaction.coefficients)
+		mydat.rsq <- t(inputResults@model.rsquared)
 	}
                 #mydat <- reshape2::melt(t(inputResults@interaction.adj.pvalues))}
 
@@ -49,17 +57,22 @@ ProcessResults <- function(inputResults,
 
 	if(length(unique(p)) !=2 & is.null(diffcorr) & is.null(corrtype)) {
 	  inputResults = ProcessResultsContinuous(inputResults,
-  	                           interactionCoeffPercentile=interactionCoeffPercentile,
-  	                           pvalCutoff=pvalcutoff)
+  	                           interactionCoeffPercentile,
+  	                           pvalcutoff, rsquaredCutoff)
 	} else if (length(unique(p)) !=2){
-  	  stop(paste("IntLim requires two categories only for correlation analysis.  Make sure the column",inputResults@stype,"only has two unique values or set diffcorr and corrtype to null to switch to interaction coefficient analysis"))
+  	  stop(paste("IntLim requires two categories only for correlation analysis.  
+  	             Make sure the column",inputResults@stype,"only has two unique 
+  	             values or set diffcorr and corrtype to null to switch to interaction 
+  	             coefficient analysis"))
 	}  else{
     	gene <- incommon$gene
     	metab <- incommon$metab
     	gp1 <- which(p == unique(p)[1])
-    	cor1.m <- stats::cor(t(gene[rownames(mydat),gp1]),t(metab[colnames(mydat),gp1]),method=corrtype)
+    	cor1.m <- stats::cor(t(gene[rownames(mydat),gp1]),t(metab[colnames(mydat),gp1]),
+    	                     method=corrtype)
     	gp2 <- which(p == unique(p)[2])
-      cor2.m <- stats::cor(t(gene[rownames(mydat),gp2]),t(metab[colnames(mydat),gp2]),method=corrtype)
+      cor2.m <- stats::cor(t(gene[rownames(mydat),gp2]),t(metab[colnames(mydat),gp2]),
+                           method=corrtype)
       
       # Create melted matrices to filter by inputs.
       fincor1 <- reshape2::melt(cor1.m)
@@ -78,11 +91,17 @@ ProcessResults <- function(inputResults,
       colnames(finmydat.interac) = c("Gene", "Metabolite", "InteracCoef")
       finmydat.interac$Gene = as.character(finmydat.interac$Gene)
       finmydat.interac$Metabolite = as.character(finmydat.interac$Metabolite)
+      finmydat.rsq <- reshape2::melt(mydat.rsq)
+      colnames(finmydat.rsq) = c("Gene", "Metabolite", "Rsq")
+      finmydat.rsq$Gene = as.character(finmydat.rsq$Gene)
+      finmydat.rsq$Metabolite = as.character(finmydat.rsq$Metabolite)
       
       if(!is.null(interactionCoeffPercentile)){
         if(interactionCoeffPercentile > 0){
-          first_half <- getQuantileForInteractionCoefficient(mydat.interac, interactionCoeffPercentile)[1]
-          second_half <- getQuantileForInteractionCoefficient(mydat.interac, interactionCoeffPercentile)[2]
+          first_half <- getQuantileForInteractionCoefficient(mydat.interac, 
+                                                             interactionCoeffPercentile)[1]
+          second_half <- getQuantileForInteractionCoefficient(mydat.interac, 
+                                                              interactionCoeffPercentile)[2]
           keepers_first <- which(finmydat.interac$InteracCoef > second_half)
           keepers_second <- which(finmydat.interac$InteracCoef < first_half)
           keepers <- c(keepers_first, keepers_second)
@@ -90,6 +109,7 @@ ProcessResults <- function(inputResults,
           fincor2 = fincor2[keepers,]
           finmydat <- finmydat[keepers,]
           finmydat.interac <- finmydat.interac[keepers,]
+          finmydat.rsq <- finmydat.rsq[keepers,]
         }
         
       }
@@ -102,17 +122,27 @@ ProcessResults <- function(inputResults,
     		fincor2 <- fincor2[keepers2,]
     		finmydat <- finmydat[keepers2,]
     		finmydat.interac <- finmydat.interac[keepers2,]
+    		finmydat.rsq <- finmydat.rsq[keepers2,]
     		genenames <- as.character(fincor1$Gene)
     		metabnames <- as.character(fincor2$Metabolite)
     	}
-            mydiffcor <- abs(fincor1$Cor1-fincor2$Cor2)
-
-    	keepers3 <- which(mydiffcor >= diffcorr)
-    	inputResults@filt.results <- data.frame(metab=metabnames[keepers3],
-    		gene=genenames[keepers3])
+      if(diffcorr > 0){
+        mydiffcor <- abs(fincor1$Cor1-fincor2$Cor2)
+        keepers3 <- which(mydiffcor >= diffcorr)
+        fincor1 <- fincor1[keepers3,]
+        fincor2 <- fincor2[keepers3,]
+        finmydat <- finmydat[keepers3,]
+        finmydat.interac <- finmydat.interac[keepers3,]
+        finmydat.rsq <- finmydat.rsq[keepers3,]
+        genenames <- as.character(fincor1$Gene)
+        metabnames <- as.character(fincor2$Metabolite)
+      }
+      keepers4 <- which(finmydat.rsq$Rsq >= rsquaredCutoff)
+    	inputResults@filt.results <- data.frame(metab=metabnames[keepers4],
+    		gene=genenames[keepers4])
     	inputResults@filt.results <- cbind(inputResults@filt.results,
-    	                                   fincor1$Cor1[keepers3],
-    	                                   fincor2$Cor2[keepers3])
+    	                                   fincor1$Cor1[keepers4],
+    	                                   fincor2$Cor2[keepers4])
     	colnames(inputResults@filt.results)[3:4]=paste0(setdiff(as.character(unlist(unique(p))),""),"_cor")
     	diff.corr <- inputResults@filt.results[,4] - inputResults@filt.results[,3]
 
@@ -134,10 +164,11 @@ ProcessResults <- function(inputResults,
     	outinteract <- (reshape2::melt(t(inputResults@interaction.coefficients)))[cornames,]
 
     	inputResults@filt.results = cbind(inputResults@filt.results,
-    	                                  finmydat.interac$InteracCoef[keepers3],
+    	                                  finmydat.interac$InteracCoef[keepers4],
+    	                                  finmydat.rsq$Rsq[keepers4],
     	                                  outp$value, 
     	                                  outpadj$value)
-    	colnames(inputResults@filt.results)[6:8]=c("interaction_coeff", "Pval","FDRadjPval")
+    	colnames(inputResults@filt.results)[6:9]=c("interaction_coeff", "Rsq", "Pval","FDRadjPval")
 	}
 
 	if (treecuts > 0){
@@ -163,12 +194,18 @@ return(inputResults)
 #' @include internalfunctions.R
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,metabolite abundances, and associated meta-data
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression
+#' ,metabolite abundances, and associated meta-data
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
 #' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
-#' @param corrtype spearman or pearson or other parameters allowed by cor() function (default spearman)
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
-#' @param treecuts user-selected number of clusters (of gene-metabolite pairs) to cut the tree into
+#' @param corrtype spearman or pearson or other parameters allowed by cor() function 
+#' (default spearman)
+#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
+#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
+#' (high positive coefficients))
+#' @param treecuts user-selected number of clusters (of gene-metabolite pairs) 
+#' to cut the tree into
+#' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @return IntResults object with model results (now includes correlations)
 #'
 #' @examples
@@ -185,66 +222,124 @@ ProcessResultsMetabolitePairs <- function(inputResults,
                            pvalcutoff=0.05,
                            diffcorr=0.5,
                            corrtype="spearman",
-                           interactionCoeffPercentile=NULL,
+                           interactionCoeffPercentile=0.5,
+                           rsquaredCutoff=0.0,
                            treecuts = 0){
   
   mydat <-inputResults@interaction.adj.pvalues
+  mydat.interac <- inputResults@interaction.coefficients
+  mydat.rsq <- inputResults@model.rsquared
   
   incommon <- getCommon(inputData,inputResults@stype)
   p <- incommon$p
+  metab <- incommon$metab 
   
   if(length(unique(p)) !=2 & is.null(diffcorr) & is.null(corrtype)) {
     inputResults = ProcessResultsContinuous(inputResults,
-                                            interactionCoeffPercentile=interactionCoeffPercentile,
-                                            pvalCutoff=pvalcutoff,
+                                            interactionCoeffPercentile,
+                                            pvalcutoff,
+                                            rsquaredCutoff,
                                             metabolite.pairs = TRUE)
   } else if (length(unique(p)) !=2){
-    stop(paste("IntLim requires two categories only for correlation analysis.  Make sure the column",inputResults@stype,"only has two unique values or set diffcorr and corrtype to null to switch to interaction coefficient analysis"))
-  } else if (length(unique(p)) == 2 & !is.null(interactionCoeffPercentile)){
-    stop(paste("Do not set the interactionCoeffPercentile parameter for 2 category analysis. Leave as null."))
+    stop(paste("IntLim requires two categories only for correlation analysis. 
+               Make sure the column",inputResults@stype,"only has two unique 
+               values or set diffcorr and corrtype to null to switch to interaction 
+               coefficient analysis"))
   }  else{
-    metab <- incommon$metab
     gp1 <- which(p == unique(p)[1])
     cor1.m <- cor(t(metab[rownames(mydat),gp1]), method = corrtype)
     cor1.m[lower.tri(cor1.m,diag=TRUE)] <- NA
     gp2 <- which(p == unique(p)[2])
     cor2.m <- cor(t(metab[rownames(mydat),gp2]), method = corrtype)
     cor2.m[lower.tri(cor2.m,diag=TRUE)] <- NA
-    if(pvalcutoff == 1) { #(no filtering)
-      temp <- reshape2::melt(cor1.m)
-      fincor1 <- as.numeric(temp[,"value"])
-      temp <- reshape2::melt(cor2.m)
-      fincor2 <- as.numeric(temp[,"value"])
-      metab1names <- as.character(temp[,1])
-      metab2names <- as.character(temp[,2])
-    } else {
-      keepers <- which(mydat <= pvalcutoff, arr.ind=T)
-      fincor1 <- as.numeric(apply(keepers,1,function(x)
-        cor1.m[x[1],x[2]]))
-      fincor2 <- as.numeric(apply(keepers,1,function(x)
-        cor2.m[x[1],x[2]]))
-      metab1names <- as.character(rownames(cor1.m)[keepers[,1]])
-      metab2names <- as.character(colnames(cor1.m)[keepers[,2]])
+    finmydat <- reshape2::melt(mydat)
+    colnames(finmydat) = c("Metab1", "Metab2", "PAdjVal")
+    finmydat$Metab1 = as.character(finmydat$Metab1)
+    finmydat$Metab2 = as.character(finmydat$Metab2)
+    fincor1 <- reshape2::melt(cor1.m)
+    colnames(fincor1) = c("Metab1", "Metab2", "Cor1")
+    fincor1$Metab1 = as.character(fincor1$Metab1)
+    fincor1$Metab2 = as.character(fincor1$Metab2)
+    fincor2 <- reshape2::melt(cor2.m)
+    colnames(fincor2) = c("Metab1", "Metab2", "Cor2")
+    fincor2$Metab1 = as.character(fincor2$Metab1)
+    fincor2$Metab2 = as.character(fincor2$Metab2)
+    finmydat.interac <- reshape2::melt(mydat.interac)
+    colnames(finmydat.interac) = c("Metab1", "Metab2", "InteracCoef")
+    finmydat.interac$Metab1 = as.character(finmydat.interac$Metab1)
+    finmydat.interac$Metab2 = as.character(finmydat.interac$Metab2)
+    finmydat.rsq <- reshape2::melt(mydat.rsq)
+    colnames(finmydat.rsq) = c("Metab1", "Metab2", "Rsq")
+    finmydat.rsq$Metab1 = as.character(finmydat.rsq$Metab1)
+    finmydat.rsq$Metab2 = as.character(finmydat.rsq$Metab2)
+    
+    if(!is.null(interactionCoeffPercentile)){
+      if(interactionCoeffPercentile > 0){
+        first_half <- getQuantileForInteractionCoefficient(mydat.interac, 
+                                                           interactionCoeffPercentile)[1]
+        second_half <- getQuantileForInteractionCoefficient(mydat.interac, 
+                                                            interactionCoeffPercentile)[2]
+        keepers_first <- which(finmydat.interac$InteracCoef > second_half)
+        keepers_second <- which(finmydat.interac$InteracCoef < first_half)
+        keepers <- c(keepers_first, keepers_second)
+        fincor1 = fincor1[keepers,]
+        fincor2 = fincor2[keepers,]
+        finmydat <- finmydat[keepers,]
+        finmydat.interac <- finmydat.interac[keepers,]
+        finmydat.rsq <- finmydat.rsq[keepers,]
+        metab1names <- as.character(fincor1$Metab1)
+        metab2names <- as.character(fincor2$Metab2)
+      }
     }
-    mydiffcor = abs(fincor1-fincor2)
-    keepers2 <- which(mydiffcor >= diffcorr)
-    inputResults@filt.results <- data.frame(metab1=metab1names[keepers2],
-                                            metab2=metab2names[keepers2])
-    inputResults@filt.results <- cbind(inputResults@filt.results,fincor1[keepers2],fincor2[keepers2])
+    if(pvalcutoff == 1) { #(no filtering)
+      metab1names <- as.character(fincor1$Metab1)
+      metab2names <- as.character(fincor2$Metab2)
+    } else {
+      keepers2 <- which(finmydat$PAdjVal <= pvalcutoff)
+      fincor1 <- fincor1[keepers2,]
+      fincor2 <- fincor2[keepers2,]
+      finmydat.interac <- finmydat.interac[keepers2,]
+      finmydat.rsq <- finmydat.rsq[keepers2,]
+      finmydat <- finmydat[keepers2,]
+      metab1names <- as.character(fincor1$Metab1)
+      metab2names <- as.character(fincor2$Metab2)
+    }
+    if(diffcorr > 0){
+      mydiffcor = abs(fincor1$Cor1-fincor2$Cor2)
+      keepers3 <- which(mydiffcor >= diffcorr)
+      fincor1 <- fincor1[keepers3,]
+      fincor2 <- fincor2[keepers3,]
+      finmydat.interac <- finmydat.interac[keepers3,]
+      finmydat.rsq <- finmydat.rsq[keepers3,]
+      finmydat <- finmydat[keepers3,]
+      metab1names <- as.character(fincor1$Metab1)
+      metab2names <- as.character(fincor2$Metab2)
+    }
+    myrsquared <- finmydat.rsq$Rsq
+    keepers4 <- which(myrsquared >= rsquaredCutoff)
+    inputResults@filt.results <- data.frame(metab1=metab1names[keepers4],
+                                            metab2=metab2names[keepers4])
+    inputResults@filt.results <- cbind(inputResults@filt.results,
+                                       fincor1$Cor1[keepers4],
+                                       fincor2$Cor2[keepers4])
+
     colnames(inputResults@filt.results)[3:4]=paste0(setdiff(as.character(unlist(unique(p))),""),"_cor")
     diff.corr <- inputResults@filt.results[,4] - inputResults@filt.results[,3]
     inputResults@filt.results <- cbind(inputResults@filt.results, diff.corr)
-    
     adjp <- reshape2::melt(inputResults@interaction.adj.pvalues)
     p <-  reshape2::melt(inputResults@interaction.pvalues)
-    cornames <- paste(as.character(inputResults@filt.results[,"metab2"]),as.character(inputResults@filt.results[,"metab1"]))
+    cornames <- paste(as.character(inputResults@filt.results[,"metab2"]),
+                      as.character(inputResults@filt.results[,"metab1"]))
     rownames(p) <- paste(as.character(p[,2]),as.character(p[,1]))
     rownames(adjp) <- paste(as.character(adjp[,2]),as.character(adjp[,1]))
     outp <- p[cornames,]
     outpadj <- adjp[cornames,]
     
-    inputResults@filt.results = cbind(inputResults@filt.results,outp$value, outpadj$value)
-    colnames(inputResults@filt.results)[6:7]=c("Pval","FDRadjPval")
+    inputResults@filt.results = cbind(inputResults@filt.results,
+                                      finmydat.interac$InteracCoef[keepers4],
+                                      finmydat.rsq$Rsq[keepers4],
+                                      outp$value, outpadj$value)
+    colnames(inputResults@filt.results)[6:9]=c("interaction_coeff", "Rsq", "Pval","FDRadjPval")
   }
   
   if (treecuts > 0){
@@ -256,7 +351,6 @@ ProcessResultsMetabolitePairs <- function(inputResults,
     
     
   }
-  
   print(paste(nrow(inputResults@filt.results), 'metabolite-metabolite pairs found given cutoffs'))
   return(inputResults)
 }
@@ -285,7 +379,8 @@ ProcessResultsContinuous<- function(inputResults,
   gene_metabolite_format_pval = reshape2::melt(inputResults@interaction.pvalues)
   gene_metabolite_format_adjp = reshape2::melt(inputResults@interaction.adj.pvalues)
   gene_metabolite_format_rsquared = reshape2::melt(inputResults@model.rsquared)
-  tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, gene_metabolite_format_adjp$value, gene_metabolite_format_rsquared$value)
+  tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, 
+                   gene_metabolite_format_adjp$value, gene_metabolite_format_rsquared$value)
   if(!metabolite.pairs){
     colnames(tofilter) = c("gene", "metab", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
   }
@@ -294,14 +389,19 @@ ProcessResultsContinuous<- function(inputResults,
   }
 
   #get top and bottom cutoffs (need highest positive and highest negative coeffs)
-  first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, interactionCoeffPercentile)[1]
-  second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, interactionCoeffPercentile)[2]
+  first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+                                                    interactionCoeffPercentile)[1]
+  second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+                                                     interactionCoeffPercentile)[2]
 
   #sort
   tofilter_sortedbycoeff <- tofilter[order(tofilter$interaction_coeff),]
 
   #filter by coefficient
-  filtered_by_coeff = tofilter_sortedbycoeff[tofilter_sortedbycoeff$interaction_coeff>second_half | tofilter_sortedbycoeff$interaction_coeff < first_half,]
+  filtered_by_coeff = tofilter_sortedbycoeff[tofilter_sortedbycoeff$interaction_coeff>
+                                               second_half | 
+                                               tofilter_sortedbycoeff$interaction_coeff 
+                                             < first_half,]
 
   #filter by pvalue
   filtered_by_pval = filtered_by_coeff[filtered_by_coeff$FDRadjPval < pvalCutoff,]
