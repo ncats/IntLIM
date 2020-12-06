@@ -4,7 +4,14 @@
 \alias{getStatsAllLMMetabolitePairs}
 \title{Function that runs Linear Models for all pairs of metabolites}
 \usage{
-getStatsAllLMMetabolitePairs(metab, type, covar, covarMatrix, continuous)
+getStatsAllLMMetabolitePairs(
+  metab,
+  type,
+  covar,
+  covarMatrix,
+  continuous,
+  save.covar.pvals
+)
 }
 \arguments{
 \item{metab}{metabolite dataset in incommon MultiDataSet object (incommon$metab)}
@@ -16,6 +23,9 @@ getStatsAllLMMetabolitePairs(metab, type, covar, covarMatrix, continuous)
 \item{covarMatrix}{covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)}
 
 \item{continuous}{indicate whether data is discrete (FALSE) or continuous (TRUE)}
+
+\item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
+which can be analyzed later but will also lengthen computation time.}
 }
 \value{
 list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)

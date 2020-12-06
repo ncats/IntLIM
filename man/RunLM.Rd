@@ -9,7 +9,8 @@ RunLM(
   outcome = "metabolite",
   type = NULL,
   covar = NULL,
-  continuous = FALSE
+  continuous = FALSE,
+  save.covar.pvals
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ Only 2 categories are currently supported.}
 \item{covar}{vector of additional vectors to consider}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
+
+\item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
+which can be analyzed later but will also lengthen computation time.}
 }
 \description{
 Function that runs linear models and returns interaction p-values.

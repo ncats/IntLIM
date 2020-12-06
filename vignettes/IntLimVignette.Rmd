@@ -137,10 +137,10 @@ IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
 The linear models are run by the __RunIntLim()__ function.  The __stype__ command allows the user to select a column from the sample meta data for the two categories to be compared (two cancer types, tumor vs. non-tumor, etc).  Currently, IntLIM only supports comparison of two categories (__"PBO_vs_Leukemia"__ is selected). The resulting object from the analysis is an IntLimResults object containing slots for un-adjusted and False Discovery Rate (FDR)-adjusted p-values for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value implies that the slope of gene-metabolite association in one phenotype is different from the other.  The __RunIntLim()__ function is based heavily on the MultiLinearModel functions developed for the ClassComparison package part of oompa (http://oompa.r-forge.r-project.org).  
 
 ```{r}
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia")
-myres.mm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", metabolite.pairs = TRUE)
-myres.gm.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE)
-myres.mm.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", metabolite.pairs = TRUE, continuous = TRUE)
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE)
+myres.mm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", metabolite.pairs = TRUE, save.covar.pvals = TRUE)
+myres.gm.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, save.covar.pvals = TRUE)
+myres.mm.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", metabolite.pairs = TRUE, continuous = TRUE, save.covar.pvals = TRUE)
 ```
 
 The __DistPValues()__ function allows the user to observe a histogram of the p-values prior to adjustment 
@@ -161,6 +161,7 @@ IntLIM::DistRSquared(IntLimResults = myres.mm.continuous)
 ```
 
 The __PValueBoxPlots()__ function allows the user to observe the p-value distributions of all covariates in the linear models prior to adjustment.
+Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when running __RunIntLim__. 
 ```{r}
 IntLIM::PValueBoxPlots(IntLimResults = myres.gm)
 IntLIM::PValueBoxPlots(IntLimResults = myres.mm)

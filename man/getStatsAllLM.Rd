@@ -4,7 +4,16 @@
 \alias{getStatsAllLM}
 \title{Function that runs Linear Models for all genes or metabolites}
 \usage{
-getStatsAllLM(outcome, gene, metab, type, covar, covarMatrix, continuous)
+getStatsAllLM(
+  outcome,
+  gene,
+  metab,
+  type,
+  covar,
+  covarMatrix,
+  continuous,
+  save.covar.pvals
+)
 }
 \arguments{
 \item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable}
@@ -21,6 +30,9 @@ Only 2 categories are currently supported.}
 \item{covarMatrix}{covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)}
 
 \item{continuous}{indicate whether data is discrete (FALSE) or continuous (TRUE)}
+
+\item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
+which can be analyzed later but will also lengthen computation time.}
 }
 \value{
 list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)

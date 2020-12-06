@@ -229,7 +229,10 @@ getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL) {
 #' Only 2 categories are currently supported.
 #' @param covar vector of additional vectors to consider
 #' @param continuous boolean to indicate whether the data is continuous or discrete
-RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continuous=FALSE) {
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
+RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, 
+                  continuous=FALSE, save.covar.pvals) {
     gene <- incommon$gene
     metab <- incommon$metab
     mymessage=""
@@ -239,26 +242,34 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
     	stop("The number of unique categores is not 2.")
         }
 
-        genesd1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
-        metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
-        genesd2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
-        metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
+        genesd1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) 
+          stats::sd(x,na.rm=T)))
+        metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) 
+          stats::sd(x,na.rm=T)))
+        genesd2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) 
+          stats::sd(x,na.rm=T)))
+        metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) 
+          stats::sd(x,na.rm=T)))
 
         if(length(which(genesd1==0))>0 || length(which(genesd2==0))>0) {
     	toremove <- c(which(genesd1==0),which(genesd2==0))
     	gene <- gene[-toremove,]
-    	mymessage <- c(mymessage,paste("Removed",length(toremove),"genes that had a standard deviation of 0:"))
+    	mymessage <- c(mymessage,paste("Removed",length(toremove),"genes that had 
+    	                               a standard deviation of 0:"))
     	mymessage <- c(mymessage,rownames(gene)[toremove])
         }
         if(length(which(metabsd1==0))>0 || length(which(metabsd2==0))>0) {
             toremove <- c(which(metabsd1==0),which(metabsd2==0))
             metab <- metab[-toremove,]
-            mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites that had a standard deviation of 0:"))
+            mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites 
+                                           that had a standard deviation of 0:"))
             mymessage <- c(mymessage,rownames(metab)[toremove])
         }
     }
 
-  mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = type, covar = covar, covarMatrix = incommon$covar_matrix, continuous = continuous)
+  mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
+                              type, covar = covar, covarMatrix = incommon$covar_matrix, 
+                            continuous = continuous, save.covar.pvals)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -279,7 +290,10 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, continu
 #' Only 2 categories are currently supported.
 #' @param covar vector of additional vectors to consider
 #' @param continuous boolean to indicate whether the data is continuous or discrete
-RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE) {
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
+RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, 
+                                 continuous=FALSE, save.covar.pvals) {
   metab <- incommon$metab
   mymessage=""
   
@@ -289,18 +303,23 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FAL
       stop("The number of unique categores is not 2.")
     }
     
-    metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
-    metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
+    metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) 
+      stats::sd(x,na.rm=T)))
+    metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) 
+      stats::sd(x,na.rm=T)))
 
     if(length(which(metabsd1==0))>0 || length(which(metabsd2==0))>0) {
       toremove <- c(which(metabsd1==0),which(metabsd2==0))
       metab <- metab[-toremove,]
-      mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites that had a standard deviation of 0:"))
+      mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites that 
+                                     had a standard deviation of 0:"))
       mymessage <- c(mymessage,rownames(metab)[toremove])
     }
   }
   
-  mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = covar, covarMatrix = incommon$covar_matrix, continuous = continuous)
+  mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
+                                             covar, covarMatrix = incommon$covar_matrix, 
+                                           continuous = continuous, save.covar.pvals)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -385,8 +404,11 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, continuous=FAL
 #' @param covar vector of additional vectors to consider
 #' @param covarMatrix covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
-getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, continuous) {
+getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, 
+                          continuous, save.covar.pvals) {
   if (outcome=="metabolite") {
     arraydata <- data.frame(metab)
     num <- nrow(gene)
@@ -420,13 +442,6 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       term.pvals <- rownames(mlin$p.value.coeff)
       index.interac <- grep('g:type', term.pvals)
       p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-      covariate.pvals <- lapply(term.pvals, function(covariate){
-        return(mlin$p.value.coeff[covariate,])
-      })
-      covariate.pvals.df <- do.call("cbind", covariate.pvals)
-      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                            rownames(gene)[i], sep="__")
-      colnames(covariate.pvals.df) <- term.pvals
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('g:type', term.coefficient)
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
@@ -443,7 +458,17 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
       list.pvals[[i]] <-  p.val.vector
       list.coefficients[[i]] <- coefficient.vector
       list.rsquared[[i]] <- r.squared.vector
-      list.covariate.pvals[[i]] <- covariate.pvals.df
+      
+      if(save.covar.pvals == TRUE){
+        covariate.pvals <- lapply(term.pvals, function(covariate){
+          return(mlin$p.value.coeff[covariate,])
+        })
+        covariate.pvals.df <- do.call("cbind", covariate.pvals)
+        rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                              rownames(gene)[i], sep="__")
+        colnames(covariate.pvals.df) <- term.pvals
+        list.covariate.pvals[[i]] <- covariate.pvals.df
+      }
     }
   } else if (outcome=="gene") {
     arraydata <- data.frame(gene)
@@ -541,8 +566,11 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, contin
 #' @param covar vector of additional vectors to consider
 #' @param covarMatrix covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
-getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, continuous) {
+getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, 
+                                         continuous, save.covar.pvals) {
   arraydata <- data.frame(metab)
   num <- nrow(metab)
   numprog <- round(num*0.1)
@@ -576,14 +604,6 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
     term.pvals <- rownames(mlin$p.value.coeff)
     index.interac <- grep('m:type', term.pvals)
     p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-    covariate.pvals <- lapply(term.pvals, function(covariate){
-      covar = as.data.frame(mlin$p.value.coeff[covariate,])
-      colnames(covar) = c(covariate)
-      return(covar)
-    })
-    covariate.pvals.df <- do.call("cbind", covariate.pvals)
-    rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                          rownames(metab)[i], sep="__")
     
     term.coefficient <- rownames(mlin$coefficients)
     index.coefficient <-  grep('m:type', term.coefficient)
@@ -601,7 +621,17 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, contin
     list.pvals[[i]] <-  p.val.vector
     list.coefficients[[i]] <- coefficient.vector
     list.rsquared[[i]] <- r.squared.vector
-    list.covariate.pvals[[i]] <- covariate.pvals.df
+    
+    if(save.covar.pvals == TRUE){
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                            rownames(metab)[i], sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
+      list.covariate.pvals[[i]] <- covariate.pvals.df
+    }
   }
   mat.pvals <- do.call(rbind, list.pvals)
   mat.coefficients <- do.call(rbind, list.coefficients)

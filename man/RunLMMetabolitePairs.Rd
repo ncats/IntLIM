@@ -4,7 +4,13 @@
 \alias{RunLMMetabolitePairs}
 \title{Function that runs linear models and returns interaction p-values for all metabolite pairs.}
 \usage{
-RunLMMetabolitePairs(incommon, type = NULL, covar = NULL, continuous = FALSE)
+RunLMMetabolitePairs(
+  incommon,
+  type = NULL,
+  covar = NULL,
+  continuous = FALSE,
+  save.covar.pvals
+)
 }
 \arguments{
 \item{incommon}{MultiDataSet object (output of ReadData()) with gene}
@@ -15,6 +21,9 @@ Only 2 categories are currently supported.}
 \item{covar}{vector of additional vectors to consider}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
+
+\item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
+which can be analyzed later but will also lengthen computation time.}
 }
 \description{
 Function that runs linear models and returns interaction p-values for all metabolite pairs.

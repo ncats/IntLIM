@@ -12,6 +12,8 @@
 #' @param class.covar Describing whether additional variables are 'numeric' or 'categorial'
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time. The default is FALSE.
 #' 
 #' @return IntLimModel object with model results
 #'
@@ -23,7 +25,9 @@
 #' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
 #' }
 #' @export
-RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, class.covar=NULL, continuous = FALSE, metabolite.pairs=FALSE){
+RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
+                      class.covar=NULL, continuous = FALSE, metabolite.pairs=FALSE,
+                      save.covar.pvals=FALSE){
 
 
     if (class(inputData) != "MultiDataSet") {
@@ -36,14 +40,11 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, cla
     }
     if (is.null(stype)) {stop("Please set the variable type (e.g. sample group)")}
 
-#    incommon<-MultiDataSet::commonSamples(inputData)
-#    mp <- as.character(Biobase::pData(incommon[["metabolite"]])[,stype])
-#    gp <- as.character(Biobase::pData(incommon[["expression"]])[,stype])
-
     incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
 
     if(!continuous & length(unique(stats::na.omit(incommon$p))) != 2) {
-	    stop(paste("IntLim currently requires only two categories.  Make sure the column",stype,"only has two unique values"))
+	    stop(paste("IntLim currently requires only two categories.  Make sure the 
+	               column",stype,"only has two unique values"))
     }
 
     print("Running the analysis on")
@@ -53,10 +54,12 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, cla
 
     myres <- NULL
     if(!metabolite.pairs){
-        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, continuous = continuous)
+        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+                       continuous = continuous, save.covar.pvals)
     }
     else{
-        myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, continuous = continuous)
+        myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
+                                      continuous = continuous, save.covar.pvals)
     }
     print(proc.time() - ptm)
     myres@stype=stype

@@ -372,8 +372,12 @@ DistPvalues<- function(IntLimResults,breaks=100) {
 #' }
 #' @export
 PValueBoxPlots<- function(IntLimResults) {
-  par(mar=c(8, 4.1, 4.1, 2.1))
-  boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
+  if(length(IntLimResults@covariate.pvalues) == 0){
+    print("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
+  }else{
+    par(mar=c(8, 4.1, 4.1, 2.1))
+    boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
+  }
 }
 
 #' Visualize the distribution of unadjusted p-values from linear models
