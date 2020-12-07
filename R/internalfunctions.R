@@ -710,15 +710,14 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
 #' @return vector with numeric cutoffs
 getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercentile){
 
-  if(interactionCoeffPercentile > 0.5) {
-    stop("interactionCoeffPercentile parameter cannot be larger than 50th pecentile")
+  if(interactionCoeffPercentile > 1 || interactionCoeffPercentile < 0) {
+    stop("interactionCoeffPercentile parameter must be between 0 and 1")
   }
-
+  
   #get top and bottom cutoffs (need highest positive and highest negative coeffs)
-  other_half = 1-interactionCoeffPercentile
-  first_half = as.numeric(quantile(tofilter, interactionCoeffPercentile, na.rm = TRUE))
-  second_half = as.numeric(quantile(tofilter, other_half, na.rm = TRUE))
-
-  return(c(first_half, second_half))
+  tofilter_abs = abs(tofilter)
+  abs_cutoff = as.numeric(quantile(tofilter_abs, interactionCoeffPercentile, na.rm = TRUE))
+  
+  return(c(0 - abs_cutoff, abs_cutoff))
 
 }

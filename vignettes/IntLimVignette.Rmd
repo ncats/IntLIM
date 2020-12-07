@@ -171,13 +171,13 @@ IntLIM::PValueBoxPlots(IntLimResults = myres.mm.continuous)
 
 The __InteractionCoefficientGraph()__ function allows the user to observe the interaction coefficients of all models, sorted in ascending order.
 ```{r}
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, interactionCoeffPercentile = 0.9)
 IntLIM::InteractionCoefficientGraph(inputResults = myres.mm, independent.var.type = "metabolite",
-                                    outcome = "metabolite")
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.continuous)
+                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.continuous, interactionCoeffPercentile = 0.9)
 IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.continuous, 
                                     independent.var.type = "metabolite", 
-                                    outcome = "metabolite")
+                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
 ```
 
 The __MarginalEffectsGraph()__ function allows the user to observe the marginal effects of phenotype for a given gene and metabolite.
