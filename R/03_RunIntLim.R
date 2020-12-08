@@ -14,6 +14,8 @@
 #' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time. The default is FALSE.
+#' @param independent.var.type 'metabolite' or 'gene' must be set as independent variable
+#' (default is 'metabolite')
 #' 
 #' @return IntLimModel object with model results
 #'
@@ -27,7 +29,7 @@
 #' @export
 RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
                       class.covar=NULL, continuous = FALSE, metabolite.pairs=FALSE,
-                      save.covar.pvals=FALSE){
+                      save.covar.pvals=FALSE, independent.var.type="gene"){
 
 
     if (class(inputData) != "MultiDataSet") {
@@ -53,13 +55,23 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
     ptm <- proc.time()
 
     myres <- NULL
-    if(!metabolite.pairs){
+    if(independent.var.type == "gene" && outcome == "metabolite"){
         myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
-                       continuous = continuous, save.covar.pvals)
-    }
-    else{
+                       continuous = continuous, save.covar.pvals=save.covar.pvals)
+    }else if(independent.var.type == "metabolite" && outcome == "gene"){
+        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+                       continuous = continuous, save.covar.pvals=save.covar.pvals)
+    }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
         myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
-                                      continuous = continuous, save.covar.pvals)
+                                      continuous = continuous, save.covar.pvals=
+                                          save.covar.pvals)
+    }else if(independent.var.type == "gene" && outcome == "gene"){
+        myres <- RunLMGenePairs(incommon,type=incommon$p,covar=covar, 
+                                continuous = continuous, save.covar.pvals = 
+                                    save.covar.pvals)
+    }else{
+        print(paste("Error! independent.var.type and outcome.type must both be either",
+        "gene or metabolite in RunIntLim."))
     }
     print(proc.time() - ptm)
     myres@stype=stype

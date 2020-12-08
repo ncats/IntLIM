@@ -716,6 +716,127 @@ PlotGMPair<- function(inputData,stype=NULL,geneName,metabName,palette = "Set1",
     hc
 }
 
+#' scatter plot of metabolite-gene pairs (based on user selection)
+#'
+#' @import magrittr
+#' @import highcharter
+#'
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param stype category to color-code by
+##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
+##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
+#' @param geneName string of select geneName
+#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
+#' in Shiny/Knittr (F)
+#' @param metabName string of select metabName
+#' @return a highcharter object
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' PlotGMPair(mydata,stype="PBO_vs_Leukemia","DLG4","(p-Hydroxyphenyl)lactic acid")
+#'
+#' }
+#' @export
+PlotMGPair<- function(inputData,stype=NULL,metabName,geneName,palette = "Set1",
+                      viewer=T) {
+  
+  if(is.null(stype)) {
+    stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
+  }
+  if (length(palette) == 2) {
+    cols <- c(palette)
+  } else if (length(palette) == 1) {
+    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+  } else {
+    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
+  }
+  
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  
+  incommon <- getCommon(inputData,stype)
+  
+  if(is.null(stype)) {
+    stop("A category to colorcode by (e.g. stype) must be provided")
+  } else if (length(intersect(colnames(Biobase::pData(inputData[["metabolite"]])),stype))!=1) {
+    stop(paste0("You provided ",stype, "as your stype variable but it does not exist in your data"))
+  } else {
+    mytypes <- incommon$p
+  }
+  
+  gene<-incommon$gene
+  if(length(which(rownames(gene)==geneName))>0) {
+    sGene<-gene[geneName,]
+  } else {
+    stop(paste0("The gene ",geneName," was not found in your data"))
+  }
+  
+  metab<-incommon$metab
+  if(length(which(rownames(metab)==metabName))>0) {
+    sMetab<-as.numeric(metab[metabName,])
+  } else {
+    stop(paste0("The metabolite ",metabName," was not found in your data"))
+  }
+  
+  if(length(unique(mytypes))!=2) {
+    stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
+  }
+  
+  mycols <- as.character(mytypes)
+  mycols[which(mytypes==unique(mytypes)[1])] <- cols[1]
+  mycols[which(mytypes==unique(mytypes)[2])] <- cols[2]
+  
+  data<-data.frame(x=sMetab,y=sGene,z=colnames(gene),label=mytypes,color=mycols)
+  
+  # Get points to draw the lines for each phenotype by hand
+  
+  uniqtypes=as.character(unique(mytypes))
+  
+  # Starting with phenotype 1, get min and max x values constrained to the values of y
+  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
+  # when slopes are really steep (abline does this automatically but not highcharter)
+  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
+    y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
+    min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
+    max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
+    
+    m1<-stats::glm(y ~ x)
+    line1<-data.frame(x=c(max,min),
+                      y=c(stats::predict(m1,data.frame(x=c(max,min)))))
+    return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
+  }
+  
+  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
+  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
+  
+  ds <- highcharter::list_parse(data)
+  #cols=c("blue","pink")
+  
+  hc <- highcharter::highchart(width = 350, height = 350 ) %>%
+    highcharter::hc_title(text=paste(metabName,' vs. ', geneName, sep = '')) %>%
+    highcharter::hc_xAxis(title=list(text=metabName)) %>%
+    highcharter::hc_yAxis(title=list(text=geneName)) %>%
+    hc_chart(zoomType = "xy") %>%
+    highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
+                               tooltip = list(headerFormat="",
+                                              pointFormat=paste("{point.label}","{point.z}")),
+                               showInLegend=FALSE)
+  
+  hc <- hc %>%
+    highcharter::hc_add_series(name = uniqtypes[1],
+                               data=line1,type='line',#name=sprintf("regression line %s",type1),
+                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
+    highcharter::hc_add_series(name = uniqtypes[2],
+                               data=line2,type='line',#name=sprintf("regression line %s",type2),
+                               color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
+  
+  hc
+}
+
 #' scatter plot of metabolite-metabolite pairs (based on user selection)
 #'
 #' @import magrittr
@@ -839,6 +960,129 @@ PlotMMPair<- function(inputData,stype=NULL,metab1Name,metab2Name,palette = "Set1
   hc
 }
 
+#' scatter plot of metabolite-metabolite pairs (based on user selection)
+#'
+#' @import magrittr
+#' @import highcharter
+#'
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param stype category to color-code by
+##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
+##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
+#' @param gene1Name string of select gene1Name
+#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
+#' in Shiny/Knittr (F)
+#' @param gene2Name string of select gene2Name
+#' @return a highcharter object
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' PlotMMPair(mydata,stype="PBO_vs_Leukemia","arginine","(p-Hydroxyphenyl)lactic acid")
+#'
+#' }
+#' @export
+PlotGGPair<- function(inputData,stype=NULL,gene1Name,gene2Name,palette = "Set1",
+                      viewer=T) {
+  
+  if(is.null(stype)) {
+    stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
+  }
+  if (length(palette) == 2) {
+    cols <- c(palette)
+  } else if (length(palette) == 1) {
+    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+  } else {
+    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
+  }
+  
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  
+  incommon <- getCommon(inputData,stype)
+  
+  if(is.null(stype)) {
+    stop("A category to colorcode by (e.g. stype) must be provided")
+  } else if (length(intersect(colnames(Biobase::pData(inputData[["metabolite"]])),stype))!=1) {
+    stop(paste0("You provided ",stype, "as your stype variable but it does not exist in your data"))
+  } else {
+    mytypes <- incommon$p
+  }
+  
+  gene<-incommon$gene
+  if(length(which(rownames(gene)==gene1Name))>0) {
+    sGene1<-as.numeric(gene[gene1Name,])
+  } else {
+    stop(paste0("The gene ",gene1Name," was not found in your data"))
+  }
+  
+  gene<-incommon$gene
+  if(length(which(rownames(gene)==gene2Name))>0) {
+    sGene2<-as.numeric(gene[gene2Name,])
+  } else {
+    stop(paste0("The gene ",gene2Name," was not found in your data"))
+  }
+  
+  if(length(unique(mytypes))!=2) {
+    stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
+  }
+  
+  mycols <- as.character(mytypes)
+  mycols[which(mytypes==unique(mytypes)[1])] <- cols[1]
+  mycols[which(mytypes==unique(mytypes)[2])] <- cols[2]
+  
+  data<-data.frame(x=sGene1,y=sGene2,z=colnames(gene),label=mytypes,color=mycols)
+  
+  # Get points to draw the lines for each phenotype by hand
+  
+  uniqtypes=as.character(unique(mytypes))
+  
+  # Starting with phenotype 1, get min and max x values constrained to the values of y
+  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
+  # when slopes are really steep (abline does this automatically but not highcharter)
+  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
+    y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
+    min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
+    max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
+    
+    m1<-stats::glm(y ~ x)
+    line1<-data.frame(x=c(max,min),
+                      y=c(stats::predict(m1,data.frame(x=c(max,min)))))
+    return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
+  }
+  
+  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
+  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
+  
+  ds <- highcharter::list_parse(data)
+  
+  #cols=c("blue","pink")
+  
+  hc <- highcharter::highchart(width = 350, height = 350 ) %>%
+    highcharter::hc_title(text=paste(gene1Name,' vs. ', gene2Name, sep = '')) %>%
+    highcharter::hc_xAxis(title=list(text=gene1Name)) %>%
+    highcharter::hc_yAxis(title=list(text=gene2Name)) %>%
+    hc_chart(zoomType = "xy") %>%
+    highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
+                               tooltip = list(headerFormat="",
+                                              pointFormat=paste("{point.label}","{point.z}")),
+                               showInLegend=FALSE)
+  
+  
+  hc <- hc %>%
+    highcharter::hc_add_series(name = uniqtypes[1],
+                               data=line1,type='line',#name=sprintf("regression line %s",type1),
+                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
+    highcharter::hc_add_series(name = uniqtypes[2],
+                               data=line2,type='line',#name=sprintf("regression line %s",type2),
+                               color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
+  
+  hc
+}
+
 
 #' 'volcano' plot (difference in correlations vs p-values)
 #' of all gene-metabolite pairs
@@ -928,6 +1172,52 @@ pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=1000
   graphics::abline(v=c(diffcorr,-diffcorr),lty=2,col="blue")
 }
 
+#' 'volcano' plot (difference in correlations vs p-values)
+#' of all gene-gene pairs
+#'
+#' @param inputResults IntLimResults object with model results (output of RunIntLim())
+#' @param inputData MultiDataSet object (output of ReadData()) with gene abundance,
+#' @param nrpoints number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)
+#' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
+#' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
+#' @return a smoothScatter plot
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
+#' pvalCorrVolcano(inputResults=myres,inputData=mydata)
+#' }
+#' @export
+pvalCorrVolcanoGenePairs <- function(inputResults, inputData,nrpoints=10000,
+                                     diffcorr=0.5,pvalcutoff=0.05){
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  if(class(inputResults) != "IntLimResults") {
+    stop("input data is not a IntLim class")
+  }
+  incommon <- getCommon(inputData,inputResults@stype)
+  p <- incommon$p
+  
+  if (length(unique(p)) !=2){
+    stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
+               with more than two categories."))
+  }
+  volc.results <- IntLIM::ProcessResultsGenePairs(inputResults,  inputData,
+                                                        diffcorr = 0, pvalcutoff = 1)
+  volc.table <- volc.results@filt.results
+  Corrdiff <- volc.table[,4] - volc.table[,3]
+  pval <- -log10(volc.table$FDRadjPval)
+  graphics::smoothScatter(x = Corrdiff, pval, xlab = 'Difference in Correlation between Phenotypes',
+                          ylab = '-log10(FDR-adjusted p-value)', nrpoints=nrpoints,
+                          main = 'Volcano Plot')
+  graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
+  graphics::abline(v=c(diffcorr,-diffcorr),lty=2,col="blue")
+}
+
 #' Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
 #' for the gene-metabolite pair
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
@@ -1000,6 +1290,15 @@ InteractionCoefficientGraph<-function(inputResults,
       plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
            col=toplot_sort$color, xlab = "Metabolite Pairs", ylab = 
              "Interaction Coefficient", pch=16)
+    }
+    else if(independent.var.type == "gene" && outcome == "gene"){
+      toplot_sort = toplot_sort[which(!is.na(toplot_sort$interaction_coeff)),]
+      plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
+           col=toplot_sort$color, xlab = "Gene Pairs", ylab = 
+             "Interaction Coefficient", pch=16)
+    }
+    else{
+      stop("Error! outcome and independent.var.type must each be one of the following: gene, metabolite.")
     }
     
 }
@@ -1129,6 +1428,65 @@ MarginalEffectsGraphDataframeMetabolitePairs<-function(inputResults, inputData,
   return(forglm)
 }
 
+#' Creates a dataframe of the marginal effect of phenotype
+#'
+#' @import stats
+#' @import margins
+#'
+#' @param inputResults IntLimResults object with model results (output of RunIntLim())
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
+#' @param geneOfInterest1 outcome gene in gene pair
+#' @param geneOfInterest2 independent gene in gene pair
+#' @return dataframe for further analysis
+#' @export
+MarginalEffectsGraphDataframeGenePairs<-function(inputResults, inputData, 
+                                                 geneOfInterest1, 
+                                                 geneOfInterest2){
+  
+  if (class(inputData) != "MultiDataSet") {
+    stop("input data is not a MultiDataSet class")
+  }
+  if(class(inputResults) != "IntLimResults") {
+    stop("input data is not a IntLim class")
+  }
+  
+  #get covariates
+  covariates = as.character(inputResults@covar$covariate)
+  covariates_class = as.character(inputResults@covar$class.var)
+  
+  #get dataframes
+  if(length(covariates) == 0){
+    incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+  }else{
+    incommon <- getCommon(inputData,inputResults@stype,covar=covariates,class.covar=covariates_class)
+  }
+  pheno <- incommon$p
+  gene <- incommon$gene
+  
+  #get two metabolites
+  gene1_data = gene[geneOfInterest1,]
+  gene2_data = gene[geneOfInterest2,]
+  
+  #Add phenotype and metabolite data for glm
+  forglm  = data.frame(row.names = 1:length(gene1_data))
+  forglm$g = as.numeric(gene1_data)
+  forglm$type = pheno
+  forglm$Y = as.numeric(gene2_data)
+  
+  
+  if (!is.null(covariates)) {
+    
+    #Add all covariates to dataframe for glm()
+    i=3
+    for(each in covariates){
+      names = colnames(forglm)
+      i = i+1
+      forglm[,i] = incommon$covar_matrix[,each]
+      colnames(forglm) = c(names, each)
+    }
+  }
+  return(forglm)
+}
 
 #' Creates a dataframe of the marginal effect of phenotype
 #' @param dataframe from MarginalEffectsGraphDataframe
@@ -1190,8 +1548,8 @@ hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", 
     }
 }
 
-#' histogram of gene-metabolite pairs
-#' depending upon metabolite or gene
+#' histogram of metabolite-metabolite pairs
+#' depending upon metabolite
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim() and ProcessResults())
 #' @param type 'outcome' or 'independent'.  'outcome' set as default
@@ -1211,7 +1569,7 @@ HistogramMMPairs <- function(inputResults, type = 'outcome', breaks = 50){
   
   x <- inputResults@filt.results
   if(is.null(x)){
-    stop('Please run ProcessResults() before inputting into HistogramGMPairs')
+    stop('Please run ProcessResults() before inputting into HistogramMMPairs')
   }
   if (type == 'outcome'){
     metab1.pairs <- data.frame(table(x$metab1))
@@ -1226,6 +1584,48 @@ HistogramMMPairs <- function(inputResults, type = 'outcome', breaks = 50){
     hist(metab2.pairs.number, 
          main = "Number of metabolite pairs based on independent metabolite", 
          breaks = breaks, xlab = 'Metabolite pairs based on independent metabolite')
+  }else{
+    stop("Only two valid types:  outcome or independent.  Invalid type entered")
+  }
+}
+
+#' histogram of gene-gene pairs
+#' depending upon gene
+#'
+#' @param inputResults IntLimResults object with model results (output of RunIntLim() 
+#' and ProcessResults())
+#' @param type 'outcome' or 'independent'.  'outcome' set as default
+#' @param breaks Number of breaks selected for histogram
+#'
+#' @examples
+#' \dontrun{
+#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
+#' csvfile <- file.path(dir, "NCItestinput.csv")
+#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
+#' myres <- ProcessResults(inputResults=myres,inputData=mydata)
+#' HistogramGMPairs(inputResults=myres)
+#' }
+#' @export
+HistogramGGPairs <- function(inputResults, type = 'outcome', breaks = 50){
+  
+  x <- inputResults@filt.results
+  if(is.null(x)){
+    stop('Please run ProcessResults() before inputting into HistogramGGPairs')
+  }
+  if (type == 'outcome'){
+    gene1.pairs <- data.frame(table(x$gene1))
+    gene1.pairs.number <- as.vector(gene1.pairs$Freq)
+    hist(gene1.pairs.number, breaks = breaks, 
+         main = "Number of gene pairs based on outcome gene", 
+         xlab = 'Gene pairs based on outcome gene')
+  }else if (type == 'independent'){
+    
+    gene2.pairs <- data.frame(table(x$gene2))
+    gene2.pairs.number <- as.vector(gene2.pairs$Freq)
+    hist(gene2.pairs.number, 
+         main = "Number of gene pairs based on independent gene", 
+         breaks = breaks, xlab = 'Gene pairs based on independent gene')
   }else{
     stop("Only two valid types:  outcome or independent.  Invalid type entered")
   }

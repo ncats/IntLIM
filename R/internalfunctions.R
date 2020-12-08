@@ -269,7 +269,7 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL,
 
   mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
                               type, covar = covar, covarMatrix = incommon$covar_matrix, 
-                            continuous = continuous, save.covar.pvals)
+                            continuous = continuous, save.covar.pvals = save.covar.pvals)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -319,7 +319,8 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
   
   mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
                                              covar, covarMatrix = incommon$covar_matrix, 
-                                           continuous = continuous, save.covar.pvals)
+                                           continuous = continuous, save.covar.pvals=
+                                             save.covar.pvals)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -330,6 +331,53 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
   return(myres)
 }
 
+#' Function that runs linear models and returns interaction p-values for all gene pairs.
+#'
+#' @include MetaboliteSet_addMetabolite.R
+#' @include AllClasses.R
+#'
+#' @param incommon MultiDataSet object (output of ReadData()) with gene
+#' @param type vector of sample type (by default, it will be used in the interaction term).
+#' Only 2 categories are currently supported.
+#' @param covar vector of additional vectors to consider
+#' @param continuous boolean to indicate whether the data is continuous or discrete
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time
+RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE, 
+                           save.covar.pvals) {
+  gene <- incommon$gene
+  mymessage=""
+  
+  if(!continuous){
+    uniqtypes <- unique(type)
+    if(length(uniqtypes)!=2) {
+      stop("The number of unique categores is not 2.")
+    }
+    
+    gened1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
+    gened2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
+    
+    if(length(which(gened1==0))>0 || length(which(gened2==0))>0) {
+      toremove <- c(which(gened1==0),which(gened2==0))
+      gene <- gene[-toremove,]
+      mymessage <- c(mymessage,paste("Removed",length(toremove),"genes that had",
+      "a standard deviation of 0:"))
+      mymessage <- c(mymessage,rownames(gene)[toremove])
+    }
+  }
+  
+  mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
+                                     covarMatrix = incommon$covar_matrix, 
+                                     continuous = continuous, save.covar.pvals)
+  myres <- methods::new('IntLimResults',
+                        interaction.pvalues=mat.list$mat.pvals,
+                        interaction.adj.pvalues = mat.list$mat.pvalsadj,
+                        interaction.coefficients=mat.list$mat.coefficients,
+                        model.rsquared = mat.list$mat.rsquared,
+                        covariate.pvalues = mat.list$covariate.pvals,
+                        warnings=mymessage)
+  return(myres)
+}
 
 #' Function that runs linear models for one gene vs all metabolites
 #'
@@ -483,6 +531,8 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
     }
     list.pvals <- list()
     list.coefficients <- list()
+    list.rsquared <- list()
+    list.covariate.pvals <- list()
 
     for (i in 1:num) {
       m <- as.numeric(metab[i,])
@@ -497,13 +547,6 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       term.pvals <- rownames(mlin$p.value.coeff)
       index.interac <- grep('m:type', term.pvals)
       p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-      covariate.pvals <- lapply(term.pvals, function(covariate){
-        return(mlin$p.value.coeff[covariate,])
-      })
-      covariate.pvals.df <- do.call("cbind", covariate.pvals)
-      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                            rownames(gene)[i], sep="__")
-      colnames(covariate.pvals.df) <- term.pvals
 
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('m:type', term.coefficient)
@@ -521,7 +564,17 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       list.pvals[[i]] <-  p.val.vector
       list.coefficients[[i]] <- coefficient.vector
       list.rsquared[[i]] <- r.squared.vector
-      list.covariate.pvals[[i]] <- covariate.pvals.df
+      
+      if(save.covar.pvals == TRUE){
+        covariate.pvals <- lapply(term.pvals, function(covariate){
+          return(mlin$p.value.coeff[covariate,])
+        })
+        covariate.pvals.df <- do.call("cbind", covariate.pvals)
+        rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                              rownames(gene)[i], sep="__")
+        colnames(covariate.pvals.df) <- term.pvals
+        list.covariate.pvals[[i]] <- covariate.pvals.df
+      }
     }
   }
   mat.pvals <- do.call(rbind, list.pvals)
@@ -703,6 +756,152 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
   list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
   return(list.mat)
 }
+
+#' Function that runs Linear Models for all pairs of genes
+#' @include AllClasses.R
+#' @param gene metabolite dataset in incommon MultiDataSet object (incommon$gene)
+#' @param type vector of sample type (by default, it will be used in the interaction term).
+#' @param covar vector of additional vectors to consider
+#' @param covarMatrix covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)
+#' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
+#' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
+getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
+                                   save.covar.pvals) {
+  arraydata <- data.frame(gene)
+  num <- nrow(gene)
+  numprog <- round(num*0.1)
+  form.add <- "Y ~ m + type + m:type"
+  if (!is.null(covar)) {
+    len.covar <- length(covar)
+    for (i in 1:len.covar) {
+      form.add <- paste(form.add, '+', covar[i])
+    }
+  }
+  list.pvals <- list()
+  list.coefficients <- list()
+  list.rsquared <- list()
+  list.covariate.pvals <- list()
+  for (i in 1:num) {
+    m <- as.numeric(gene[i, ])
+    if (is.null(covar)) {
+      clindata <- data.frame(m, type)
+    } else {
+      clindata <- data.frame(m, type, covarMatrix)
+    }
+    
+    #change type for continuous data (factor to numeric)
+    if(continuous){
+      clindata[2] <- lapply(clindata[2], as.character)
+      clindata[2] <- lapply(clindata[2], as.numeric)
+    }
+    
+    mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
+                          arraydata = arraydata)
+    term.pvals <- rownames(mlin$p.value.coeff)
+    index.interac <- grep('m:type', term.pvals)
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+    
+    term.coefficient <- rownames(mlin$coefficients)
+    index.coefficient <-  grep('m:type', term.coefficient)
+    coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+    
+    term.rsquared <- rownames(mlin$r.squared.val)
+    r.squared.vector <- as.vector(mlin$r.squared.val)
+    
+    if (numprog != 0){
+      if (i %% numprog == 0) {
+        progX <- round(i/num*100)
+        print(paste(progX,"% complete"))
+      }
+    }
+    list.pvals[[i]] <-  p.val.vector
+    list.coefficients[[i]] <- coefficient.vector
+    list.rsquared[[i]] <- r.squared.vector
+    
+    if(save.covar.pvals == TRUE){
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                            rownames(gene)[i], sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
+      list.covariate.pvals[[i]] <- covariate.pvals.df
+    }
+  }
+  mat.pvals <- do.call(rbind, list.pvals)
+  mat.coefficients <- do.call(rbind, list.coefficients)
+  mat.rsquared <- do.call(rbind, list.rsquared)
+  
+  # adjust p-values
+  row.pvt <- dim(mat.pvals)[1]
+  col.pvt <- dim(mat.pvals)[2]
+  myps <- as.vector(mat.pvals)
+  mypsadj <- stats::p.adjust(myps, method = 'fdr')
+  mat.pvalsadj <- matrix(mypsadj, row.pvt, col.pvt)
+  rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(gene)
+  colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(gene)
+  rownames(mat.coefficients) <- rownames(gene)
+  colnames(mat.coefficients) <- rownames(gene)
+  rownames(mat.rsquared) <- rownames(gene)
+  colnames(mat.rsquared) <- rownames(gene)
+  
+  # Find locations where the upper triangular value is higher than the lower triangular.
+  mat.pvals.t <- t(mat.pvals)
+  mat.pvalsadj.t <- t(mat.pvalsadj)
+  mat.coefficients.t <- t(mat.coefficients)
+  mat.rsquared.t <- t(mat.rsquared)
+  where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
+  
+  # Replace those locations with values from the lower triangular.
+  mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
+  mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
+  mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
+  mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
+  covariate.pvals <- do.call(rbind, list.covariate.pvals)
+  
+  # Remove the highest p-values and store the result in the upper triangular.
+  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
+    ret_val = FALSE
+    pieces = strsplit(name, "__")[[1]]
+    m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
+                                                   fixed = TRUE) == TRUE)]
+    pval_1 = covariate.pvals[name,m_type]
+    pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
+    if(pieces[1] == pieces[2]){
+      ret_val = TRUE
+    }
+    else if(pval_2 < pval_1){
+      ret_val = TRUE
+    }
+    else if(pval_2 == pval_1){
+      pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
+      pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
+                                                               pieces[1], 
+                                                               sep = "__"))
+      if(pos_pval_1 > pos_pval_2){
+        ret_val = TRUE
+      }
+    }
+    return(ret_val)
+  }))
+  covariate.pvals = covariate.pvals[which(should_remove == FALSE),]
+  mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
+  mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
+  mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
+  mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
+  
+  list.mat <- list()
+  list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
+  list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
+  list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
+  list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
+  list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
+  return(list.mat)
+}
+
 
 #' Function that gets numeric cutoffs from percentile
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))

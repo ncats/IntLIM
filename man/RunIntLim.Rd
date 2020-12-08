@@ -12,7 +12,8 @@ RunIntLim(
   class.covar = NULL,
   continuous = FALSE,
   metabolite.pairs = FALSE,
-  save.covar.pvals = FALSE
+  save.covar.pvals = FALSE,
+  independent.var.type = "gene"
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ in the interaction term). Only 2 categories are currently supported.}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time. The default is FALSE.}
+
+\item{independent.var.type}{'metabolite' or 'gene' must be set as independent variable
+(default is 'metabolite')}
 }
 \value{
 IntLimModel object with model results
