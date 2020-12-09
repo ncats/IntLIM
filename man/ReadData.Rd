@@ -4,8 +4,13 @@
 \alias{ReadData}
 \title{Read in CSV file}
 \usage{
-ReadData(inputFile, metabid = NULL, geneid = NULL, logmetab = FALSE,
-  loggene = FALSE)
+ReadData(
+  inputFile,
+  metabid = NULL,
+  geneid = NULL,
+  logmetab = FALSE,
+  loggene = FALSE
+)
 }
 \arguments{
 \item{inputFile}{input file in CSV format (see Despcription)}
