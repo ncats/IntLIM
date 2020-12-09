@@ -17,6 +17,7 @@ Imports:
     shiny,
     shinydashboard,
     shinyjs,
+    shinyFiles,
     rmarkdown,
     Biobase,
     MultiDataSet,
