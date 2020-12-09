@@ -6,42 +6,44 @@ Authors@R: c(
  person("Jalal", "Siddiqui", email = "Jalal.Siddiqui@osumc.edu", role="aut"),
  person("Shunchao", "Wang", email="shunchao.wang@osumc.edu", role="aut"),
  person("Rohith", "Vanam", email="rohith.vanam@osumc.edu", role="aut"),
- person("Ewy", "Mathe", email="ewy.mathe@osumc.edu", role=c("aut","cre")))
-Maintainer: The package maintainer <ewy.mathe@osumc.edu>
+ person("Tara", "Eicher", email="eicher.33@osu.edu", role="aut"),
+ person("Ewy", "Mathe", email="ewy.mathe@nih.gov", role=c("aut","cre")))
+Maintainer: The package maintainer <ewy.mathe@nih.gov>
 Description: This workflow takes normalized gene expression and metabolite levels, 
   meta-information on genes, metabolites, and samples to identify gene:metabolite pairs 
   that are significantly associated with an outcome (e.g. tumors).
 License: GPL-2
 Depends: R (>= 3.2.0)
 Imports:
+    Biobase,
+    BiocGenerics,
+    GenomicRanges,
+    heatmaply,
+    highcharter,
+    magrittr,
+    margins,
+    methods,
+    MultiDataSet,
+    reshape2,
+    stats
+Suggests:
+    dendextend,
+    dplyr,
+    DT,
+    gplots,
+    htmltools,
+    htmlwidgets,
+    knitr,
+    parallel,
+    plotly,
+    purrr,
+    RColorBrewer,
+    rmarkdown,
     shiny,
     shinydashboard,
     shinyjs,
     shinyFiles,
-    rmarkdown,
-    Biobase,
-    MultiDataSet,
-    methods,
-    reshape2,
-    margins,
-    magrittr,
-    GenomicRanges,
-    htmltools,
-    highcharter,
-    RColorBrewer,
-    parallel,
-    BiocGenerics,
-    tidyr,
-    dplyr,
-    purrr,
-    heatmaply,
-    plotly,
-    DT,
-    gplots,
-    dendextend,
-    htmlwidgets
-Suggests:
-    knitr
+    tidyr
 Encoding: UTF-8
 LazyData: TRUE
 NeedsCompilation: no
