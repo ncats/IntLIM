@@ -35,7 +35,6 @@ if (!requireNamespace("BiocManager", quietly = TRUE)){
   install.packages("BiocManager")
 }
 BiocManager::install("S4Vectors")
-
 BiocManager::install("IRanges")
 BiocManager::install("MultiDataSet")
 ```
