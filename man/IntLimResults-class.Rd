@@ -16,6 +16,8 @@ IntLimResults class
 
 \item{\code{interaction.coefficients}}{matrix of interaction coefficients}
 
+\item{\code{covariate.coefficients}}{data frame of coefficients for each covariate}
+
 \item{\code{covariate.pvalues}}{data frame of p-values for each covariate}
 
 \item{\code{model.rsquared}}{matrix of r-squared values}
