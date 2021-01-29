@@ -231,8 +231,10 @@ getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL) {
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
+#' @param global boolean to indicate whether to save global co-regulation terms
+#' (rather than interaction terms).
 RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, 
-                  continuous=FALSE, save.covar.pvals) {
+                  continuous=FALSE, save.covar.pvals, global=FALSE) {
     gene <- incommon$gene
     metab <- incommon$metab
     mymessage=""
@@ -267,9 +269,18 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL,
         }
     }
 
-  mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
-                              type, covar = covar, covarMatrix = incommon$covar_matrix, 
-                            continuous = continuous, save.covar.pvals = save.covar.pvals)
+    mat.list <- NULL
+    if(global == FALSE){
+      mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
+                                  type, covar = covar, covarMatrix = incommon$covar_matrix, 
+                                continuous = continuous, save.covar.pvals = save.covar.pvals)
+    }else{
+      mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
+                                  type, covar = covar, covarMatrix = incommon$covar_matrix, 
+                                continuous = continuous, save.covar.pvals = save.covar.pvals,
+                                global = TRUE)
+    }
+  
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -293,8 +304,10 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL,
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
+#' @param global boolean to indicate whether to save global co-regulation terms
+#' (rather than interaction terms).
 RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, 
-                                 continuous=FALSE, save.covar.pvals) {
+                                 continuous=FALSE, save.covar.pvals, global=FALSE) {
   metab <- incommon$metab
   mymessage=""
   
@@ -317,11 +330,18 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
       mymessage <- c(mymessage,rownames(metab)[toremove])
     }
   }
+  if(global == FALSE){
+    mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
+                                               covar, covarMatrix = incommon$covar_matrix, 
+                                             continuous = continuous, save.covar.pvals=
+                                               save.covar.pvals)
+  }else{
+    mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
+                                               covar, covarMatrix = incommon$covar_matrix, 
+                                             continuous = continuous, save.covar.pvals=
+                                               save.covar.pvals, global = TRUE)
+  }
   
-  mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
-                                             covar, covarMatrix = incommon$covar_matrix, 
-                                           continuous = continuous, save.covar.pvals=
-                                             save.covar.pvals)
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -345,8 +365,10 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time
+#' @param global boolean to indicate whether to save global co-regulation terms
+#' (rather than interaction terms).
 RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE, 
-                           save.covar.pvals) {
+                           save.covar.pvals, global=FALSE) {
   gene <- incommon$gene
   mymessage=""
   
@@ -368,9 +390,17 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
     }
   }
   
-  mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
-                                     covarMatrix = incommon$covar_matrix, 
-                                     continuous = continuous, save.covar.pvals)
+  if(global == FALSE){
+    mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
+                                       covarMatrix = incommon$covar_matrix, 
+                                       continuous = continuous, save.covar.pvals)
+  }else{
+    mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
+                                       covarMatrix = incommon$covar_matrix, 
+                                       continuous = continuous, save.covar.pvals,
+                                       global = TRUE)
+  }
+  
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -457,9 +487,11 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
+#' @param global boolean to indicate whether or not to return the p-value and coefficient of the
+#' global co-regulation (as opposed to the differential co-reguation from the interaction term).
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, 
-                          continuous, save.covar.pvals) {
+                          continuous, save.covar.pvals, global = FALSE) {
   if (outcome=="metabolite") {
     arraydata <- data.frame(metab)
     num <- nrow(gene)
@@ -492,10 +524,16 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                             arraydata = arraydata)
       term.pvals <- rownames(mlin$p.value.coeff)
+      
+      # Return the primary p-values and coefficients.
       index.interac <- grep('g:type', term.pvals)
-      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('g:type', term.coefficient)
+      if(global == TRUE){
+        index.interac <- which(term.pvals == "g")
+        index.coefficient <-  which(term.coefficient == "g")
+      }
+      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
       
       term.rsquared <- rownames(mlin$r.squared.val)
@@ -560,11 +598,16 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                             arraydata = arraydata)
       term.pvals <- rownames(mlin$p.value.coeff)
+      
+      # Return the primary p-values and coefficients.
       index.interac <- grep('m:type', term.pvals)
-      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('m:type', term.coefficient)
+      if(global == TRUE){
+        index.interac <- which(term.pvals == "m")
+        index.coefficient <-  which(term.coefficient == "m")
+      }
+      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
       
       term.rsquared <- rownames(mlin$r.squared.val)
@@ -649,9 +692,11 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
+#' @param global boolean to indicate whether or not to return the p-value and coefficient of the
+#' global co-regulation (as opposed to the differential co-reguation from the interaction term).
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, 
-                                         continuous, save.covar.pvals) {
+                                         continuous, save.covar.pvals, global = FALSE) {
   arraydata <- data.frame(metab)
   num <- nrow(metab)
   numprog <- round(num*0.1)
@@ -684,13 +729,18 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = arraydata)
     term.pvals <- rownames(mlin$p.value.coeff)
-    index.interac <- grep('m:type', term.pvals)
-    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     
+    # Return the primary p-values and coefficients.
+    index.interac <- grep('m:type', term.pvals)
     term.coefficient <- rownames(mlin$coefficients)
     index.coefficient <-  grep('m:type', term.coefficient)
+    if(global == TRUE){
+      index.interac <- which(term.pvals == "m")
+      index.coefficient <-  which(term.coefficient == "m")
+    }
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
-    
+
     term.rsquared <- rownames(mlin$r.squared.val)
     r.squared.vector <- as.vector(mlin$r.squared.val)
     
@@ -809,9 +859,11 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
+#' @param global boolean to indicate whether or not to return the p-value and coefficient of the
+#' global co-regulation (as opposed to the differential co-reguation from the interaction term).
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
-                                   save.covar.pvals) {
+                                   save.covar.pvals, global = FALSE) {
   arraydata <- data.frame(gene)
   num <- nrow(gene)
   numprog <- round(num*0.1)
@@ -844,11 +896,16 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = arraydata)
     term.pvals <- rownames(mlin$p.value.coeff)
-    index.interac <- grep('m:type', term.pvals)
-    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     
+    # Return the primary p-values and coefficients.
+    index.interac <- grep('m:type', term.pvals)
     term.coefficient <- rownames(mlin$coefficients)
     index.coefficient <-  grep('m:type', term.coefficient)
+    if(global == TRUE){
+      index.interac <- which(term.pvals == "m")
+      index.coefficient <-  which(term.coefficient == "m")
+    }
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
     
     term.rsquared <- rownames(mlin$r.squared.val)
