@@ -302,7 +302,145 @@ OutputResults(inputResults=myres.gg,filename="~/MyResults.gg.continuous.csv")
 A Shiny App embedded in the package provides a user friendly interface for running IntLim (https://shiny.rstudio.com).  This can be run by calling __runIntLIMApp()__ below. 
 
 ```{r eval=FALSE}
+if(!require(shiny)){
+  install.packages("shiny")
+}
+library(shiny)
 runIntLIMApp()
+```
+
+##Run Global Co-Regulation
+
+The linear models are run by the __RunGlobalCoRegulation()__ function.  The __stype__ command allows the user to select a column from the sample meta data for the two categories to be compared (two cancer types, tumor vs. non-tumor, etc).  Currently, IntLIM only supports comparison of two categories (__"PBO_vs_Leukemia"__ is selected). The resulting object from the analysis is an IntLimResults object containing slots for un-adjusted and False Discovery Rate (FDR)-adjusted p-values for the “g” co-regulation coefficient.  A significant FDR-adjusted p-value implies that the slope of gene-metabolite association is independent of phenotype.  The __RunGlobalCoRegulation()__ function is based heavily on the MultiLinearModel functions developed for the ClassComparison package part of oompa (http://oompa.r-forge.r-project.org).  
+
+```{r}
+myres.gm.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
+myres.mm.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
+myres.mg.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "gene", independent.var.type = "metabolite")
+myres.gg.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="PBO_vs_Leukemia", outcome = "gene", independent.var.type = "gene")
+
+myres.gm.continuous.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
+myres.mm.continuous.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
+myres.gg.continuous.global <- IntLIM::RunGlobalCoRegulation(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE,  outcome = "gene", independent.var.type = "gene")
+```
+
+The __DistPValues()__ function allows the user to observe a histogram of the p-values prior to adjustment 
+
+```{r}
+IntLIM::DistPvalues(IntLimResults = myres.gm.global)
+IntLIM::DistPvalues(IntLimResults = myres.mm.global)
+IntLIM::DistPvalues(IntLimResults = myres.mg.global)
+IntLIM::DistPvalues(IntLimResults = myres.gg.global)
+
+IntLIM::DistPvalues(IntLimResults = myres.gm.continuous.global)
+IntLIM::DistPvalues(IntLimResults = myres.mm.continuous.global)
+IntLIM::DistPvalues(IntLimResults = myres.gg.continuous.global)
+```
+
+The __DistRSquared()__ function allows the user to observe a histogram of the r-squared values.
+```{r}
+IntLIM::DistRSquared(IntLimResults = myres.gm.global)
+IntLIM::DistRSquared(IntLimResults = myres.mm.global)
+IntLIM::DistRSquared(IntLimResults = myres.mg.global)
+IntLIM::DistRSquared(IntLimResults = myres.gg.global)
+
+IntLIM::DistRSquared(IntLimResults = myres.gm.continuous.global)
+IntLIM::DistRSquared(IntLimResults = myres.mm.continuous.global)
+IntLIM::DistRSquared(IntLimResults = myres.gg.continuous.global)
+```
+
+The __PValueBoxPlots()__ function allows the user to observe the p-value distributions of all covariates in the linear models prior to adjustment.
+Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when running __RunIntLim__. 
+```{r}
+IntLIM::PValueBoxPlots(IntLimResults = myres.gm.global)
+IntLIM::PValueBoxPlots(IntLimResults = myres.mm.global)
+IntLIM::PValueBoxPlots(IntLimResults = myres.mg.global)
+
+IntLIM::PValueBoxPlots(IntLimResults = myres.gm.continuous.global)
+IntLIM::PValueBoxPlots(IntLimResults = myres.mm.continuous.global)
+```
+
+The __InteractionCoefficientGraph()__ function allows the user to observe the interaction coefficients of all models, sorted in ascending order.
+```{r}
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.global, interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.global, independent.var.type = "metabolite",
+                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.mg.global, independent.var.type = "metabolite",
+                                    outcome = "gene", interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.global, independent.var.type = "gene",
+                                    outcome = "gene", interactionCoeffPercentile = 0.9)
+
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.continuous.global, interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.continuous.global, 
+                                    independent.var.type = "metabolite", 
+                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.continuous.global, 
+                                    independent.var.type = "gene", 
+                                    outcome = "gene", interactionCoeffPercentile = 0.9)
+```
+
+The __MarginalEffectsGraph()__ function allows the user to observe the marginal effects of phenotype for a given gene and metabolite.
+The __MarginalEffectsGraphDataframe()__ function creates the input for __MarginalEffectsGraph()__, given the IntLIM results, the input data, and the gene and metabolite of interest.
+The __MarginalEffectsGraphDataframeMetabolitePairs()__ function is analogous to __MarginalEffectsGraphDataframe()__ for metabolite pairs.
+```{r}
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm.global, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.global, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.mg.global, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.global, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
+
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm.continuous.global, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.continuous.global, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.continuous.global, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
+```
+
+Process the results and filter pairs of genes-metabolites based on adjusted p-values and differences in correlation coefficients between groups 1 and 2.  Then plot heatmap of significant gene-metabolite pairs
+
+##Filter Results (Global Co-Regulation)
+
+The __ProcessResults()__ function allows the user to filter the results by FDR p-values (default set at 0.05) and by the absolute value difference of the gene-metabolite Spearman correlation (default set at 0.50) between the two groups.  The output is a list of gene-metabolite pairs and gene-metabolite Spearman correlations for each of the two groups
+The __ProcessResultsMetabolitePairs()__ function is analogous to __ProcessResults()__ for metabolite pairs.
+Note that the __diffcorr__ and __corrtype__ arguments must be set to __NULL__ for continuous phenotypes.
+
+```{r}
+myres.gm.global <- IntLIM::ProcessResults(inputResults = myres.gm.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
+myres.mm.global <- IntLIM::ProcessResultsMetabolitePairs(inputResults = myres.mm.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
+myres.mg.global <- IntLIM::ProcessResults(inputResults = myres.mg.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
+myres.gg.global <- IntLIM::ProcessResultsGenePairs(inputResults = myres.gg.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
+
+myres.gm.continuous.global <- IntLIM::ProcessResults(inputResults = myres.gm.continuous.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
+myres.mm.continuous.global <- IntLIM::ProcessResultsMetabolitePairs(inputResults = myres.mm.continuous.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
+myres.gg.continuous.global <- IntLIM::ProcessResultsGenePairs(inputResults = myres.gg.continuous.global, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
+```
+
+The __HistogramGMPairs()__ function plots the count of gene-metabolite pairs by either
+gene or metabolite.
+The __HistogramMMPairs()__ function is the analogous function for metabolite pairs.
+```{r}
+IntLIM::HistogramGMPairs(myres.gm.global, type = "gene")
+IntLIM::HistogramGMPairs(myres.gm.global, type = "metabolite")
+IntLIM::HistogramMMPairs(myres.mm.global, type = "outcome")
+IntLIM::HistogramMMPairs(myres.mm.global, type = "independent")
+IntLIM::HistogramGMPairs(myres.mg.global, type = "gene")
+IntLIM::HistogramGMPairs(myres.mg.global, type = "metabolite")
+IntLIM::HistogramGGPairs(myres.gg.global, type = "outcome")
+IntLIM::HistogramGGPairs(myres.gg.global, type = "independent")
+```
+
+Of note, plots are generated using Highcharter (http://jkunst.com/highcharter/) and Plotly (Sievert, et al.) (https://plot.ly), which enables interactive visualization, allowing users to promptly assess the effect of changing parameters on analysis results and accelerating discovery of phenotype-specific gene-metabolite pairs.  This will greatly allow the workflow to be accessible to non-computational biologists.   
+
+The __OutputData()__ and __OutputResults()__ function allows the users to output the data and results of the analyses into zipped CSV files.  
+
+Lastly, various writing functions are implemented.  The __OutputData()__ and __OutputResults()__ function allows the users to output the data and results of the analyses into zipped CSV files.
+
+```{r eval = FALSE}
+IntLIM::OutputData(inputData=inputDatafilt,filename="~/FilteredData.zip")
+OutputResults(inputResults=myres.gm,filename="~/MyResults.gm.global.csv")
+OutputResults(inputResults=myres.mm,filename="~/MyResults.mm.global.csv")
+OutputResults(inputResults=myres.mg,filename="~/MyResults.mg.global.csv")
+OutputResults(inputResults=myres.gg,filename="~/MyResults.gg.global.csv")
+OutputResults(inputResults=myres.gm,filename="~/MyResults.gm.continuous.global.csv")
+OutputResults(inputResults=myres.mm,filename="~/MyResults.mm.continuous.global.csv")
+OutputResults(inputResults=myres.gg,filename="~/MyResults.gg.continuous.global.csv")
 ```
 
 ##References

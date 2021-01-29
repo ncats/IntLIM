@@ -12,7 +12,8 @@ getStatsAllLM(
   covar,
   covarMatrix,
   continuous,
-  save.covar.pvals
+  save.covar.pvals,
+  global = FALSE
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ Only 2 categories are currently supported.}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time.}
+
+\item{global}{boolean to indicate whether or not to return the p-value and coefficient of the
+global co-regulation (as opposed to the differential co-reguation from the interaction term).}
 }
 \value{
 list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)

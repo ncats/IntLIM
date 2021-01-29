@@ -9,7 +9,8 @@ RunLMGenePairs(
   type = NULL,
   covar = NULL,
   continuous = FALSE,
-  save.covar.pvals
+  save.covar.pvals,
+  global = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ Only 2 categories are currently supported.}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time}
+
+\item{global}{boolean to indicate whether to save global co-regulation terms
+(rather than interaction terms).}
 }
 \description{
 Function that runs linear models and returns interaction p-values for all gene pairs.
