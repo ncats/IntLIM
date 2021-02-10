@@ -233,7 +233,13 @@ ProcessResultsMetabolitePairs <- function(inputResults,
   mydat.interac <- inputResults@interaction.coefficients
   mydat.rsq <- inputResults@model.rsquared
   
-  incommon <- getCommon(inputData,inputResults@stype)
+  mytypes <- names(Biobase::assayData(inputData))
+  incommon <- NULL
+  if(any(mytypes == "expression")){
+    incommon <- getCommon(inputData,inputResults@stype)
+  }else{
+    incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "metabolite")
+  }
   p <- incommon$p
   metab <- incommon$metab 
   
@@ -399,7 +405,13 @@ ProcessResultsGenePairs <- function(inputResults,
   mydat.interac <- inputResults@interaction.coefficients
   mydat.rsq <- inputResults@model.rsquared
   
-  incommon <- getCommon(inputData,inputResults@stype)
+  mytypes <- names(Biobase::assayData(inputData))
+  incommon <- NULL
+  if(any(mytypes == "metabolite")){
+    incommon <- getCommon(inputData,inputResults@stype)
+  }else{
+    incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "expression")
+  }
   p <- incommon$p
   gene <- incommon$gene 
   

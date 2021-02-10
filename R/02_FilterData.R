@@ -18,83 +18,154 @@
 #' @export
 FilterData <- function(inputData,geneperc=0,metabperc=0, metabmiss=0) {
 
-    # Check that input is a MultiDataSet
-    if (class(inputData) != "MultiDataSet") {
-	stop("input data is not a MultiDataSet class")
-    }
-    mytypes <- names(Biobase::assayData(inputData))
-    if(!any(mytypes=="expression") || !any(mytypes=="metabolite")) {
-	stop("input data must contain assayData of type 'metabolite' and 'expression.
-	Try reading in the data with the ReadData function")
-    }	
-
+  # Check that input is a MultiDataSet
+  if (class(inputData) != "MultiDataSet") {
+	   stop("input data is not a MultiDataSet class")
+  }
+  mytypes <- names(Biobase::assayData(inputData))
+  filtdata <- NULL
+  if(!any(mytypes=="expression") && !any(mytypes=="metabolite")) {
+	   stop("input data must contain assayData of type 'metabolite' or 'expression'.
+	     Try reading in the data with the ReadData function")
+  }	else if(any(mytypes == "expression") && any(mytypes == "metabolite")){
     if(!is.null(geneperc) && geneperc > 1) {stop("geneperc parameter must be between 0 and 1")}
     if(!is.null(metabperc) && metabperc > 1) {stop("metabperc parameter must be between 0 and 1")}
     if(!is.null(metabmiss) && metabmiss > 1) {stop("metabmiss parameter must be between 0 and 1")}
-
-
+  
     # Check that at least one parameter is not null
     len <- length(c(geneperc,metabperc,metabmiss))
     if ((geneperc+metabperc+metabmiss) ==0) {
-        warning("All filtering parameters are NULL so the data remains unfiltered")
-	return(inputData)
+      warning("All filtering parameters are NULL so the data remains unfiltered")
+      filtdata <- inputData
+    } else {
+      mygenes <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
+      mymetab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
+      if(geneperc > 0) {
+        if(geneperc>1) {geneperc=geneperc}
+        mymean <- as.numeric(apply(mygenes,1, function(x) mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,geneperc))
+        mygenes <- mygenes[keepers,]
+        pgenes <- Biobase::pData(inputData[["expression"]])
+        fgenes <- Biobase::fData(inputData[["expression"]])[keepers,]
+      } else {
+        print("No gene filtering is applied")
+        mygenes <- mygenes
+        fgenes <- Biobase::fData(inputData[["expression"]])
+      }
+      if(metabperc > 0) {
+        if(metabperc>1) {metabperc=metabperc}
+          mymean <- as.numeric(apply(mymetab,1, function(x) mean(x,na.rm=T)))
+          keepers <- which(mymean > stats::quantile(mymean,metabperc))
+          mymetab <- mymetab[keepers,]
+          fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
+      } else {
+        print("No metabolite filtering by percentile is applied")
+        mymetab <- mymetab
+        fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
+      }
+      if(metabmiss > 0) {
+        missnum <- as.numeric(apply(mymetab,1,function(x) length(which(x==min(x,na.rm=T)))))-1
+        mycut <- metabmiss * ncol(mymetab)
+        keepers <- which(missnum < mycut)
+        mymetab <- mymetab[keepers,]
+        fmetab <- fmetab[keepers,]
+      } else {
+        print("No metabolite filtering by missing values is applied")
+        mymetab <- mymetab
+        fmetab <- fmetab
+      }
+    
+      # Now reconstruct the multidataset object
+      gene.set <- Biobase::ExpressionSet(assayData=mygenes)
+      Biobase::fData(gene.set) <- fgenes
+      Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
+    
+      metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
+                              phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
+                              featureData =  fmetab)
+    
+      multi <- MultiDataSet::createMultiDataSet()
+      multi1 <- MultiDataSet::add_genexp(multi, gene.set)
+      filtdata <- add_metabolite(multi1, metab.set)
+    }
+  }else if(any(mytypes == "expression")){
+    if(!is.null(geneperc) && geneperc > 1) {stop("geneperc parameter must be between 0 and 1")}
+    
+    # Check that at least one parameter is not null
+    len <- length(c(geneperc,metabperc,metabmiss))
+    if (is.null(geneperc)) {
+      warning("All filtering parameters are NULL so the data remains unfiltered")
+      filtdata <- inputData
     }
     else {
-	mygenes <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
-	mymetab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
-	if(geneperc > 0) {
-		if(geneperc>1) {geneperc=geneperc}
-		mymean <- as.numeric(apply(mygenes,1, function(x)
-			mean(x,na.rm=T)))
-		keepers <- which(mymean > stats::quantile(mymean,geneperc))
-		mygenes <- mygenes[keepers,]
-		pgenes <- Biobase::pData(inputData[["expression"]])
-		fgenes <- Biobase::fData(inputData[["expression"]])[keepers,]
-	} else {
-                print("No gene filtering is applied")
-		mygenes <- mygenes
-                fgenes <- Biobase::fData(inputData[["expression"]])
-	}
-	if(metabperc > 0) {
-		if(metabperc>1) {metabperc=metabperc}
-                mymean <- as.numeric(apply(mymetab,1, function(x)
-                        mean(x,na.rm=T)))
-                keepers <- which(mymean > stats::quantile(mymean,metabperc))
-                mymetab <- mymetab[keepers,]
-		fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
-        } else {
-                print("No metabolite filtering by percentile is applied")
-		mymetab <- mymetab
-		fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
-	}
-	if(metabmiss > 0) {
-		missnum <- as.numeric(apply(mymetab,1,function(x) length(which(x==min(x,na.rm=T)))))-1
-		mycut <- metabmiss * ncol(mymetab)
-		keepers <- which(missnum < mycut)
-		mymetab <- mymetab[keepers,]
-		#fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
-		fmetab <- fmetab[keepers,]
-	} else {
-		print("No metabolite filtering by missing values is applied")
-		mymetab <- mymetab
-		#fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
-		fmetab <- fmetab
-	}
-
-	# Now reconstruct the multidataset object
-	gene.set <- Biobase::ExpressionSet(assayData=mygenes)
-        Biobase::fData(gene.set) <- fgenes
-        Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
-        
-	metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
-                phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
-		featureData =  fmetab)
-
-	multi <- MultiDataSet::createMultiDataSet()
-        multi1 <- MultiDataSet::add_genexp(multi, gene.set)
-        filtdata <- add_metabolite(multi1, metab.set)
-
-	return(filtdata)
+      mygenes <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
+      if(geneperc > 0) {
+        if(geneperc>1) {geneperc=geneperc}
+        mymean <- as.numeric(apply(mygenes,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,geneperc))
+        mygenes <- mygenes[keepers,]
+        pgenes <- Biobase::pData(inputData[["expression"]])
+        fgenes <- Biobase::fData(inputData[["expression"]])[keepers,]
+      } else {
+        print("No gene filtering is applied")
+        mygenes <- mygenes
+        fgenes <- Biobase::fData(inputData[["expression"]])
+      }
+      
+      # Now reconstruct the multidataset object
+      gene.set <- Biobase::ExpressionSet(assayData=mygenes)
+      Biobase::fData(gene.set) <- fgenes
+      Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
+      
+      multi <- MultiDataSet::createMultiDataSet()
+      filtdata <- MultiDataSet::add_genexp(multi, gene.set)
     }
+  } else if(any(mytypes == "metabolite")){
+    if(!is.null(metabperc) && metabperc > 1) {stop("metabperc parameter must be between 0 and 1")}
+    if(!is.null(metabmiss) && metabmiss > 1) {stop("metabmiss parameter must be between 0 and 1")}
+    
+    # Check that at least one parameter is not null
+    len <- length(c(metabperc,metabmiss))
+    if ((metabperc+metabmiss) ==0) {
+      warning("All filtering parameters are NULL so the data remains unfiltered")
+      filtdata <- inputData
+    }
+    else {
+      mymetab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
+      if(metabperc > 0) {
+        if(metabperc>1) {metabperc=metabperc}
+        mymean <- as.numeric(apply(mymetab,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,metabperc))
+        mymetab <- mymetab[keepers,]
+        fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
+      } else {
+        print("No metabolite filtering by percentile is applied")
+        mymetab <- mymetab
+        fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
+      }
+      if(metabmiss > 0) {
+        missnum <- as.numeric(apply(mymetab,1,function(x) length(which(x==min(x,na.rm=T)))))-1
+        mycut <- metabmiss * ncol(mymetab)
+        keepers <- which(missnum < mycut)
+        mymetab <- mymetab[keepers,]
+        fmetab <- fmetab[keepers,]
+      } else {
+        print("No metabolite filtering by missing values is applied")
+        mymetab <- mymetab
+        fmetab <- fmetab
+      }
+      
+      # Now reconstruct the multidataset object
+      metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
+                                phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
+                                featureData =  fmetab)
+      
+      multi <- MultiDataSet::createMultiDataSet()
+      filtdata <- add_metabolite(multi, metab.set)
+    }
+  }
+	return(filtdata)
 }
 

@@ -16,105 +16,106 @@
 #' @param loggene T/F
 CreateIntLimObject <- function(genefdata, metabfdata, pdata, geneid, metabid,
 	metabdata, genedata, logmetab=FALSE,loggene=FALSE) {
+  
+  multi <- MultiDataSet::createMultiDataSet()
 
 	# Check that feature data and abundance data metabolites corresponds
-        if (!is.null(metabfdata)) {
-        if(length(which(colnames(metabfdata)=='id'))!=1) {
-                stop(paste("metabid provided",metabid,"does not exist in metabolite meta data file"))} else if
-	(length(intersect(rownames(metabdata),as.character(metabfdata[,metabid])))<nrow(metabdata)){
-                stop("Metabolites in abundance data file and metabolite meta data file are not equal")} else {
-                myind <- as.numeric(lapply(rownames(metabdata),function(x) {
+  if(!is.null(metabdata)){
+    if (!is.null(metabfdata)) {
+      if(length(which(colnames(metabfdata)=='id'))!=1) {
+        stop(paste("metabid provided",metabid,"does not exist in metabolite meta data file"))
+      } else if (length(intersect(rownames(metabdata),as.character(metabfdata[,metabid])))<nrow(metabdata)){
+        stop("Metabolites in abundance data file and metabolite meta data file are not equal")
+      } else {
+        myind <- as.numeric(lapply(rownames(metabdata),function(x) {
                         which(as.character(metabfdata[,'id'])==x)[1]}))
-                        metabpdata<-pdata[myind,,drop=FALSE]}
+                        metabpdata<-pdata[myind,,drop=FALSE]
+      }
+      rownames(metabfdata)=as.character(metabfdata[,'id'])
+    }
 
-	rownames(metabfdata)=as.character(metabfdata[,'id'])
-        }
-
-        # Check that samples data and abundance data samples correspond
-        if(length(intersect(colnames(metabdata),rownames(pdata)))<ncol(metabdata)){
-                stop("All samples in abundance data file must be in metabolite meta data file")
-        } else {
-                myind <- as.numeric(lapply(colnames(metabdata),function(x) {
+    # Check that samples data and abundance data samples correspond
+    if(length(intersect(colnames(metabdata),rownames(pdata)))<ncol(metabdata)){
+      stop("All samples in abundance data file must be in metabolite meta data file")
+    } else {
+      myind <- as.numeric(lapply(colnames(metabdata),function(x) {
                         which(rownames(pdata)==x)[1]}))
                         metabpdata<-pdata[myind,,drop=FALSE]
-        }
+    }
 
-	#new data frames are set for phenoData and featureData
+	  #new data frames are set for phenoData and featureData
+  	metabpdata$id=rownames(metabpdata)
+  	metabphenoData <- Biobase::AnnotatedDataFrame(data = metabpdata)
+  	if (logmetab == TRUE){
+	  	metabdata <- log2(metabdata)
+	  }
 
-
-	metabpdata$id=rownames(metabpdata)
-
-	metabphenoData <- Biobase::AnnotatedDataFrame(data = metabpdata)
-
-	if (logmetab == TRUE){
-		metabdata <- log2(metabdata)
-	}
-
-	if(is.null(metabfdata)) {
-		metabfdata <- data.frame(id = rownames(metabdata),stringsAsFactors=FALSE)
-                rownames(metabfdata) <- metabfdata[,1]
-	}
-	# Make sure order of feature data is the same as the data matrix:
-	myind=as.numeric(lapply(rownames(metabdata),function(x) which(metabfdata[,"id"]==x)))
-        metabfdata <- data.frame(metabfdata[myind,],stringsAsFactors=FALSE)
-	rownames(metabfdata) <- metabfdata[,1]
-	metabfeatureData <- Biobase::AnnotatedDataFrame(data = metabfdata)
-	metab.set <- methods::new("MetaboliteSet",metabData = metabdata,
+	  if(is.null(metabfdata)) {
+		  metabfdata <- data.frame(id = rownames(metabdata),stringsAsFactors=FALSE)
+      rownames(metabfdata) <- metabfdata[,1]
+	  }
+	  # Make sure order of feature data is the same as the data matrix:
+	  myind=as.numeric(lapply(rownames(metabdata),function(x) which(metabfdata[,"id"]==x)))
+    metabfdata <- data.frame(metabfdata[myind,],stringsAsFactors=FALSE)
+	  rownames(metabfdata) <- metabfdata[,1]
+	  metabfeatureData <- Biobase::AnnotatedDataFrame(data = metabfdata)
+	  metab.set <- methods::new("MetaboliteSet",metabData = metabdata,
 		phenoData = metabphenoData, featureData = metabfeatureData)
+	  multi <- add_metabolite(multi, metab.set)
+  }
 
 
 	#####  Now the genes
 	# Check that feature data and gene expression data corresponds
-       if(!is.null(genefdata)) {
-       if(length(which(colnames(genefdata)=="id"))!=1) {
-                stop(paste("geneid provided",geneid,"does not exist in gene meta data file"))
-        } else if(length(intersect(rownames(genedata),as.character(genefdata[,'id']))) < nrow(genedata)){
-                stop("Genes in expression data file and gene meta data file are not equal")
-        } else {
-                myind <- as.numeric(lapply(rownames(genedata),function(x) {
-                        which(as.character(genefdata[,'id'])==x)[1]}))
-                        genepdata<-pdata[myind,,drop=FALSE]
-        }
+  if(!is.null(genedata)){
+    if(!is.null(genefdata)) {
+      if(length(which(colnames(genefdata)=="id"))!=1) {
+        stop(paste("geneid provided",geneid,"does not exist in gene meta data file"))
+      } else if(length(intersect(rownames(genedata),as.character(genefdata[,'id']))) < nrow(genedata)){
+        stop("Genes in expression data file and gene meta data file are not equal")
+      } else {
+        myind <- as.numeric(lapply(rownames(genedata),function(x) {
+          which(as.character(genefdata[,'id'])==x)[1]}))
+        genepdata<-pdata[myind,,drop=FALSE]
+      }
+      
+      rownames(genefdata)=as.character(genefdata[,'id'])
+    }
+    # Check that samples data and abundance data samples correspond
+    if(length(intersect(colnames(genedata),rownames(pdata)))<ncol(genedata)){
+      stop("Samples in expression data file and sample meta data file are not equal")
+    } else {
+      myind <- as.numeric(lapply(colnames(genedata),function(x) {
+        which(rownames(pdata)==x)[1]}))
+      genepdata<-pdata[myind,,drop=FALSE]
+    }
+    
+    #new data frames are set for phenoData and featureData
+    if (loggene == TRUE){
+      genedata <- log2(genedata)
+    }
+    
+    gene.set <- Biobase::ExpressionSet(assayData=as.matrix(genedata))
+    if(is.null(genefdata)) {
+      genefdata <- data.frame(id = rownames(genedata))
+      rownames(genefdata) <- genefdata[,1]
+    }
+    if(length(which(colnames(genefdata)=="chromosome"))==0) {
+      genefdata$chromosome <- rep("chr",nrow(genefdata))}
+    if(length(which(colnames(genefdata)=="start"))==0) {
+      genefdata$start <- rep(0,nrow(genefdata))}
+    if(length(which(colnames(genefdata)=="end"))==0) {
+      genefdata$end <- rep(0,nrow(genefdata))}
+    # Make sure that the order of genefdata is the same as the input data
+    myind=as.numeric(lapply(rownames(genedata),function(x) which(genefdata$id==x)))
+    genefdata <- genefdata[myind,]
+    Biobase::fData(gene.set) <- data.frame(genefdata,stringAsFactors=FALSE)
+    genepdata$id=rownames(genepdata)
+    Biobase::pData(gene.set) <- genepdata
+    multi <- MultiDataSet::add_genexp(multi, gene.set)
+  }
 
-        rownames(genefdata)=as.character(genefdata[,'id'])
-        }
-        # Check that samples data and abundance data samples correspond
-        if(length(intersect(colnames(genedata),rownames(pdata)))<ncol(genedata)){
-                stop("Samples in expression data file and sample meta data file are not equal")
-        } else {
-		myind <- as.numeric(lapply(colnames(genedata),function(x) {
-			which(rownames(pdata)==x)[1]}))
-			genepdata<-pdata[myind,,drop=FALSE]
-	}
-
-        #new data frames are set for phenoData and featureData
-        if (loggene == TRUE){
-                genedata <- log2(genedata)
-        }
-
-        gene.set <- Biobase::ExpressionSet(assayData=as.matrix(genedata))
-	if(is.null(genefdata)) {
-		genefdata <- data.frame(id = rownames(genedata))
-		rownames(genefdata) <- genefdata[,1]
-        }
-	if(length(which(colnames(genefdata)=="chromosome"))==0) {
-		genefdata$chromosome <- rep("chr",nrow(genefdata))}
-	if(length(which(colnames(genefdata)=="start"))==0) {
-	        genefdata$start <- rep(0,nrow(genefdata))}
-	if(length(which(colnames(genefdata)=="end"))==0) {
-	        genefdata$end <- rep(0,nrow(genefdata))}
-	# Make sure that the order of genefdata is the same as the input data
-	myind=as.numeric(lapply(rownames(genedata),function(x) which(genefdata$id==x)))
-	genefdata <- genefdata[myind,]
-	Biobase::fData(gene.set) <- data.frame(genefdata,stringAsFactors=FALSE)
-	genepdata$id=rownames(genepdata)
-	Biobase::pData(gene.set) <- genepdata
-
-
-	multi <- MultiDataSet::createMultiDataSet()
-	multi1 <- MultiDataSet::add_genexp(multi, gene.set)
-	multi2 <- add_metabolite(multi1, metab.set)
-	return(multi2)
+	return(multi)
 }
 
 
@@ -215,7 +216,97 @@ getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL) {
    return(out)
 }
 
+#' Function that returns a list of all data for samples in metabolite or gene dataset.
+#'
+##' @include AllClasses.R
+#'
+#' @import MultiDataSet
+#' @param inputData MultiDataSet object (output of ReadData())
+#' @param stype category to color-code by (can be more than two categories)
+#' @param covar vector of additional variables to be incorporated into model
+#' @param class.covar class of additional variables
+#' @param type either "metabolite" or "expression"
+formatSingleOmicInput <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL,
+                                  type = NULL) {
+  incommon<-inputData
+  p <- NULL
+  analyte <- NULL
+  if(type == "metabolite"){
+    p <- Biobase::pData(incommon[["metabolite"]])
+    analyte <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
+  }else if(type == "expression"){
+    p <- Biobase::pData(incommon[["expression"]])
+    analyte <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
+  }
+  p.0 <- p
+  
+  if(!is.null(stype)) {
+    p <- p[,stype]
+    uniqp <- unique(p)
+    
+    uniqtypes <- unique(p)
+    # Deal with missing values or ""
+    if(length(which(p==""))>0) {
+      new.p <- p[which(p!="")]
+      analyte <- analyte[,which(p!="")]
+    }
+    if(length(which(is.na(p)))>0) {
+      new.p <- p[which(!is.na(p))]
+      analyte <- analyte[,which(!is.na(p))]
+      p <- new.p
+    }
+  }
 
+  if(!is.null(covar)){
+    
+    if (length(covar %in% colnames(p.0)) != sum(covar %in% colnames(p.0))){
+      stop("Additional variable names not in pData")
+    }
+    covar_matrix <- p.0[colnames(analyte),covar, drop = FALSE]
+    na.covar <- which(is.na(covar_matrix) | covar_matrix == '',arr.ind = TRUE)
+    na.covar.list <- unique(rownames(na.covar))
+    new.overall.list <- setdiff(colnames(analyte), na.covar.list)
+    
+    covar_matrix <- covar_matrix[new.overall.list,,drop = FALSE]
+    
+    class.var <- apply(covar_matrix,2,class)
+    
+    analyte <- analyte[,new.overall.list]
+    p <- p.0[new.overall.list,stype]
+    
+    if(!(is.null(class.covar))){
+      
+      if(length(class.covar) != length(covar)){
+        stop("lengths of covar and class.covar not the same")
+      }
+      len.covar <- length(covar)
+      for(i in 1:len.covar){
+        if(class.covar[i] == 'numeric'){
+          
+          covar_matrix[,i] <- as.numeric(covar_matrix[,i])
+          
+        }else{
+          
+          covar_matrix[,i] <- as.factor(as.character(covar_matrix[,i]))
+          
+        }
+      }
+    }
+    
+  }else{
+    covar_matrix <- NULL
+  }
+  
+  # Check that everything is in right order
+  out <- list(p=as.factor(as.character(p)),covar_matrix=covar_matrix)
+  if(type == "metabolite"){
+    out[["metab"]] <- analyte
+  }
+  if(type == "expression"){
+    out[["gene"]] <- analyte
+  }
+  return(out)
+}
 
 #' Function that runs linear models and returns interaction p-values.
 #'
@@ -377,7 +468,7 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
     if(length(uniqtypes)!=2) {
       stop("The number of unique categores is not 2.")
     }
-    
+
     gened1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
     gened2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
     

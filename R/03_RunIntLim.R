@@ -36,14 +36,22 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
         stop("input data is not a MultiDataSet class")
     }
     mytypes <- names(Biobase::assayData(inputData))
-    if(!any(mytypes=="expression") || !any(mytypes=="metabolite")) {
-        stop("input data must contain assayData of type 'metabolite' and 'expression.
+    if(!any(mytypes=="expression") && !any(mytypes=="metabolite")) {
+        stop("input data must contain assayData of type 'metabolite' or 'expression.
         Try reading in the data with the ReadData function")
     }
     if (is.null(stype)) {stop("Please set the variable type (e.g. sample group)")}
 
-    incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
-
+    incommon <- inputData
+    if(any(mytypes == "expression") && any(mytypes == "metabolite")){
+        incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
+    }else{
+        type <- "metabolite"
+        if(any(mytypes == "expression")){
+            type <- "expression"
+        }
+        incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type)
+    }
     if(!continuous & length(unique(stats::na.omit(incommon$p))) != 2) {
 	    stop(paste("IntLim currently requires only two categories.  Make sure the 
 	               column",stype,"only has two unique values"))
@@ -56,19 +64,39 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
 
     myres <- NULL
     if(independent.var.type == "gene" && outcome == "metabolite"){
-        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+        if(any(mytypes=="expression") && any(mytypes=="metabolite")) {
+            myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
                        continuous = continuous, save.covar.pvals=save.covar.pvals)
+        }
+        else{
+            stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
+        }
     }else if(independent.var.type == "metabolite" && outcome == "gene"){
-        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
-                       continuous = continuous, save.covar.pvals=save.covar.pvals)
+        if(any(mytypes=="expression") && any(mytypes=="metabolite")) {
+            myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+                           continuous = continuous, save.covar.pvals=save.covar.pvals)
+        }
+        else{
+            stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
+        }
     }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
-        myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
-                                      continuous = continuous, save.covar.pvals=
-                                          save.covar.pvals)
+        if(any(mytypes=="metabolite")) {
+            myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
+                                          continuous = continuous, save.covar.pvals=
+                                              save.covar.pvals)
+        }
+        else{
+            stop("The metabolite data is missing. Cannot run.\n")
+        }
     }else if(independent.var.type == "gene" && outcome == "gene"){
-        myres <- RunLMGenePairs(incommon,type=incommon$p,covar=covar, 
-                                continuous = continuous, save.covar.pvals = 
-                                    save.covar.pvals)
+        if(any(mytypes=="expression")) {
+            myres <- RunLMGenePairs(incommon,type=incommon$p,covar=covar, 
+                                    continuous = continuous, save.covar.pvals = 
+                                        save.covar.pvals)
+        }
+        else{
+            stop("The gene data is missing. Cannot run.\n")
+        }
     }else{
         print(paste("Error! independent.var.type and outcome.type must both be either",
         "gene or metabolite in RunIntLim."))
@@ -127,13 +155,22 @@ RunGlobalCoRegulation <- function(inputData,stype=NULL,outcome="metabolite", cov
         stop("input data is not a MultiDataSet class")
     }
     mytypes <- names(Biobase::assayData(inputData))
-    if(!any(mytypes=="expression") || !any(mytypes=="metabolite")) {
-        stop("input data must contain assayData of type 'metabolite' and 'expression.
+    if(!any(mytypes=="expression") && !any(mytypes=="metabolite")) {
+        stop("input data must contain assayData of type 'metabolite' or 'expression.
         Try reading in the data with the ReadData function")
     }
     if (is.null(stype)) {stop("Please set the variable type (e.g. sample group)")}
     
-    incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
+    incommon <- inputData
+    if(any(mytypes == "expression") && any(mytypes == "metabolite")){
+        incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
+    }else{
+        type <- "metabolite"
+        if(any(mytypes == "expression")){
+            type <- "expression"
+        }
+        incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type)
+    }
     
     if(!continuous & length(unique(stats::na.omit(incommon$p))) != 2) {
         stop(paste("IntLim currently requires only two categories.  Make sure the 
@@ -147,21 +184,37 @@ RunGlobalCoRegulation <- function(inputData,stype=NULL,outcome="metabolite", cov
     
     myres <- NULL
     if(independent.var.type == "gene" && outcome == "metabolite"){
-        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+        if(any(mytypes=="expression") && any(mytypes=="metabolite")) {
+            myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
                        continuous = continuous, save.covar.pvals=save.covar.pvals,
                        global = TRUE)
+        }else{
+            stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
+        }
     }else if(independent.var.type == "metabolite" && outcome == "gene"){
-        myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+        if(any(mytypes=="expression") && any(mytypes=="metabolite")) {
+            myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
                        continuous = continuous, save.covar.pvals=save.covar.pvals,
                        global = TRUE)
+        }else{
+            stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
+        }
     }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
-        myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
+        if(any(mytypes=="metabolite")) {
+            myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
                                       continuous = continuous, save.covar.pvals=
                                           save.covar.pvals, global = TRUE)
+        }else{
+            stop("The metabolite data is missing. Cannot run.\n")
+        }
     }else if(independent.var.type == "gene" && outcome == "gene"){
-        myres <- RunLMGenePairs(incommon,type=incommon$p,covar=covar, 
+        if(any(mytypes=="expression")){
+            myres <- RunLMGenePairs(incommon,type=incommon$p,covar=covar, 
                                 continuous = continuous, save.covar.pvals = 
                                     save.covar.pvals, global = TRUE)
+        }else{
+            stop("The gene data is missing. Cannot run.\n")
+        }
     }else{
         print(paste("Error! independent.var.type and outcome.type must both be either",
                     "gene or metabolite in RunGlobalCoRegulation"))

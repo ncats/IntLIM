@@ -17,115 +17,129 @@
 #' mydata <- ReadData(csvfile,metabid='id',geneid='id')
 #' PlotDistributions(mydata)
 #' @export
-PlotDistributions <- function(inputData,viewer=T,
-#	palette = c("#C71585", "#00E5EE")) {
-        palette="Set1"){
-      . <- c()
-      if (length(palette) == 2) {
-        cols <- c(palette)
-      }
-      else if (length(palette) == 1) {
-        cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-      }
-      else {
-        stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
-      }
-
-    categ <- c("Genes","Metabolites")
-
-	mygene <- as.data.frame(Biobase::assayDataElement(inputData[["expression"]],'exprs'))
-	toplot <- suppressMessages(reshape2::melt(mygene))
-        df <- dplyr::tibble(value = toplot$value, by = toplot$variable) %>% dplyr::group_by_at("by") %>%
- 	       dplyr::do(data = grDevices::boxplot.stats(.$value))
-#	names(df$data) <- df$by
-#        df$color <- df$by
-	bxps <- purrr::map(df$data, "stats")
-	outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
-            if (length(y$out) > 0)
-                d <- dplyr::tibble(x = x - 1, y = y$out)
-            else d <- dplyr::tibble()
-            d
-        })
-        outs <- data.frame(outs, 'z' = colnames(mygene)[outs$x + 1])
-        z <- outs$z
-# To try to get the gene names of outliers, would have to go back and get the gene names from original data frame and put htem in outs$color
-	boxplotOptions <- list(
-          fillColor = '#ffffff',
-          lineWidth = 2,
-          medianColor = '#000000',
-          medianWidth = 2,
-          stemColor = '#000000',
-          stemDashStyle = 'dot',
-          stemWidth = 1,
-          whiskerColor = '#000000',
-          whiskerLength = '20%',
-          whiskerWidth = 3)
-
-	g <- highcharter::highchart(width = 750, height = 750 ) %>%
+PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
+  . <- c()
+  if (length(palette) == 2) {
+    cols <- c(palette)
+  }
+  else if (length(palette) == 1) {
+    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+  }
+  else {
+    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
+  }
+  mytypes <- names(Biobase::assayData(inputData))
+  g <- NULL
+  m <- NULL
+  p <- NULL
+  boxplotOptions <- list(
+    fillColor = '#ffffff',
+    lineWidth = 2,
+    medianColor = '#000000',
+    medianWidth = 2,
+    stemColor = '#000000',
+    stemDashStyle = 'dot',
+    stemWidth = 1,
+    whiskerColor = '#000000',
+    whiskerLength = '20%',
+    whiskerWidth = 3)
+  if(any(mytypes=="expression")){
+    mygene <- as.data.frame(Biobase::assayDataElement(inputData[["expression"]],'exprs'))
+    toplot <- suppressMessages(reshape2::melt(mygene))
+    df <- dplyr::tibble(value = toplot$value, by = toplot$variable) %>% dplyr::group_by_at("by") %>%
+      dplyr::do(data = grDevices::boxplot.stats(.$value))
+    bxps <- purrr::map(df$data, "stats")
+    outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
+      if (length(y$out) > 0)
+        d <- dplyr::tibble(x = x - 1, y = y$out)
+      else d <- dplyr::tibble()
+      d
+    })
+    outs <- data.frame(outs, 'z' = colnames(mygene)[outs$x + 1])
+    z <- outs$z
+    # To try to get the gene names of outliers, would have to go back and get the gene names from original data frame and put htem in outs$color
+    
+    g <- highcharter::highchart(width = 750, height = 750 ) %>%
       highcharter::hc_title(text = "Gene Expression",
-               style = list(color = '#2E1717',
-			fontWeight = 'bold', fontSize = "20px")) %>%
+                            style = list(color = '#2E1717',
+                                         fontWeight = 'bold', fontSize = "20px")) %>%
       highcharter::hc_plotOptions(
         boxplot = boxplotOptions
-        ) %>%
+      ) %>%
       hc_add_series(data = bxps,name = "Gene Expression", type="boxplot",color=cols[1],showInLegend=FALSE) %>%
       highcharter::hc_add_series(data=list_parse(outs),name = "Gene Expression",
-      type="scatter",color=cols[1],showInLegend=FALSE,
-      tooltip = list(headerFormat = "", pointFormat = "{point.z} <br/> {point.y}",
-      showInLegend = FALSE)) %>%
-#		name = str_trim(paste(list(...)$name, "outliers")),
-#                type = "scatter") #marker = list(...)) %>%
-#		tooltip = list(headerFormat = "<span>{point.key}</span><br/>")) %>%
-#                  pointFormat = "<span style='color:{point.color}'></span> \nOutlier: <b>{point.y}</b><br/>")) %>%
+                                 type="scatter",color=cols[1],showInLegend=FALSE,
+                                 tooltip = list(headerFormat = "", pointFormat = "{point.z} <br/> {point.y}",
+                                                showInLegend = FALSE)) %>%
       highcharter::hc_yAxis(title = list(text = "log(expression)",
-                            style = list(fontSize = "13px")),
-               labels = list(format = "{value}")) %>%
+                                         style = list(fontSize = "13px")),
+                            labels = list(format = "{value}")) %>%
       highcharter::hc_xAxis(labels="", categories = colnames(mygene)) %>%
       highcharter::hc_tooltip(valueDecimals = 2) %>%
       highcharter::hc_exporting(enabled = TRUE)
-
-	mymetab <- Biobase::assayDataElement(inputData[["metabolite"]],'metabData')
-	toplot <- suppressMessages(reshape2::melt(mymetab))
-        df <- dplyr::data_frame(value = toplot$value, by = toplot$variable) %>%
-		dplyr::group_by_at("by") %>%
-               dplyr::do(data = grDevices::boxplot.stats(.$value))
-        bxps <- purrr::map(df$data, "stats")
-        outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
-            if (length(y$out) > 0)
-                d <- dplyr::data_frame(x = x - 1, y = y$out)
-            else d <- dplyr::data_frame()
-            d
-        })
-        outs <- data.frame(outs, 'z' = colnames(mymetab)[outs$x + 1])
-        z <- outs$z
-
-        m <- highcharter::highchart(width = 750, height = 750 ) %>%
+  }
+  if(any(mytypes=="metabolite")){
+    mymetab <- Biobase::assayDataElement(inputData[["metabolite"]],'metabData')
+    toplot <- suppressMessages(reshape2::melt(mymetab))
+    df <- dplyr::data_frame(value = toplot$value, by = toplot$variable) %>%
+      dplyr::group_by_at("by") %>%
+      dplyr::do(data = grDevices::boxplot.stats(.$value))
+    bxps <- purrr::map(df$data, "stats")
+    outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
+      if (length(y$out) > 0)
+        d <- dplyr::data_frame(x = x - 1, y = y$out)
+      else d <- dplyr::data_frame()
+      d
+    })
+    outs <- data.frame(outs, 'z' = colnames(mymetab)[outs$x + 1])
+    z <- outs$z
+    
+    m <- highcharter::highchart(width = 750, height = 750 ) %>%
       highcharter::hc_title(text = "Metabolite Levels",
-               style = list(color = '#2E1717',
-                            fontWeight = 'bold', fontSize = "20px")) %>%
+                            style = list(color = '#2E1717',
+                                         fontWeight = 'bold', fontSize = "20px")) %>%
       highcharter::hc_plotOptions(
         boxplot = boxplotOptions
-        ) %>%
+      ) %>%
       highcharter::hc_add_series(data = bxps,name = "Metabolite Levels",
-      type="boxplot",color=cols[2],showInLegend=FALSE) %>%
+                                 type="boxplot",color=cols[2],showInLegend=FALSE) %>%
       highcharter::hc_add_series(data=list_parse(outs),name = "Metabolite Levels",
-      type="scatter",color=cols[2],showInLegend=FALSE,tooltip = list(headerFormat = "", pointFormat = "{point.z} <br/> {point.y}",
-      showInLegend = FALSE)) %>%
-
+                                 type="scatter",color=cols[2],showInLegend=FALSE,tooltip = list(headerFormat = "", pointFormat = "{point.z} <br/> {point.y}",
+                                                                                                showInLegend = FALSE)) %>%
+      
       highcharter::hc_yAxis(title = list(text = "log(abundances)",
-                            style = list(fontSize = "13px")),
-               labels = list(format = "{value}")) %>%
+                                         style = list(fontSize = "13px")),
+                            labels = list(format = "{value}")) %>%
       highcharter::hc_xAxis(labels="", categories = colnames(mymetab)) %>%
       highcharter::hc_tooltip(valueDecimals = 2) %>%
       highcharter::hc_exporting(enabled = TRUE)
-
-  if (viewer == TRUE) {
-    p <-
-      htmltools::browsable(highcharter::hw_grid(g, m, ncol = 2, rowheight = 550))
   }
-  else {
-    p <- highcharter::hw_grid(g, m)
+  if(!is.null(g) & !is.null(m)){
+    if (viewer == TRUE) {
+      p <-
+        htmltools::browsable(highcharter::hw_grid(g, m, ncol = 2, rowheight = 550))
+    }
+    else {
+      p <- highcharter::hw_grid(g, m)
+    }
+  } else if(!is.null(g)){
+    if (viewer == TRUE) {
+      p <-
+        htmltools::browsable(highcharter::hw_grid(g, ncol = 1, rowheight = 550))
+    }
+    else {
+      p <- highcharter::hw_grid(g)
+    }
+  } else if(!is.null(m)){
+    if (viewer == TRUE) {
+      p <-
+        htmltools::browsable(highcharter::hw_grid(m, ncol = 1, rowheight = 550))
+    }
+    else {
+      p <- highcharter::hw_grid(m)
+    }
   }
+  
   return(p)
 }
 
@@ -153,179 +167,234 @@ PlotDistributions <- function(inputData,viewer=T,
 PlotPCA <- function(inputData,viewer=T,stype=NULL,common=T,
         palette = "Set1") {
 
-    categ <- c("Genes","Metabolites")
+  mytypes <- names(Biobase::assayData(inputData))
+  biobase_pdata <- NULL
+  if(any(mytypes == "metabolite")){
+    biobase_pdata <- Biobase::pData(inputData[["metabolite"]])
+  }else{
+    biobase_pdata <- Biobase::pData(inputData[["expression"]])
+  }
 
-        if(is.null(stype)) {
+  if(is.null(stype)) {
 		warning("The resulting PCA plot is not color-coded because you did not provide a category in 'stype'")
 		mytype <- NULL
-        } else if (length(intersect(colnames(Biobase::pData(inputData[["metabolite"]])),stype))!=1) {
+  } else if (length(intersect(colnames(biobase_pdata),stype))!=1) {
 		stop(paste0("You provided ",stype, "as your stype variable but it does not exist in your data"))
-        } else {
-        	mytype <- as.character(Biobase::pData(inputData[["metabolite"]])[,stype])
-                numcateg <- length(unique(mytype))
-                if(length(palette) >= 2) {
-                           cols <- palette
-                } else {
-                if(numcateg == 1) {
-                       if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(3, palette)[1]
-                       } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
-                } else if (numcateg == 2) {
-                      if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-                      } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
-                } else if (numcateg > 2) {
-                      if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(numcateg, palette)
-                      } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
-                } else {stop("There are no values in your 'stype' column")}
+  } else {
+  	mytype <- as.character(biobase_pdata[,stype])
+    numcateg <- length(unique(mytype))
+    if(length(palette) >= 2) {
+      cols <- palette
+    } else {
+      if(numcateg == 1) {
+         if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(3, palette)[1]
+         } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
+      } else if (numcateg == 2) {
+          if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+          } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
+      } else if (numcateg > 2) {
+          if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(numcateg, palette)
+          } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
+      } else {stop("There are no values in your 'stype' column")}
                }
-        }
-
+    }
+  p <- NULL
+  pg <- NULL
+  pm <- NULL
 
 	if(common==T) {
-		if(is.null(stype)) {
-			incommon <- getCommon(inputData)
-			mygene <- incommon$gene
-			gpca <- stats::prcomp(t(mygene),center=T,scale=F)
-			mymetab <- incommon$metab
-			mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
-			gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=rep("blue",nrow(gpca$x)))
-			mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=rep("blue",nrow(mpca$x)))
-                        gds <- list_parse(gtoplot)
-                        pg <- highcharter::highchart(width = 350, height = 350 )
-                        pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
-                                tooltip = list(headerFormat="",
-                                pointFormat=paste("{point.label}","{point.z}")),
-                                showInLegend=FALSE)
-                        mds <- list_parse(mtoplot)
-                        pm <- highcharter::highchart(width = 350, height = 350)
-                        pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
-                                tooltip = list(headerFormat="",
-                                pointFormat=paste("{point.label}","{point.z}")),
-                                showInLegend=FALSE)
-		} else {
-			incommon <- getCommon(inputData,stype)
-			mygene <- incommon$gene
-			mymetab <- incommon$metab
-			alltype <- incommon$p
-			uniqtypes <- unique(alltype)
-			mycols <- as.character(alltype)
-			for (i in 1:numcateg) {
-				mycols[which(alltype==uniqtypes[i])] <- cols[i]
-			}
-			gpca <- stats::prcomp(t(mygene),center=T,scale=F)
-			mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
-			gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
-			mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
-			mds <- list_parse(mtoplot)
-                        gds <- list_parse(gtoplot)
-                        pg <- highcharter::highchart(width = 350, height = 350)
-			pm <- highcharter::highchart(width = 350, height = 350)
-                        for (i in 1:length(uniqtypes)) {
-                                mytype <- unique(alltype)[i]
-                                gds <- list_parse(gtoplot[which(gtoplot$label==mytype),])
-                                pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
-                                        name=mytype,color=cols[which(alltype==mytype)[1]],tooltip = list(headerFormat="",
-                                        pointFormat=paste("{point.label}","{point.z}")),
-                                        showInLegend=TRUE)
-                                mds <- list_parse(mtoplot[which(mtoplot$label==mytype),])
-                                pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
-                                        name=mytype,color=cols[which(alltype==mytype)[1]],tooltip = list(headerFormat="",
-                                        pointFormat=paste("{point.label}","{point.z}")),
-                                        showInLegend=TRUE)
-                        }
+	  if(!any(mytypes=="expression") || !any(mytypes == "metabolite")){
+	    stop("A dataset not containing both expression and metabolite data cannot run
+	         with 'common' set to TRUE. Set 'common' to FALSE.")
+	  } else {
+	    if(is.null(stype)) {
+  			incommon <- getCommon(inputData)
+  			mygene <- incommon$gene
+  			gpca <- stats::prcomp(t(mygene),center=T,scale=F)
+  			mymetab <- incommon$metab
+  			mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
+  			gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=rep("blue",nrow(gpca$x)))
+  			mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=rep("blue",nrow(mpca$x)))
+        gds <- list_parse(gtoplot)
+        pg <- highcharter::highchart(width = 350, height = 350 )
+        pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
+                                  tooltip = list(headerFormat="",
+                                  pointFormat=paste("{point.label}","{point.z}")),
+                                  showInLegend=FALSE)
+        mds <- list_parse(mtoplot)
+        pm <- highcharter::highchart(width = 350, height = 350)
+        pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
+                                  tooltip = list(headerFormat="",
+                                  pointFormat=paste("{point.label}","{point.z}")),
+                                  showInLegend=FALSE)
+	    } else {
+  			incommon <- getCommon(inputData,stype)
+  			mygene <- incommon$gene
+  			mymetab <- incommon$metab
+  			alltype <- incommon$p
+  			uniqtypes <- unique(alltype)
+  			mycols <- as.character(alltype)
+  			for (i in 1:numcateg) {
+  				mycols[which(alltype==uniqtypes[i])] <- cols[i]
+  			}
+  			gpca <- stats::prcomp(t(mygene),center=T,scale=F)
+  			mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
+  			gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
+  			mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
+  			mds <- list_parse(mtoplot)
+        gds <- list_parse(gtoplot)
+        pg <- highcharter::highchart(width = 350, height = 350)
+  			pm <- highcharter::highchart(width = 350, height = 350)
+        for (i in 1:length(uniqtypes)) {
+          mytype <- unique(alltype)[i]
+          gds <- list_parse(gtoplot[which(gtoplot$label==mytype),])
+          pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
+                                          name=mytype,color=cols[which(alltype==mytype)[1]],tooltip = list(headerFormat="",
+                                          pointFormat=paste("{point.label}","{point.z}")),
+                                          showInLegend=TRUE)
+          mds <- list_parse(mtoplot[which(mtoplot$label==mytype),])
+          pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
+                                          name=mytype,color=cols[which(alltype==mytype)[1]],tooltip = list(headerFormat="",
+                                          pointFormat=paste("{point.label}","{point.z}")),
+                                          showInLegend=TRUE)
+        }
+	    }
 		}
 	} else { # common == F
-		mygene <- as.data.frame(Biobase::assayDataElement(inputData[["expression"]],'exprs'))
-		mymetab <- Biobase::assayDataElement(inputData[["metabolite"]],'metabData')
-        	gpca <- stats::prcomp(t(mygene),center=T,scale=F)
-		mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
-#		percvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
-		if(!is.null(stype)) {
-			gtypes <- as.character(Biobase::pData(inputData[["expression"]])[,stype])
-			mtypes <- as.character(Biobase::pData(inputData[["metabolite"]])[,stype])
-        		uniqtypes <- unique(c(mtypes,gtypes))
-        		gcols <- as.character(gtypes)
-			mcols <- as.character(mtypes)
-        		for (i in 1:numcateg) {
-				gcols[which(gtypes==uniqtypes[i])] <- cols[i]
-				mcols[which(mtypes==uniqtypes[i])] <- cols[i]
-        		}
-		        # Deal with missing values or ""
-		        if(length(which(gtypes==""))>0) {
-				gcols[which(gtypes=="")]="grey"
-        		        gtypes[which(gtypes=="")]="NA"
-        		}
-			if (length(which(mtypes==""))>0) {
-                                mcols[which(mtypes=="")]="grey"
-                                mtypes[which(mtypes=="")]="NA"
-			}
-		        if(length(which(is.na(gtypes)))>0) {
-                		gcols[which(is.na(gtypes))]="grey"
-			}
-                        if(length(which(is.na(mtypes)))>0) {
-                                mcols[which(is.na(mtypes))]="grey"
-                        }
-			gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=gtypes,color=gcols)
-                        mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=mtypes,color=mcols)
-			mds <- list_parse(mtoplot)
-			gds <- list_parse(gtoplot)
-			pg <- highcharter::highchart(width = 350, height = 350 )
-			for (i in 1:length(unique(gtypes))) {
-				mytype <- unique(gtypes)[i]
-				gds <- list_parse(gtoplot[which(gtoplot$label==mytype),])
-				pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
-					name=mytype,color=cols[which(gtypes==mytype)[1]],tooltip = list(headerFormat="",
-		                        pointFormat=paste("{point.label}","{point.z}")),
-                		        showInLegend=TRUE)
-			}
-			pm <- highcharter::highchart(width = 350, height = 350 )
-                        for (i in 1:length(unique(mtypes))) {
-                                mytype <- unique(mtypes)[i]
-                                mds <- list_parse(mtoplot[which(mtoplot$label==mytype),])
-                                pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
-                                        name=mytype,color=cols[which(mtypes==mytype)[1]],tooltip = list(headerFormat="",
-                                        pointFormat=paste("{point.label}","{point.z}")),
-                                        showInLegend=TRUE)
-                        }
+	  
+	  if(!is.null(stype)) {
+      # Compute PC's.
+      gtypes <- NULL
+      mtypes <- NULL
+      uniqtypes <- NULL
+      if(any(mytypes == "expression")){
+        mygene <- as.data.frame(Biobase::assayDataElement(inputData[["expression"]],'exprs'))
+        gpca <- stats::prcomp(t(mygene),center=T,scale=F)
+        gtypes <- as.character(Biobase::pData(inputData[["expression"]])[,stype])
+        uniqtypes <- unique(gtypes)
+      }
+      if(any(mytypes == "metabolite")){
+        mymetab <- Biobase::assayDataElement(inputData[["metabolite"]],'metabData')
+        mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
+        mtypes <- as.character(Biobase::pData(inputData[["metabolite"]])[,stype])
+        uniqtypes <- unique(mtypes)
+      }
+      
+      # Take the union of types.
+      if(any(mytypes=="expression") && any(mytypes == "metabolite")){
+	      uniqtypes <- unique(c(mtypes,gtypes))
+      }
+	      
+      # Set up plots.
+	    if(any(mytypes == "expression")){
+	      gcols <- as.character(gtypes)
+	      for (i in 1:numcateg) {
+	        gcols[which(gtypes==uniqtypes[i])] <- cols[i]
+	      }
+	      # Deal with missing values or ""
+	      if(length(which(gtypes==""))>0) {
+	        gcols[which(gtypes=="")]="grey"
+	        gtypes[which(gtypes=="")]="NA"
+	      }
+	      if(length(which(is.na(gtypes)))>0) {
+	        gcols[which(is.na(gtypes))]="grey"
+	      }
+	      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=gtypes,color=gcols)
+	      gds <- list_parse(gtoplot)
+	      pg <- highcharter::highchart(width = 350, height = 350 )
+	      for (i in 1:length(unique(gtypes))) {
+	        mytype <- unique(gtypes)[i]
+	        gds <- list_parse(gtoplot[which(gtoplot$label==mytype),])
+	        pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
+	                                                name=mytype,color=cols[which(gtypes==mytype)[1]],tooltip = list(headerFormat="",
+	                                                                                                                pointFormat=paste("{point.label}","{point.z}")),
+	                                                showInLegend=TRUE)
+	      }
+	    }
+      if(any(mytypes == "metabolite")){
+        mcols <- as.character(mtypes)
+        for (i in 1:numcateg) {
+          mcols[which(mtypes==uniqtypes[i])] <- cols[i]
+        }
+        if (length(which(mtypes==""))>0) {
+          mcols[which(mtypes=="")]="grey"
+          mtypes[which(mtypes=="")]="NA"
+        }
+        if(length(which(is.na(mtypes)))>0) {
+          mcols[which(is.na(mtypes))]="grey"
+        }
+        mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=mtypes,color=mcols)
+        mds <- list_parse(mtoplot)
+        pm <- highcharter::highchart(width = 350, height = 350 )
+        for (i in 1:length(unique(mtypes))) {
+          mytype <- unique(mtypes)[i]
+          mds <- list_parse(mtoplot[which(mtoplot$label==mytype),])
+          pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
+                                                  name=mytype,color=cols[which(mtypes==mytype)[1]],tooltip = list(headerFormat="",
+                                                                                                                  pointFormat=paste("{point.label}","{point.z}")),
+                                                  showInLegend=TRUE)
+        }
+      }
+	    
+	  } else { #stype is null
+	    if(any(mytypes == "expression")){
+	      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label="",color=rep("blue",nrow(gpca$x)))
+	      gds <- list_parse(gtoplot)
+	      pg <- highcharter::highchart(width = 350, height = 350 )
+	      pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
+	                                              tooltip = list(headerFormat="",
+	                                                             pointFormat=paste("{point.label}","{point.z}")),
+	                                              showInLegend=FALSE)
+	    }
+	    if(any(mytypes == "metabolite")){
+	      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label="",color=rep("blue",nrow(mpca$x)))
+	      mds <- list_parse(mtoplot)
+	      pm <- highcharter::highchart(width = 350, height = 350)
+	      pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
+	                                              tooltip = list(headerFormat="",
+	                                                             pointFormat=paste("{point.label}","{point.z}")),
+	                                              showInLegend=FALSE)
+	    }
+	  }
+	}
+  # end common == F
 
-		} else { #stype is null
-			gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label="",color=rep("blue",nrow(gpca$x)))
-                        mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label="",color=rep("blue",nrow(mpca$x)))
-			gds <- list_parse(gtoplot)
-			pg <- highcharter::highchart(width = 350, height = 350 )
-			pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
-				tooltip = list(headerFormat="",
-                                pointFormat=paste("{point.label}","{point.z}")),
-                                showInLegend=FALSE)
-			mds <- list_parse(mtoplot)
-			pm <- highcharter::highchart(width = 350, height = 350)
-			pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
-				tooltip = list(headerFormat="",
-				pointFormat=paste("{point.label}","{point.z}")),
-				showInLegend=FALSE)
-		}
-	} # end common == F
-
-	mpercvar=round((mpca$sdev)^2 / sum(mpca$sdev^2)*100,2)
-	gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
-
-		pg <- pg %>% highcharter::hc_title(text="PCA of genes") %>%
-		highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(gpercvar[1],1),"%"))) %>%
-		highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(gpercvar[2],2),"%"))) %>%
-		hc_chart(zoomType = "xy")
-#		dataLabels= list(enabled = TRUE, format = "{point.label}"),
-
-                pm <- pm %>% highcharter::hc_title(text="PCA of metabolites") %>%
-                highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(mpercvar[1],1),"%"))) %>%
-                highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(mpercvar[2],2),"%"))) %>%
-                hc_chart(zoomType = "xy")
-
-
-         if (viewer == TRUE) {
-    		p <-
-      		htmltools::browsable(highcharter::hw_grid(pg, pm, ncol = 2, rowheight = 550))
-  	} else {
-    		p <- highcharter::hw_grid(pg, pm)
-  	}
+  # Set up plots.
+  if(any(mytypes == "metabolite")){
+    mpercvar=round((mpca$sdev)^2 / sum(mpca$sdev^2)*100,2)
+    pm <- pm %>% highcharter::hc_title(text="PCA of metabolites") %>%
+      highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(mpercvar[1],1),"%"))) %>%
+      highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(mpercvar[2],2),"%"))) %>%
+      hc_chart(zoomType = "xy")
+  }
+  if(any(mytypes == "expression")){
+    gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
+    pg <- pg %>% highcharter::hc_title(text="PCA of genes") %>%
+      highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(gpercvar[1],1),"%"))) %>%
+      highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(gpercvar[2],2),"%"))) %>%
+      hc_chart(zoomType = "xy")
+  }
+  p <- NULL
+  if(any(mytypes=="expression") && any(mytypes == "metabolite")){
+    if (viewer == TRUE) {
+      p <-htmltools::browsable(highcharter::hw_grid(pg, pm, ncol = 2, rowheight = 550))
+    } else {
+      p <- highcharter::hw_grid(pg, pm)
+    }
+  } else if(any(mytypes=="expression")){
+    if (viewer == TRUE) {
+      p <-htmltools::browsable(highcharter::hw_grid(pg, ncol = 1, rowheight = 550))
+    } else {
+      p <- highcharter::hw_grid(pg)
+    }
+  } else if(any(mytypes=="metabolite")){
+    if (viewer == TRUE) {
+      p <-htmltools::browsable(highcharter::hw_grid(pm, ncol = 1, rowheight = 550))
+    } else {
+      p <- highcharter::hw_grid(pm)
+    }
+  }
+  
   return(p)
 
 }
@@ -437,7 +506,14 @@ type <- cor <- c()
 	if(nrow(inputResults@filt.results)==0) {
 		stop("Make sure you run ProcessResults before making the heatmap")
 	}
-  incommon <- getCommon(inputData,inputResults@stype)
+  mytypes <- names(Biobase::assayData(inputData))
+  if(any(mytypes == "expression") && any(mytypes == "metabolite")){
+    incommon <- getCommon(inputData,inputResults@stype)
+  }else if(any(mytypes == "metabolite")){
+    incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "metabolite")
+  }else if(any(mytypes == "expression")){
+    incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "expression")
+  }
   p <- incommon$p
   if(length(unique(p)) !=2){
     stop("CorrHeatmap requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
@@ -879,7 +955,12 @@ PlotMMPair<- function(inputData,stype=NULL,metab1Name,metab2Name,palette = "Set1
     stop("input data is not a MultiDataSet class")
   }
   
-  incommon <- getCommon(inputData,stype)
+  mytypes <- names(Biobase::assayData(inputData))
+  if(any(mytypes == "expression")){
+    incommon <- getCommon(inputData,stype)
+  }else{
+    incommon <- formatSingleOmicInput(inputData,stype, type = "metabolite")
+  }
   
   if(is.null(stype)) {
     stop("A category to colorcode by (e.g. stype) must be provided")
@@ -1001,12 +1082,19 @@ PlotGGPair<- function(inputData,stype=NULL,gene1Name,gene2Name,palette = "Set1",
   if (class(inputData) != "MultiDataSet") {
     stop("input data is not a MultiDataSet class")
   }
-  
-  incommon <- getCommon(inputData,stype)
+  biobase_pdata <- NULL
+  mytypes <- names(Biobase::assayData(inputData))
+  if(any(mytypes == "metabolite")){
+    incommon <- getCommon(inputData,stype)
+    biobase_pdata <- Biobase::pData(inputData[["metabolite"]])
+  }else{
+    incommon <- formatSingleOmicInput(inputData,stype, type = "expression")
+    biobase_pdata <- Biobase::pData(inputData[["expression"]])
+  }
   
   if(is.null(stype)) {
     stop("A category to colorcode by (e.g. stype) must be provided")
-  } else if (length(intersect(colnames(Biobase::pData(inputData[["metabolite"]])),stype))!=1) {
+  } else if (length(intersect(colnames(biobase_pdata),stype))!=1) {
     stop(paste0("You provided ",stype, "as your stype variable but it does not exist in your data"))
   } else {
     mytypes <- incommon$p
@@ -1058,8 +1146,6 @@ PlotGGPair<- function(inputData,stype=NULL,gene1Name,gene2Name,palette = "Set1",
   line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
   
   ds <- highcharter::list_parse(data)
-  
-  #cols=c("blue","pink")
   
   hc <- highcharter::highchart(width = 350, height = 350 ) %>%
     highcharter::hc_title(text=paste(gene1Name,' vs. ', gene2Name, sep = '')) %>%
@@ -1154,7 +1240,14 @@ pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=1000
   if(class(inputResults) != "IntLimResults") {
     stop("input data is not a IntLim class")
   }
-  incommon <- getCommon(inputData,inputResults@stype)
+  mytypes <- names(Biobase::assayData(inputData))
+  incommon <- NULL
+  if(any(mytypes == "expression")){
+    incommon <- getCommon(inputData,inputResults@stype)
+  }else{
+    incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "metabolite")
+  }
+  
   p <- incommon$p
   
   if (length(unique(p)) !=2){
@@ -1199,7 +1292,13 @@ pvalCorrVolcanoGenePairs <- function(inputResults, inputData,nrpoints=10000,
   if(class(inputResults) != "IntLimResults") {
     stop("input data is not a IntLim class")
   }
-  incommon <- getCommon(inputData,inputResults@stype)
+  mytypes <- names(Biobase::assayData(inputData))
+  incommon <- NULL
+  if(any(mytypes == "metabolite")){
+    incommon <- getCommon(inputData,inputResults@stype)
+  }else{
+    incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "expression")
+  }
   p <- incommon$p
   
   if (length(unique(p)) !=2){
@@ -1395,10 +1494,23 @@ MarginalEffectsGraphDataframeMetabolitePairs<-function(inputResults, inputData,
   covariates_class = as.character(inputResults@covar$class.var)
   
   #get dataframes
+  mytypes <- names(Biobase::assayData(inputData))
+  incommon <- NULL
   if(length(covariates) == 0){
-    incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+    if(any(mytypes == "expression")){
+      incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+    } else {
+      incommon <- formatSingleOmicInput(inputData,inputResults@stype,covar=covariates, 
+                                        type = "metabolite")
+    }
+    
   }else{
-    incommon <- getCommon(inputData,inputResults@stype,covar=covariates,class.covar=covariates_class)
+    if(any(mytypes == "expression")){
+      incommon <- getCommon(inputData,inputResults@stype,covar=covariates,class.covar=covariates_class)
+    } else {
+      incommon <- formatSingleOmicInput(inputData,inputResults@stype,covar=covariates,
+                                        class.covar=covariates_class, type = "metabolite")
+    }
   }
   pheno <- incommon$p
   metab <- incommon$metab
@@ -1455,10 +1567,21 @@ MarginalEffectsGraphDataframeGenePairs<-function(inputResults, inputData,
   covariates_class = as.character(inputResults@covar$class.var)
   
   #get dataframes
+  mytypes <- names(Biobase::assayData(inputData))
   if(length(covariates) == 0){
-    incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+    if(any(mytypes == "metabolite")){
+      incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+    } else {
+      incommon <- formatSingleOmicInput(inputData,inputResults@stype,covar=covariates,
+                                        type = "expression")
+    }
   }else{
-    incommon <- getCommon(inputData,inputResults@stype,covar=covariates,class.covar=covariates_class)
+    if(any(mytypes == "metabolite")){
+      incommon <- getCommon(inputData,inputResults@stype,covar=covariates)
+    } else {
+      incommon <- formatSingleOmicInput(inputData,inputResults@stype,covar=covariates,
+                                        class.covar=covariates_class, type = "expression")
+    }
   }
   pheno <- incommon$p
   gene <- incommon$gene

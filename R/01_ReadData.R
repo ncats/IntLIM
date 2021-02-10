@@ -40,11 +40,15 @@
 #' @export
 ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE){
     # Check that file exists
+    print(inputFile)
     if (!file.exists(inputFile)) {
         stop("CSV input file does not exist")
     }
     # Make into df to make access easier
     csvfile <- as.data.frame(utils::read.csv(inputFile, header=TRUE,row.names=1))
+    GMData <- NULL
+    GData <- NULL
+    MData <- NULL
 
     # Check column names are correct
     if (colnames(csvfile)!="filenames") {
@@ -57,60 +61,78 @@ ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=
     mymatches <- as.numeric(lapply(mytypes,function(x) 
 		length(which(rownames(csvfile)==x))))
     if(sum(mymatches)!=5) {
-	stop("The column 'type' contains non-allowed entries (See Description). The CSV input file must contain 6 rows (if optional meta data files for metabolites and genes are not to be input, have the corresponding filenames be blanks.")}
+	    stop("The column 'type' contains non-allowed entries (See Description). The CSV input file must contain 6 rows (if optional meta data files for metabolites and genes are not to be input, have the corresponding filenames be blanks.")
+    }
  
     mydir <- base::dirname(inputFile)
-    # Check that files exist then read them in one by one
-    temp <- paste0(mydir,"/",as.character(csvfile['metabData',]))
-    if(!file.exists(temp)) {
-	stop(paste("File", temp, "does not exist"))} else {
-    ids <- utils::read.csv(temp,check.names=F)[,1]
-    if(length(ids) != length(unique(ids))) {
-	stop(paste("Error: your input file",temp,"contains has duplicate entries in column 1. Please make sure you have one row per metabolite"))
-    } else {
-    	MData<-utils::read.csv(temp,row.names = 1,check.names=F)
+    
+    if((as.character(csvfile['geneData',]) == "") & (as.character(csvfile['metabData',]) == "")){
+      stop("No data provided.")
     }
-    }
-
-    temp <- paste0(mydir,"/",as.character(csvfile['geneData',]))
-    if(!file.exists(temp)) {
+    else{
+      # Check that files exist then read them in one by one
+      if(as.character(csvfile['metabData',])=="") {
+        warning("No data provided for metabolites. This means you cannot run metabolite-metabolite or gene-metabolite analyses.\n")
+        ;GData<-NULL;} 
+      else{
+        temp <- paste0(mydir,"/",as.character(csvfile['metabData',]))
+        if(!file.exists(temp)) {
+          stop(paste("File", temp, "does not exist"))
+        } 
+        else {
+          ids <- utils::read.csv(temp,check.names=F)[,1]
+          if(length(ids) != length(unique(ids))) {
+            stop(paste("Error: your input file",temp,"contains has duplicate entries in column 1. Please make sure you have one row per metabolite"))
+          } 
+          else {
+            MData<-utils::read.csv(temp,row.names = 1,check.names=F)
+          }
+        }
+      }
+      if(as.character(csvfile['geneData',])=="") {
+        warning("No data provided for genes. This means you cannot run gene-gene or gene-metabolite analyses.\n")
+        ;GData<-NULL;} 
+      else {
+          temp <- paste0(mydir,"/",as.character(csvfile['geneData',]))
+          if(!file.exists(temp)) {
+            stop(paste("File", temp, "does not exist"))} else {
+              ids <- utils::read.csv(temp,check.names=F)[,1]
+              if(length(ids) != length(unique(ids))) {
+                stop(paste("Error: your input file",temp,"contains has duplicate entries in column 1. Please make sure you have one row per gene"))
+              } else {
+                GData<-utils::read.csv(temp,row.names = 1,check.names=F)}
+          }
+      }
+      
+      temp <- paste0(mydir,"/",as.character(csvfile['metabMetaData',]))
+      if(as.character(csvfile['metabMetaData',])=="") {
+        warning("No metadata provided for metabolites");MmetaData<-NULL;metabid=NULL; } else if
+      (!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))} else {
-    ids <- utils::read.csv(temp,check.names=F)[,1]
-    if(length(ids) != length(unique(ids))) {
-        stop(paste("Error: your input file",temp,"contains has duplicate entries in column 1. Please make sure you have one row per gene"))
-    } else {
-    	GData<-utils::read.csv(temp,row.names = 1,check.names=F)}
-    }
-    temp <- paste0(mydir,"/",as.character(csvfile['metabMetaData',]))
-    if(as.character(csvfile['metabMetaData',])=="") {
-	warning("No metadata provided for metabolites");MmetaData<-NULL;metabid=NULL; } else if
-    (!file.exists(temp)) {
-        stop(paste("File", temp, "does not exist"))} else {
-    MmetaData<-utils::read.csv(temp)
-    colnames(MmetaData)[which(colnames(MmetaData)==metabid)]="id"}
-
-   temp <- paste0(mydir,"/",as.character(csvfile['geneMetaData',]))
-   if(as.character(csvfile['geneMetaData',])=="") {
+          MmetaData<-utils::read.csv(temp)
+          colnames(MmetaData)[which(colnames(MmetaData)==metabid)]="id"}
+      
+      temp <- paste0(mydir,"/",as.character(csvfile['geneMetaData',]))
+      if(as.character(csvfile['geneMetaData',])=="") {
         warning("No metadata provided for genes");GmetaData<-NULL;geneid=NULL} else if
-    (!file.exists(temp)) {
+      (!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))} else {
-    GmetaData<-utils::read.csv(temp)
-    colnames(GmetaData)[which(colnames(GmetaData)==geneid)]="id"}
-
-    temp <- paste0(mydir,"/",as.character(csvfile['sampleMetaData',]))
-    if(!file.exists(temp)) {
+          GmetaData<-utils::read.csv(temp)
+          colnames(GmetaData)[which(colnames(GmetaData)==geneid)]="id"}
+      
+      temp <- paste0(mydir,"/",as.character(csvfile['sampleMetaData',]))
+      if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))} else {
-    pData<-utils::read.csv(temp,row.names = 1)}
-
-    #Create Multi
-    GMdata <- CreateIntLimObject(genefdata=GmetaData, metabfdata=MmetaData,
-	metabid=metabid, geneid=geneid,pdata=pData,metabdata=MData,
-	genedata=GData,logmetab=logmetab,loggene=loggene)
-	
-	#genefdata=GmetaData; metabfdata=MmetaData;metabid="BIOCHEMICAL";geneid="X";
-	#pdata=pData;metabdata=MData;genedata=GData;logmetab=F;loggene=F
-
-    print("CreateMultiDataSet created")
+          pData<-utils::read.csv(temp,row.names = 1)}
+      
+      #Create Multi
+      GMdata <- CreateIntLimObject(genefdata=GmetaData, metabfdata=MmetaData,
+                                   metabid=metabid, geneid=geneid,pdata=pData,metabdata=MData,
+                                   genedata=GData,logmetab=logmetab,loggene=loggene)
+      
+      print("CreateMultiDataSet created")
+      
+    }
     return(GMdata)
 }
 
