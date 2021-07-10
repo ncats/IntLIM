@@ -13,7 +13,8 @@ RunIntLim(
   continuous = FALSE,
   metabolite.pairs = FALSE,
   save.covar.pvals = FALSE,
-  independent.var.type = "gene"
+  independent.var.type = "gene",
+  remove.duplicates = FALSE
 )
 }
 \arguments{
@@ -39,6 +40,9 @@ which can be analyzed later but will also lengthen computation time. The default
 
 \item{independent.var.type}{'metabolite' or 'gene' must be set as independent variable
 (default is 'metabolite')}
+
+\item{remove.duplicates}{boolean to indicate whether or not to remove the metabolite-metabolite
+or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \value{
 IntLimModel object with model results

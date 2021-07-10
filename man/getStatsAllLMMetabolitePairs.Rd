@@ -10,8 +10,8 @@ getStatsAllLMMetabolitePairs(
   covar,
   covarMatrix,
   continuous,
-  save.covar.pvals,
-  global = FALSE
+  save.covar.pvals = FALSE,
+  remove.tri = FALSE
 )
 }
 \arguments{
@@ -28,8 +28,8 @@ getStatsAllLMMetabolitePairs(
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time.}
 
-\item{global}{boolean to indicate whether or not to return the p-value and coefficient of the
-global co-regulation (as opposed to the differential co-reguation from the interaction term).}
+\item{remove.tri}{boolean to indicate whether or not to remove the metabolite-metabolite
+or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \value{
 list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)

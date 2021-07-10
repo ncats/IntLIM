@@ -8,9 +8,7 @@ ProcessResultsContinuous(
   inputResults,
   interactionCoeffPercentile = 0.1,
   pvalCutoff = 0.05,
-  rsquaredCutoff = 0,
-  outcome = "metabolite",
-  independent.var.type = "gene"
+  rsquaredCutoff = 0
 )
 }
 \arguments{
@@ -22,12 +20,6 @@ default bottom 10 percent (high negative coefficients) and top 10 percent (high 
 \item{pvalCutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
 \item{rsquaredCutoff}{cutoff of R-squared value for filtering (default 0, no filtering)}
-
-\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable
-(default is 'metabolite')}
-
-\item{independent.var.type}{'metabolite' or 'gene' must be set as independent variable
-(default is 'metabolite')}
 }
 \description{
 Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model

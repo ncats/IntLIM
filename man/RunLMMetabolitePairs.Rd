@@ -9,8 +9,8 @@ RunLMMetabolitePairs(
   type = NULL,
   covar = NULL,
   continuous = FALSE,
-  save.covar.pvals,
-  global = FALSE
+  save.covar.pvals = FALSE,
+  keep.highest.pval = FALSE
 )
 }
 \arguments{
@@ -24,10 +24,11 @@ Only 2 categories are currently supported.}
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
-which can be analyzed later but will also lengthen computation time.}
-
-\item{global}{boolean to indicate whether to save global co-regulation terms
+which can be analyzed later but will also lengthen computation time.
 (rather than interaction terms).}
+
+\item{keep.highest.pval}{boolean to indicate whether or not to remove the metabolite-metabolite
+or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \description{
 Function that runs linear models and returns interaction p-values for all metabolite pairs.

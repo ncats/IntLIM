@@ -1254,7 +1254,7 @@ pvalCorrVolcanoMetabolitePairs <- function(inputResults, inputData,nrpoints=1000
     stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
                with more than two categories."))
   }
-  volc.results <- IntLIM::ProcessResultsMetabolitePairs(inputResults,  inputData, diffcorr = 0, pvalcutoff = 1)
+  volc.results <- IntLIM::ProcessResults(inputResults,  inputData, diffcorr = 0, pvalcutoff = 1)
   volc.table <- volc.results@filt.results
   Corrdiff <- volc.table[,4] - volc.table[,3]
   pval <- -log10(volc.table$FDRadjPval)
@@ -1305,7 +1305,7 @@ pvalCorrVolcanoGenePairs <- function(inputResults, inputData,nrpoints=10000,
     stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
                with more than two categories."))
   }
-  volc.results <- IntLIM::ProcessResultsGenePairs(inputResults,  inputData,
+  volc.results <- IntLIM::ProcessResults(inputResults,  inputData,
                                                         diffcorr = 0, pvalcutoff = 1)
   volc.table <- volc.results@filt.results
   Corrdiff <- volc.table[,4] - volc.table[,3]
@@ -1652,23 +1652,22 @@ MarginalEffectsGraph<-function(dataframe, title){
 #' @export
 HistogramGMPairs <- function(inputResults, type = 'metabolite', breaks = 50){
 
-x <- inputResults@filt.results
-
-if(is.null(x)){
-    stop('Please run ProcessResults() before inputting into HistogramGMPairs')
-}
-if (type == 'metabolite'){
-metab.pairs <- data.frame(table(x$metab))
-metab.pairs.number <- as.vector(metab.pairs$Freq)
-hist(metab.pairs.number, breaks = breaks, main = "Number of gene-metabolite pairs based on metabolite", xlab = 'Gene-metabolite pairs based on metabolite')
-}else if (type == 'gene'){
-
-gene.pairs <- data.frame(table(x$gene))
-gene.pairs.number <- as.vector(gene.pairs$Freq)
-hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", breaks = breaks, xlab = 'Gene-metabolite pairs based on gene')
-}else{
-    stop("Only two valid types:  gene or metabolite.  Invalid type entered")
-    }
+  x <- inputResults@filt.results
+  
+  if(is.null(x)){
+      stop('Please run ProcessResults() before inputting into HistogramGMPairs')
+  }
+  if (type == 'metabolite'){
+    metab.pairs <- data.frame(table(x$Metabolite))
+    metab.pairs.number <- as.vector(metab.pairs$Freq)
+    hist(metab.pairs.number, breaks = breaks, main = "Number of gene-metabolite pairs based on metabolite", xlab = 'Gene-metabolite pairs based on metabolite')
+  }else if (type == 'gene'){
+    gene.pairs <- data.frame(table(x$Gene))
+    gene.pairs.number <- as.vector(gene.pairs$Freq)
+    hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", breaks = breaks, xlab = 'Gene-metabolite pairs based on gene')
+  }else{
+      stop("Only two valid types:  gene or metabolite.  Invalid type entered")
+  }
 }
 
 #' histogram of metabolite-metabolite pairs
@@ -1695,14 +1694,14 @@ HistogramMMPairs <- function(inputResults, type = 'outcome', breaks = 50){
     stop('Please run ProcessResults() before inputting into HistogramMMPairs')
   }
   if (type == 'outcome'){
-    metab1.pairs <- data.frame(table(x$metab1))
+    metab1.pairs <- data.frame(table(x$Metab1))
     metab1.pairs.number <- as.vector(metab1.pairs$Freq)
     hist(metab1.pairs.number, breaks = breaks, 
          main = "Number of metabolite pairs based on outcome metabolite", 
          xlab = 'Metabolite pairs based on outcome metabolite')
   }else if (type == 'independent'){
     
-    metab2.pairs <- data.frame(table(x$metab2))
+    metab2.pairs <- data.frame(table(x$Metab2))
     metab2.pairs.number <- as.vector(metab2.pairs$Freq)
     hist(metab2.pairs.number, 
          main = "Number of metabolite pairs based on independent metabolite", 
@@ -1737,14 +1736,14 @@ HistogramGGPairs <- function(inputResults, type = 'outcome', breaks = 50){
     stop('Please run ProcessResults() before inputting into HistogramGGPairs')
   }
   if (type == 'outcome'){
-    gene1.pairs <- data.frame(table(x$gene1))
+    gene1.pairs <- data.frame(table(x$Gene1))
     gene1.pairs.number <- as.vector(gene1.pairs$Freq)
     hist(gene1.pairs.number, breaks = breaks, 
          main = "Number of gene pairs based on outcome gene", 
          xlab = 'Gene pairs based on outcome gene')
   }else if (type == 'independent'){
     
-    gene2.pairs <- data.frame(table(x$gene2))
+    gene2.pairs <- data.frame(table(x$Gene2))
     gene2.pairs.number <- as.vector(gene2.pairs$Freq)
     hist(gene2.pairs.number, 
          main = "Number of gene pairs based on independent gene", 

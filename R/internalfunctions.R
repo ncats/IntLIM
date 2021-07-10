@@ -322,10 +322,9 @@ formatSingleOmicInput <- function(inputData,stype=NULL, covar = NULL, class.cova
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
-#' @param global boolean to indicate whether to save global co-regulation terms
 #' (rather than interaction terms).
 RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL, 
-                  continuous=FALSE, save.covar.pvals, global=FALSE) {
+                  continuous=FALSE, save.covar.pvals = FALSE) {
     gene <- incommon$gene
     metab <- incommon$metab
     mymessage=""
@@ -360,17 +359,9 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL,
         }
     }
 
-    mat.list <- NULL
-    if(global == FALSE){
-      mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
+    mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
                                   type, covar = covar, covarMatrix = incommon$covar_matrix, 
                                 continuous = continuous, save.covar.pvals = save.covar.pvals)
-    }else{
-      mat.list <- getStatsAllLM(outcome = outcome, gene = gene, metab = metab, type = 
-                                  type, covar = covar, covarMatrix = incommon$covar_matrix, 
-                                continuous = continuous, save.covar.pvals = save.covar.pvals,
-                                global = TRUE)
-    }
   
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
@@ -395,10 +386,12 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL,
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
-#' @param global boolean to indicate whether to save global co-regulation terms
 #' (rather than interaction terms).
+#' @param keep.highest.pval boolean to indicate whether or not to remove the metabolite-metabolite
+#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL, 
-                                 continuous=FALSE, save.covar.pvals, global=FALSE) {
+                                 continuous=FALSE, save.covar.pvals=FALSE, 
+                                 keep.highest.pval = FALSE) {
   metab <- incommon$metab
   mymessage=""
   
@@ -421,17 +414,11 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
       mymessage <- c(mymessage,rownames(metab)[toremove])
     }
   }
-  if(global == FALSE){
-    mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
+  mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
                                                covar, covarMatrix = incommon$covar_matrix, 
                                              continuous = continuous, save.covar.pvals=
-                                               save.covar.pvals)
-  }else{
-    mat.list <- getStatsAllLMMetabolitePairs(metab = metab, type = type, covar = 
-                                               covar, covarMatrix = incommon$covar_matrix, 
-                                             continuous = continuous, save.covar.pvals=
-                                               save.covar.pvals, global = TRUE)
-  }
+                                               save.covar.pvals, 
+                                             remove.tri = keep.highest.pval)
   
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
@@ -456,10 +443,10 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time
-#' @param global boolean to indicate whether to save global co-regulation terms
-#' (rather than interaction terms).
+#' @param keep.highest.pval boolean to indicate whether or not to remove the metabolite-metabolite
+#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE, 
-                           save.covar.pvals, global=FALSE) {
+                           save.covar.pvals=FALSE, keep.highest.pval = FALSE) {
   gene <- incommon$gene
   mymessage=""
   
@@ -481,16 +468,10 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
     }
   }
   
-  if(global == FALSE){
-    mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
+  mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
                                        covarMatrix = incommon$covar_matrix, 
-                                       continuous = continuous, save.covar.pvals)
-  }else{
-    mat.list <- getStatsAllLMGenePairs(gene = gene, type = type, covar = covar, 
-                                       covarMatrix = incommon$covar_matrix, 
-                                       continuous = continuous, save.covar.pvals,
-                                       global = TRUE)
-  }
+                                       continuous = continuous, save.covar.pvals, 
+									   remove.tri = keep.highest.pval)
   
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
@@ -550,17 +531,7 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
           return(sum(i^2))
         }))
         r.squared <- 1 - (sse / var.y)
-        #methods::new('IntLimModel', call=call, model=form,
-         list(# call=call, model=form,
-                coefficients=bhat,
-                # predictions=yhat,
-                #df=c(rdf, edf),
-                #sse=sse,
-                #ssr=ssr,
-                #F.statistics=fval,
-                #F.p.values=pfval
-                #std.error.coeff = stderror.coeff,
-                #t.value.coeff = t.coeff,
+         list(coefficients=bhat,
                 p.value.coeff = p.val.coeff, # interaction p-value
                 r.squared.val = r.squared # r-squared value
     )
@@ -578,11 +549,9 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
-#' @param global boolean to indicate whether or not to return the p-value and coefficient of the
-#' global co-regulation (as opposed to the differential co-reguation from the interaction term).
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix, 
-                          continuous, save.covar.pvals, global = FALSE) {
+                          continuous, save.covar.pvals) {
   if (outcome=="metabolite") {
     arraydata <- data.frame(metab)
     num <- nrow(gene)
@@ -620,10 +589,6 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       index.interac <- grep('g:type', term.pvals)
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('g:type', term.coefficient)
-      if(global == TRUE){
-        index.interac <- which(term.pvals == "g")
-        index.coefficient <-  which(term.coefficient == "g")
-      }
       p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
       
@@ -646,8 +611,9 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
           return(mlin$p.value.coeff[covariate,])
         })
         covariate.pvals.df <- do.call("cbind", covariate.pvals)
-        rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                              rownames(gene)[i], sep="__")
+        rownames(covariate.pvals.df) <- paste(rownames(gene)[i], 
+                                                     rownames(covariate.pvals.df),
+                                                     sep="__")
         colnames(covariate.pvals.df) <- term.pvals
         list.covariate.pvals[[i]] <- covariate.pvals.df
         
@@ -656,8 +622,9 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
           return(mlin$coefficients[covariate,])
         })
         covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
-        rownames(covariate.coefficients.df) <- paste(rownames(covariate.coefficients.df), 
-                                                     rownames(gene)[i], sep="__")
+        rownames(covariate.coefficients.df) <- paste(rownames(gene)[i],
+                                                     rownames(covariate.coefficients.df), 
+                                                     sep="__")
         colnames(covariate.coefficients.df) <- term.pvals
         list.covariate.coefficients[[i]] <- covariate.coefficients.df
       }
@@ -694,10 +661,6 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       index.interac <- grep('m:type', term.pvals)
       term.coefficient <- rownames(mlin$coefficients)
       index.coefficient <-  grep('m:type', term.coefficient)
-      if(global == TRUE){
-        index.interac <- which(term.pvals == "m")
-        index.coefficient <-  which(term.coefficient == "m")
-      }
       p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
       coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
       
@@ -721,7 +684,7 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
         })
         covariate.pvals.df <- do.call("cbind", covariate.pvals)
         rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                              rownames(gene)[i], sep="__")
+                                              rownames(metab)[i], sep="__")
         colnames(covariate.pvals.df) <- term.pvals
         list.covariate.pvals[[i]] <- covariate.pvals.df
         
@@ -731,7 +694,9 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
         })
         covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
         rownames(covariate.coefficients.df) <- paste(rownames(covariate.coefficients.df), 
-                                                     rownames(gene)[i], sep="__")
+                                                       rownames(metab)[i],
+                                                       sep="__")
+        
         colnames(covariate.coefficients.df) <- term.coefficient
         list.covariate.coefficients[[i]] <- covariate.coefficients.df
       }
@@ -783,11 +748,12 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
-#' @param global boolean to indicate whether or not to return the p-value and coefficient of the
-#' global co-regulation (as opposed to the differential co-reguation from the interaction term).
+#' @param remove.tri boolean to indicate whether or not to remove the metabolite-metabolite
+#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix, 
-                                         continuous, save.covar.pvals, global = FALSE) {
+                                         continuous, save.covar.pvals=FALSE,
+                                         remove.tri = FALSE) {
   arraydata <- data.frame(metab)
   num <- nrow(metab)
   numprog <- round(num*0.1)
@@ -825,10 +791,6 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
     index.interac <- grep('m:type', term.pvals)
     term.coefficient <- rownames(mlin$coefficients)
     index.coefficient <-  grep('m:type', term.coefficient)
-    if(global == TRUE){
-      index.interac <- which(term.pvals == "m")
-      index.coefficient <-  which(term.coefficient == "m")
-    }
     p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
 
@@ -844,7 +806,6 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
     list.pvals[[i]] <-  p.val.vector
     list.coefficients[[i]] <- coefficient.vector
     list.rsquared[[i]] <- r.squared.vector
-    
     if(save.covar.pvals == TRUE){
       # Save covariate p-values.
       covariate.pvals <- lapply(term.pvals, function(covariate){
@@ -867,6 +828,8 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
       list.covariate.coefficients[[i]] <- covariate.coefficients.df
     }
   }
+  covariate.pvals <- do.call(rbind, list.covariate.pvals)
+  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
   mat.pvals <- do.call(rbind, list.pvals)
   mat.coefficients <- do.call(rbind, list.coefficients)
   mat.rsquared <- do.call(rbind, list.rsquared)
@@ -883,54 +846,77 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
   colnames(mat.coefficients) <- rownames(metab)
   rownames(mat.rsquared) <- rownames(metab)
   colnames(mat.rsquared) <- rownames(metab)
+  if(remove.tri == TRUE)
+  {
+	  # Find locations where the upper triangular value is higher than the lower triangular.
+	  mat.pvals.t <- t(mat.pvals)
+	  mat.pvalsadj.t <- t(mat.pvalsadj)
+	  mat.coefficients.t <- t(mat.coefficients)
+	  mat.rsquared.t <- t(mat.rsquared)
+	  where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
 
-  # Find locations where the upper triangular value is higher than the lower triangular.
-  mat.pvals.t <- t(mat.pvals)
-  mat.pvalsadj.t <- t(mat.pvalsadj)
-  mat.coefficients.t <- t(mat.coefficients)
-  mat.rsquared.t <- t(mat.rsquared)
-  where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
+	  # Replace those locations with values from the lower triangular.
+	  mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
+	  mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
+	  mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
+	  mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
+	  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
+	  
+	  # Remove the highest p-values and store the result in the upper triangular.
+	  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
+  		ret_val = FALSE
+  		pieces = strsplit(name, "__")[[1]]
+  		m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
+  													   fixed = TRUE) == TRUE)]
+  		pval_1 = covariate.pvals[name, m_type]
+  		pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
+  		if(pieces[1] == pieces[2]){
+  		  ret_val = TRUE
+  		}
+  		else if(pval_2 < pval_1){
+  		  ret_val = TRUE
+  		}
+  		else if(pval_2 == pval_1){
+  		  pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
+  		  pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
+  																   pieces[1], 
+  																   sep = "__"))
+  		  if(pos_pval_1 > pos_pval_2){
+  			ret_val = TRUE
+  		  }
+  		}
+  		return(ret_val)
+	  }))
 
-  # Replace those locations with values from the lower triangular.
-  mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
-  mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
-  mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
-  mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
-  covariate.pvals <- do.call(rbind, list.covariate.pvals)
-  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
-  
-  # Remove the highest p-values and store the result in the upper triangular.
-  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
-    ret_val = FALSE
-    pieces = strsplit(name, "__")[[1]]
-    m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
-                                                   fixed = TRUE) == TRUE)]
-    pval_1 = covariate.pvals[name, m_type]
-    pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
-    if(pieces[1] == pieces[2]){
-      ret_val = TRUE
-    }
-    else if(pval_2 < pval_1){
-      ret_val = TRUE
-    }
-    else if(pval_2 == pval_1){
-      pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
-      pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
-                                                               pieces[1], 
-                                                               sep = "__"))
-      if(pos_pval_1 > pos_pval_2){
-        ret_val = TRUE
+	  if(save.covar.pvals == TRUE){
+  	  for(i in 1:length(colnames(covariate.pvals))){
+  	    covariate.pvals[which(should_remove == TRUE),i] <- NA
+  	    covariate.coefficients[which(should_remove == TRUE),i] <- NA
+  	  }
+	  }
+	  mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
+	  mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
+	  mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
+	  mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
+  }
+  else{
+    # Only remove the diagonal.
+    diag(mat.pvals) <- NA
+    diag(mat.pvalsadj) <- NA
+    diag(mat.coefficients) <- NA
+    diag(mat.rsquared) <- NA
+    if(save.covar.pvals == TRUE){
+      pieces_list = lapply(rownames(covariate.pvals), function(name){
+        split = strsplit(name, "__")[[1]]
+        return(data.frame(from = split[1], to = split[2]))
+      })
+      pieces = do.call(rbind, pieces_list)
+      for(i in 1:length(colnames(covariate.pvals))){
+        covariate.pvals[which(pieces$from == pieces$to),i] <- NA
+        covariate.coefficients[which(pieces$from == pieces$to),i] <- NA
       }
     }
-    return(ret_val)
-  }))
-  covariate.pvals = covariate.pvals[which(should_remove == FALSE),]
-  covariate.coefficients = covariate.coefficients[which(should_remove == FALSE),]
-  mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
-  mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
-  mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
-  mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
-
+  }
   list.mat <- list()
   list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
   list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
@@ -950,11 +936,11 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
-#' @param global boolean to indicate whether or not to return the p-value and coefficient of the
-#' global co-regulation (as opposed to the differential co-reguation from the interaction term).
+#' @param remove.tri boolean to indicate whether or not to remove the metabolite-metabolite
+#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
-                                   save.covar.pvals, global = FALSE) {
+                                   save.covar.pvals, remove.tri = FALSE) {
   arraydata <- data.frame(gene)
   num <- nrow(gene)
   numprog <- round(num*0.1)
@@ -992,10 +978,6 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
     index.interac <- grep('m:type', term.pvals)
     term.coefficient <- rownames(mlin$coefficients)
     index.coefficient <-  grep('m:type', term.coefficient)
-    if(global == TRUE){
-      index.interac <- which(term.pvals == "m")
-      index.coefficient <-  which(term.coefficient == "m")
-    }
     p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
     
@@ -1034,6 +1016,8 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
       list.covariate.coefficients[[i]] <- covariate.coefficients.df
     }
   }
+  covariate.pvals <- do.call(rbind, list.covariate.pvals)
+  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
   mat.pvals <- do.call(rbind, list.pvals)
   mat.coefficients <- do.call(rbind, list.coefficients)
   mat.rsquared <- do.call(rbind, list.rsquared)
@@ -1051,63 +1035,85 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
   rownames(mat.rsquared) <- rownames(gene)
   colnames(mat.rsquared) <- rownames(gene)
   
-  # Find locations where the upper triangular value is higher than the lower triangular.
-  mat.pvals.t <- t(mat.pvals)
-  mat.pvalsadj.t <- t(mat.pvalsadj)
-  mat.coefficients.t <- t(mat.coefficients)
-  mat.rsquared.t <- t(mat.rsquared)
-  where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
-  
-  # Replace those locations with values from the lower triangular.
-  mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
-  mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
-  mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
-  mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
-  covariate.pvals <- do.call(rbind, list.covariate.pvals)
-  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
-  
-  # Remove the highest p-values and store the result in the upper triangular.
-  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
-    ret_val = FALSE
-    pieces = strsplit(name, "__")[[1]]
-    m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
-                                                   fixed = TRUE) == TRUE)]
-    pval_1 = covariate.pvals[name,m_type]
-    pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
-    if(pieces[1] == pieces[2]){
-      ret_val = TRUE
-    }
-    else if(pval_2 < pval_1){
-      ret_val = TRUE
-    }
-    else if(pval_2 == pval_1){
-      pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
-      pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
-                                                               pieces[1], 
-                                                               sep = "__"))
-      if(pos_pval_1 > pos_pval_2){
-        ret_val = TRUE
+  if(remove.tri == TRUE){
+	  # Find locations where the upper triangular value is higher than the lower triangular.
+	  mat.pvals.t <- t(mat.pvals)
+	  mat.pvalsadj.t <- t(mat.pvalsadj)
+	  mat.coefficients.t <- t(mat.coefficients)
+	  mat.rsquared.t <- t(mat.rsquared)
+	  where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
+	  
+	  # Replace those locations with values from the lower triangular.
+	  mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
+	  mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
+	  mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
+	  mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
+	  covariate.pvals <- do.call(rbind, list.covariate.pvals)
+	  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
+	  
+	  # Remove the highest p-values and store the result in the upper triangular.
+	  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
+  		ret_val = FALSE
+  		pieces = strsplit(name, "__")[[1]]
+  		m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
+  													   fixed = TRUE) == TRUE)]
+  		pval_1 = covariate.pvals[name,m_type]
+  		pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
+  		if(pieces[1] == pieces[2]){
+  		  ret_val = TRUE
+  		}
+  		else if(pval_2 < pval_1){
+  		  ret_val = TRUE
+  		}
+  		else if(pval_2 == pval_1){
+  		  pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
+  		  pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
+  																   pieces[1], 
+  																   sep = "__"))
+  		  if(pos_pval_1 > pos_pval_2){
+  			ret_val = TRUE
+  		  }
+  		}
+  		return(ret_val)
+	  }))
+	  if(save.covar.pvals == TRUE){
+  	  for(i in 1:length(colnames(covariate.pvals))){
+  	    covariate.pvals[which(should_remove == TRUE),i] <- NA
+  	    covariate.coefficients[which(should_remove == TRUE),i] <- NA
+  	  }
+	  }
+	  mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
+	  mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
+	  mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
+	  mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
+  }
+  else{
+    # Only remove the diagonal.
+    diag(mat.pvals) <- NA
+    diag(mat.pvalsadj) <- NA
+    diag(mat.coefficients) <- NA
+    diag(mat.rsquared) <- NA
+    if(save.covar.pvals == TRUE){
+      pieces_list = lapply(rownames(covariate.pvals), function(name){
+        split = strsplit(name, "__")[[1]]
+        return(data.frame(from = split[1], to = split[2]))
+      })
+      pieces = do.call(rbind, pieces_list)
+      for(i in 1:length(colnames(covariate.pvals))){
+        covariate.pvals[which(pieces$from == pieces$to),i] <- NA
+        covariate.coefficients[which(pieces$from == pieces$to),i] <- NA
       }
     }
-    return(ret_val)
-  }))
-  covariate.pvals = covariate.pvals[which(should_remove == FALSE),]
-  covariate.coefficients = covariate.coefficients[which(should_remove == FALSE),]
-  mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
-  mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
-  mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
-  mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
-  
+  }
   list.mat <- list()
   list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
   list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
   list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
   list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
-  list.mat[["covariate.coefficients"]] <- as.data.frame(covariate.pvals)
+  list.mat[["covariate.coefficients"]] <- as.data.frame(covariate.coefficients)
   return(list.mat)
 }
-
 
 #' Function that gets numeric cutoffs from percentile
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
