@@ -944,7 +944,7 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
   arraydata <- data.frame(gene)
   num <- nrow(gene)
   numprog <- round(num*0.1)
-  form.add <- "Y ~ m + type + m:type"
+  form.add <- "Y ~ g + type + g:type"
   if (!is.null(covar)) {
     len.covar <- length(covar)
     for (i in 1:len.covar) {
@@ -957,11 +957,11 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
   list.covariate.pvals <- list()
   list.covariate.coefficients <- list()
   for (i in 1:num) {
-    m <- as.numeric(gene[i, ])
+    g <- as.numeric(gene[i, ])
     if (is.null(covar)) {
-      clindata <- data.frame(m, type)
+      clindata <- data.frame(g, type)
     } else {
-      clindata <- data.frame(m, type, covarMatrix)
+      clindata <- data.frame(g, type, covarMatrix)
     }
     
     #change type for continuous data (factor to numeric)
@@ -975,9 +975,9 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
     term.pvals <- rownames(mlin$p.value.coeff)
     
     # Return the primary p-values and coefficients.
-    index.interac <- grep('m:type', term.pvals)
+    index.interac <- grep('g:type', term.pvals)
     term.coefficient <- rownames(mlin$coefficients)
-    index.coefficient <-  grep('m:type', term.coefficient)
+    index.coefficient <-  grep('g:type', term.coefficient)
     p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
     coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
     
@@ -1055,7 +1055,7 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
 	  should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
   		ret_val = FALSE
   		pieces = strsplit(name, "__")[[1]]
-  		m_type = colnames(covariate.pvals)[which(grepl("m:", colnames(covariate.pvals), 
+  		m_type = colnames(covariate.pvals)[which(grepl("g:", colnames(covariate.pvals), 
   													   fixed = TRUE) == TRUE)]
   		pval_1 = covariate.pvals[name,m_type]
   		pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),m_type]
@@ -1127,7 +1127,7 @@ getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercent
   
   #get top and bottom cutoffs (need highest positive and highest negative coeffs)
   tofilter_abs = abs(tofilter)
-  abs_cutoff = as.numeric(quantile(tofilter_abs, interactionCoeffPercentile, na.rm = TRUE))
+  abs_cutoff = as.numeric(stats::quantile(tofilter_abs, interactionCoeffPercentile, na.rm = TRUE))
   
   return(c(0 - abs_cutoff, abs_cutoff))
 

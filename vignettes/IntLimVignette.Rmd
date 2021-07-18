@@ -11,6 +11,8 @@ vignette: >
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+result_dir <- "~\\IntLIM_vignette_results"
+dir.create(result_dir)
 ```
 
 ##Introduction
@@ -90,8 +92,7 @@ Additionally, the metabMetaData, geneMetaData, and SampleMetaData need to contai
 A small data set is embedded in a package.  This consists of the National Cancer Institute-60 (NCI-60) cell line data with a reduced number of genes for faster calculation.  To access it use the following commands.  csvfile describes the location of the meta-file describing the location of the other 5 input files.  
 
 ```{r}
-#dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-dir <- "H:\\data_driven_networks\\intlim_code\\IntLIM\\inst\\extdata"
+dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
 csvfile <- file.path(dir, "NCItestinput.csv")
 csvfile
 ```
@@ -130,51 +131,24 @@ IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
 ```
 
 ##Run IntLIM
-###Discrete Phenotype Models
 The linear models are run by the __RunIntLim()__ function.  The __stype__ command allows the user to select a column from the sample meta data for the two categories to be compared (two cancer types, tumor vs. non-tumor, etc).  Currently, IntLIM only supports comparison of two categories (__"PBO_vs_Leukemia"__ is selected). The resulting object from the analysis is an IntLimResults object containing slots for un-adjusted and False Discovery Rate (FDR)-adjusted p-values for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value implies that the slope of gene-metabolite association in one phenotype is different from the other.  The __RunIntLim()__ function is based heavily on the MultiLinearModel functions developed for the ClassComparison package part of oompa (http://oompa.r-forge.r-project.org).
 
-Variations of each method are tested here as well:
+The following variations of this function are available:
 - Setting `save.covar.pvals` to TRUE returns the p-values and coefficients of all terms in the model (not only the interaction term p-value and coefficient).
 - Setting `remove.duplicates` to TRUE filters gene-gene and metabolite-metabolite association models to include only the model with the highest p-value. e.g. if m1 ~ m2 has a higher p-value than m2 ~ m1, then the m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1) are removed.
 
 ```{r}
 # Gene-metabolite
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", outcome = "metabolite", independent.var.type = "gene")
-myres.gm.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
 
 # Metabolite-gene
-myres.mg <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", outcome = "gene", independent.var.type = "metabolite")
-myres.mg.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "gene", independent.var.type = "metabolite")
+myres.mg <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), save.covar.pvals = TRUE, outcome = "gene", independent.var.type = "metabolite")
 
 # Metabolite-metabolite
-myres.mm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", outcome = "metabolite", independent.var.type = "metabolite")
-myres.mm.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
-myres.mm.no.dups <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", remove.duplicates = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
-myres.mm.no.dups.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, remove.duplicates = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
+myres.mm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), outcome = "metabolite", independent.var.type = "metabolite")
 
 # Gene-gene
-myres.gg <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", outcome = "gene", independent.var.type = "gene")
-myres.gg.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, outcome = "gene", independent.var.type = "gene")
-myres.gg.no.dups <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", remove.duplicates = TRUE, outcome = "gene", independent.var.type = "gene")
-```
-
-
-###Continuous Phenotype Models
-```{r}
-# Gene-metabolite
-myres.gm.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, outcome = "metabolite", independent.var.type = "gene")
-myres.gm.continuous.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
-
-# Metabolite-metabolite
-myres.mm.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
-myres.mm.continuous.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
-myres.mm.continuous.no.dups <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, remove.duplicates = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
-myres.mm.continuous.no.dups.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE, save.covar.pvals = TRUE, remove.duplicates = TRUE, outcome = "metabolite", independent.var.type = "metabolite")
-
-# Gene-gene
-myres.gg.continuous <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE,  outcome = "gene", independent.var.type = "gene")
-myres.gg.continuous.covar <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE,  save.covar.pvals = TRUE, outcome = "gene", independent.var.type = "gene")
-myres.gg.continuous.no.dups <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="cellnbr", continuous = TRUE,  remove.duplicates = TRUE, outcome = "gene", independent.var.type = "gene")
+myres.gg <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), outcome = "gene", independent.var.type = "gene")
 ```
 
 The __DistPValues()__ function allows the user to observe a histogram of the p-values prior to adjustment 
@@ -182,143 +156,59 @@ The __DistPValues()__ function allows the user to observe a histogram of the p-v
 ```{r}
 IntLIM::DistPvalues(IntLimResults = myres.gm)
 IntLIM::DistPvalues(IntLimResults = myres.mm)
-IntLIM::DistPvalues(IntLimResults = myres.mm.no.dups)
 IntLIM::DistPvalues(IntLimResults = myres.mg)
 IntLIM::DistPvalues(IntLimResults = myres.gg)
-IntLIM::DistPvalues(IntLimResults = myres.gg.no.dups)
-
-IntLIM::DistPvalues(IntLimResults = myres.gm.continuous)
-IntLIM::DistPvalues(IntLimResults = myres.mm.continuous)
-IntLIM::DistPvalues(IntLimResults = myres.mm.continuous.no.dups)
-IntLIM::DistPvalues(IntLimResults = myres.gg.continuous)
-IntLIM::DistPvalues(IntLimResults = myres.gg.continuous.no.dups)
 ```
 
 The __DistRSquared()__ function allows the user to observe a histogram of the r-squared values.
 ```{r}
 IntLIM::DistRSquared(IntLimResults = myres.gm)
 IntLIM::DistRSquared(IntLimResults = myres.mm)
-IntLIM::DistRSquared(IntLimResults = myres.mm.no.dups)
 IntLIM::DistRSquared(IntLimResults = myres.mg)
 IntLIM::DistRSquared(IntLimResults = myres.gg)
-IntLIM::DistRSquared(IntLimResults = myres.gg.no.dups)
-
-IntLIM::DistRSquared(IntLimResults = myres.gm.continuous)
-IntLIM::DistRSquared(IntLimResults = myres.mm.continuous)
-IntLIM::DistRSquared(IntLimResults = myres.mm.continuous.no.dups)
-IntLIM::DistRSquared(IntLimResults = myres.gg.continuous)
-IntLIM::DistRSquared(IntLimResults = myres.gg.continuous.no.dups)
 ```
 
 The __PValueBoxPlots()__ function allows the user to observe the p-value distributions of all covariates in the linear models prior to adjustment.
 Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when running __RunIntLim__. 
 ```{r}
-IntLIM::PValueBoxPlots(IntLimResults = myres.gm.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.mm.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.mm.no.dups.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.mg.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.gg.covar)
-
-IntLIM::PValueBoxPlots(IntLimResults = myres.gm.continuous.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.mm.continuous.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.mm.continuous.no.dups.covar)
-IntLIM::PValueBoxPlots(IntLimResults = myres.gg.continuous.covar)
+IntLIM::PValueBoxPlots(IntLimResults = myres.gm)
+IntLIM::PValueBoxPlots(IntLimResults = myres.mm)
+IntLIM::PValueBoxPlots(IntLimResults = myres.mg)
+IntLIM::PValueBoxPlots(IntLimResults = myres.gg)
 ```
 
 The __InteractionCoefficientGraph()__ function allows the user to observe the interaction coefficients of all models, sorted in ascending order.
 ```{r}
 # Gene-metabolite
 IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.covar, interactionCoeffPercentile = 0.9)
 
 # Metabolite-metabolite
 IntLIM::InteractionCoefficientGraph(inputResults = myres.mm, independent.var.type = "metabolite",
                                     outcome = "metabolite", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.covar, independent.var.type = "metabolite",
-                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.no.dups, independent.var.type = "metabolite",
-                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.no.dups.covar, independent.var.type = 
-                                      "metabolite", outcome = "metabolite", 
-                                    interactionCoeffPercentile = 0.9)
 
 # Metabolite-gene
 IntLIM::InteractionCoefficientGraph(inputResults = myres.mg, independent.var.type = "metabolite",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mg.covar, independent.var.type = "metabolite",
                                     outcome = "gene", interactionCoeffPercentile = 0.9)
 
 # Gene-gene
 IntLIM::InteractionCoefficientGraph(inputResults = myres.gg, independent.var.type = "gene",
                                     outcome = "gene", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.covar, independent.var.type = "gene",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.no.dups, independent.var.type = "gene",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
 ```
-
-```{r}
-# Gene-metabolite
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.continuous, interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm.continuous.covar, interactionCoeffPercentile = 0.9)
-
-# Metabolite-metabolite
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.continuous, independent.var.type = "metabolite",
-                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.continuous.covar, independent.var.type = "metabolite",
-                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.continuous.no.dups, independent.var.type = "metabolite",
-                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm.continuous.no.dups.covar, independent.var.type = 
-                                      "metabolite", outcome = "metabolite", 
-                                    interactionCoeffPercentile = 0.9)
-
-# Gene-gene
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.continuous, independent.var.type = "gene",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.continuous.covar, independent.var.type = "gene",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gg.continuous.no.dups, independent.var.type = "gene",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
-```
-
 The __MarginalEffectsGraph()__ function allows the user to observe the marginal effects of phenotype for a given gene and metabolite.
 The __MarginalEffectsGraphDataframe()__ function creates the input for __MarginalEffectsGraph()__, given the IntLIM results, the input data, and the gene and metabolite of interest.
 The __MarginalEffectsGraphDataframeMetabolitePairs()__ function is analogous to __MarginalEffectsGraphDataframe()__ for metabolite pairs.
 ```{r}
 # Gene-metabolite
 IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm.covar, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
 
 # Metabolite-metabolite
 IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.covar, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.no.dups, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.no.dups.covar, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
 
 # Metabolite-gene
 IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.mg, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.mg.covar, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
 
 # Gene-gene
 IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.covar, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.no.dups, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
-
-# Gene-metabolite (continuous)
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm.continuous, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm.continuous.covar, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
-
-# Metabolite-metabolite (continuous)
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.continuous, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.continuous.covar, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.continuous.no.dups, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm.continuous.no.dups.covar, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-
-# Gene-gene (continuous)
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.continuous, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.continuous.covar, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg.continuous.no.dups, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
 ```
 
 The __pvalCorrVolcano()__ function allows users to observe a volcano plot comparing the Spearman correlation difference between groups to the –log10(FDR-adjusted p-value).
@@ -328,22 +218,15 @@ Note that these functions are not applicable to continuous outcome data.
 ```{r}
 # Gene-metabolite
 IntLIM::pvalCorrVolcano(inputResults = myres.gm, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcano(inputResults = myres.gm.covar, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
 
 # Metabolite-metabolite
 IntLIM::pvalCorrVolcanoMetabolitePairs(inputResults = myres.mm, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcanoMetabolitePairs(inputResults = myres.mm.covar, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcanoMetabolitePairs(inputResults = myres.mm.no.dups, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcanoMetabolitePairs(inputResults = myres.mm.no.dups.covar, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
 
 # Metabolite-gene
 IntLIM::pvalCorrVolcano(inputResults = myres.mg, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcano(inputResults = myres.mg.covar, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
 
 # Gene-gene
 IntLIM::pvalCorrVolcanoGenePairs(inputResults = myres.gg, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcanoGenePairs(inputResults = myres.gg.covar, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-IntLIM::pvalCorrVolcanoGenePairs(inputResults = myres.gg.no.dups, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
 ```
 
 Process the results and filter pairs of genes-metabolites based on adjusted p-values and differences in correlation coefficients between groups 1 and 2.  Then plot heatmap of significant gene-metabolite pairs
@@ -357,38 +240,15 @@ Note that the __diffcorr__ and __corrtype__ arguments must be set to __NULL__ fo
 ```{r}
 # Gene-metabolite
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-OutputResults(inputResults=myres.gm.sig,filename="~/MyResults.gm.csv")
-myres.gm.covar.sig <- IntLIM::ProcessResults(inputResults = myres.gm.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
 
 # Metabolite-metabolite
 myres.mm.sig <- IntLIM::ProcessResults(inputResults = myres.mm, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-myres.mm.covar.sig <- IntLIM::ProcessResults(inputResults = myres.mm.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-myres.mm.no.dups.sig <- IntLIM::ProcessResults(inputResults = myres.mm.no.dups, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-myres.mm.no.dups.covar.sig <- IntLIM::ProcessResults(inputResults = myres.mm.no.dups.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
 
 # Metabolite-gene
 myres.mg.sig <- IntLIM::ProcessResults(inputResults = myres.mg, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-myres.mg.covar.sig <- IntLIM::ProcessResults(inputResults = myres.mg.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
 
 # Gene-gene
 myres.gg.sig <- IntLIM::ProcessResults(inputResults = myres.gg, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-myres.gg.covar.sig <- IntLIM::ProcessResults(inputResults = myres.gg.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-myres.gg.no.dups.sig <- IntLIM::ProcessResults(inputResults = myres.gg.no.dups, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-
-# Gene-metabolite (continuous)
-myres.gm.continuous.sig <- IntLIM::ProcessResults(inputResults = myres.gm.continuous, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-myres.gm.continuous.covar.sig <- IntLIM::ProcessResults(inputResults = myres.gm.continuous.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-
-# Metabolite-metabolite (continuous)
-myres.mm.continuous.sig <- IntLIM::ProcessResults(inputResults = myres.mm.continuous, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-myres.mm.continuous.covar.sig <- IntLIM::ProcessResults(inputResults = myres.mm.continuous.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-myres.mm.continuous.no.dups.sig <- IntLIM::ProcessResults(inputResults = myres.mm.continuous.no.dups, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-myres.mm.continuous.no.dups.covar.sig <- IntLIM::ProcessResults(inputResults = myres.mm.continuous.no.dups.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-
-# Gene-gene (continuous)
-myres.gg.continuous.sig <- IntLIM::ProcessResults(inputResults = myres.gg.continuous, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-myres.gg.continuous.covar.sig <- IntLIM::ProcessResults(inputResults = myres.gg.continuous.covar, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
-myres.gg.continuous.no.dups.sig <- IntLIM::ProcessResults(inputResults = myres.gg.continuous.no.dups, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = NULL, corrtype = NULL, rsquaredCutoff = 0.2)
 ```
 
 The __CorrHeatmap()__ produces a clustered heatmap of the gene-metabolite Spearman correlations for each of these groups.  
@@ -436,39 +296,38 @@ The __OutputData()__ and __OutputResults()__ function allows the users to output
 Lastly, various writing functions are implemented.  The __OutputData()__ and __OutputResults()__ function allows the users to output the data and results of the analyses into zipped CSV files.
 
 ```{r eval = FALSE}
-IntLIM::OutputData(inputData=inputDatafilt,filename="~/FilteredData.zip")
-OutputResults(inputResults=myres.gm.sig,filename="~/MyResults.gm.csv")
-OutputResults(inputResults=myres.gm.covar.sig,filename="~/MyResults.gm.covar.csv")
-OutputResults(inputResults=myres.mm.sig,filename="~/MyResults.mm.csv")
-OutputResults(inputResults=myres.mm.covar.sig,filename="~/MyResults.mm.covar.csv")
-OutputResults(inputResults=myres.mm.no.dups.sig,filename="~/MyResults.mm.no.dups.csv")
-OutputResults(inputResults=myres.mm.no.dups.covar.sig,filename="~/MyResults.mm.no.dups.covar.csv")
-OutputResults(inputResults=myres.mg.sig,filename="~/MyResults.mg.csv")
-OutputResults(inputResults=myres.mg.covar.sig,filename="~/MyResults.mg.covar.csv")
-OutputResults(inputResults=myres.gg.sig,filename="~/MyResults.gg.csv")
-OutputResults(inputResults=myres.gg.covar.sig,filename="~/MyResults.gg.covar.csv")
-OutputResults(inputResults=myres.gg.no.dups.sig,filename="~/MyResults.gg.no.dups.csv")
-OutputResults(inputResults=myres.gm.continuous.sig,filename="~/MyResults.gm.continuous.csv")
-OutputResults(inputResults=myres.gm.continuous.covar.sig,filename="~/MyResults.gm.continuous.covar.csv")
-OutputResults(inputResults=myres.mm.continuous.sig,filename="~/MyResults.mm.continuous.csv")
-OutputResults(inputResults=myres.mm.continuous.covar.sig,filename="~/MyResults.mm.continuous.covar.csv")
-OutputResults(inputResults=myres.mm.continuous.no.dups.sig,filename="~/MyResults.mm.continuous.no.dups.csv")
-OutputResults(inputResults=myres.mm.continuous.no.dups.covar.sig,filename="~/MyResults.mm.continuous.no.dups.covar.csv")
-OutputResults(inputResults=myres.gg.continuous.sig,filename="~/MyResults.gg.continuous.csv")
-OutputResults(inputResults=myres.gg.continuous.covar.sig,filename="~/MyResults.gg.continuous.covar.csv")
-OutputResults(inputResults=myres.gg.continuous.no.dups.sig,filename="~/MyResults.gg.continuous.no.dups.csv")
+IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.mm.sig,filename=paste(result_dir, "MyResults.mm.csv", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.mg.sig,filename=paste(result_dir, "MyResults.mg.csv", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.gg.sig,filename=paste(result_dir, "MyResults.gg.csv", sep = "\\"))
 ```
 
-##ShinyApp User Interface
+# Create Co-Regulation Graph
+In a co-regulation graph, nodes are analytes (genes and metabolites) and edges indicate
+a significant phenotype-dependent association between the analytes.
+```{r}
+coreg_graph = BuildCoRegulationGraph(list(myres.gm.sig, myres.mm.sig, myres.mg.sig, myres.gg.sig))
 
-A Shiny App embedded in the package provides a user friendly interface for running IntLim (https://shiny.rstudio.com).  This can be run by calling __runIntLIMApp()__ below. 
+# Betweenness
+centrality_graph = IntLIM::ComputeCentrality(coreg_graph, c("betweenness", "kleinberg", "closeness",
+                                                                      "eccentricity"))
+write.csv(centrality_graph, file=paste(result_dir, "Graph.Centrality.csv", sep = "\\"))
+```
+# Run Pairwise Prediction.
+```{r}
+# Get predictions.
+predictions_gm <- IntLIM::RunPairwisePrediction(myres.gm.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
+predictions_mm <- IntLIM::RunPairwisePrediction(myres.mm.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
+predictions_mg <- IntLIM::RunPairwisePrediction(myres.mg.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
+predictions_gg <- IntLIM::RunPairwisePrediction(myres.gg.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
 
-```{r eval=FALSE}
-if(!require(shiny)){
-  install.packages("shiny")
-}
-library(shiny)
-runIntLIMApp()
+# Project predictions onto graph.
+predictions_graph <- IntLIM::ProjectPredictionsOntoGraph(list(predictions_gm, predictions_mm, predictions_mg, predictions_gg), coreg_graph)
+IntLIM::SaveGraphPredictionPlots(graphWithPredictions=predictions_graph, 
+                         inputData=inputDatafilt, stype="PBO_vs_Leukemia", 
+                         dirName=paste(result_dir, "Predictions", sep = "\\"),
+                                     continuous = FALSE)
 ```
 
 ##References

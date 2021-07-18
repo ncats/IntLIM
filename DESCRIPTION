@@ -6,7 +6,8 @@ Authors@R: c(
  person("Jalal", "Siddiqui", email = "Jalal.Siddiqui@osumc.edu", role="aut"),
  person("Shunchao", "Wang", email="shunchao.wang@osumc.edu", role="aut"),
  person("Rohith", "Vanam", email="rohith.vanam@osumc.edu", role="aut"),
- person("Tara", "Eicher", email="eicher.33@osu.edu", role="aut"),
+ person("Elizabeth", "Baskin", email="baskin.18@osu.edu", role="aut"),
+ person("Tara", "Eicher", email="tara.eicher@nih.gov", role="aut"),
  person("Ewy", "Mathe", email="ewy.mathe@nih.gov", role=c("aut","cre")))
 Maintainer: The package maintainer <ewy.mathe@nih.gov>
 Description: This workflow takes normalized gene expression and metabolite levels, 
@@ -18,19 +19,23 @@ Imports:
     Biobase,
     BiocGenerics,
     GenomicRanges,
-    heatmaply,
+	graphics,
+	grDevices,
     highcharter,
+	igraph,
     magrittr,
     margins,
     methods,
     MultiDataSet,
     reshape2,
-    stats
+    stats,
+	utils
 Suggests:
     dendextend,
     dplyr,
     DT,
     gplots,
+	heatmaply,
     htmltools,
     htmlwidgets,
     knitr,
@@ -55,6 +60,8 @@ Collate:
     '02_FilterData.R'
     '03_RunIntLim.R'
     '04_ProcessResults.R'
+    '05_BuildCoRegulationGraph.R'
+    '06_RunPairwisePrediction.R'
     'IntLimResults_extendedfunctions.R'
     'MultiDataSet_extendedfunctions.R'
     'plottingfunctions.R'

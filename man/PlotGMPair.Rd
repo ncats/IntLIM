@@ -28,9 +28,6 @@ PlotGMPair(
 \item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
 in Shiny/Knittr (F)}
 }
-\value{
-a highcharter object
-}
 \description{
 scatter plot of gene-metabolite pairs (based on user selection)
 }

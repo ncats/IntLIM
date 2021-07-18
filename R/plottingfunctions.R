@@ -1,6 +1,7 @@
 #' Get some stats after reading in data
 #'
 #' @import magrittr
+#' @import highcharter
 #'
 #' @include MultiDataSet_extendedfunctions.R
 #'
@@ -146,6 +147,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 #' PCA plots of data for QC
 #'
 #' @import magrittr
+#' @import highcharter
 #'
 #' @include MultiDataSet_extendedfunctions.R
 #'
@@ -475,7 +477,6 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #' Plot correlation heatmap
 #'
 #' @import magrittr
-#' @import heatmaply
 #'
 #' @param inputResults IntLimResults object (output of ProcessResults())
 #' @param inputData IntLimObject output of ReadData() or FilterData()
@@ -582,21 +583,11 @@ type <- cor <- c()
                                    y_axis_font_size ="1px",
                                    colors = palette,
                                    key.title = 'Correlation \n differences' )
-        #distance = stats::dist(heat_data)
-        #hcluster = stats::hclust(distance)
-        #dend1 = stats::as.dendrogram(hcluster)
-        #dend1 = dendextend::set(dend1, "branches_k_color", k = treecuts)
-        #dend1 = dendextend::set(dend1, "branches_lwd", c(1,treecuts))
-        #dend1 = dendextend::ladderize(dend1)
-        #row_dend  <-dend1
         
         row_dend = hmr$rows
         grDevices::pdf(file=pdf.file, width=12, height=6.3)
         gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                          #k_row = treecuts,#k_col = 2,
-                          #margins = c(80,5),
                           dendrogram = "row",
-                          #y_axis_font_size ="1px",
                           col = palette,
                           density.info = 'none',
                           key.title = 'Correlation \n differences',
@@ -615,20 +606,10 @@ type <- cor <- c()
                                  y_axis_font_size ="1px",
                                  colors = palette,
                                  key.title = 'Correlation \n differences' )
-      #distance = stats::dist(heat_data)
-      #hcluster = stats::hclust(distance)
-      #dend1 = stats::as.dendrogram(hcluster)
-      #dend1 = dendextend::set(dend1, "branches_k_color", k = treecuts)
-      #dend1 = dendextend::set(dend1, "branches_lwd", c(1,treecuts))
-      #dend1 = dendextend::ladderize(dend1)
-      #row_dend  <-dend1
       
       row_dend = hmr$rows
       gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                        #k_row = treecuts,#k_col = 2,
-                        #margins = c(80,5),
                         dendrogram = "row",
-                        #y_axis_font_size ="1px",
                         col = palette,
                         density.info = 'none',
                         key.title = 'Correlation \n differences',
@@ -639,10 +620,7 @@ type <- cor <- c()
       if(!is.null(pdf.file)){
         grDevices::pdf(file=pdf.file, width=12, height=6.3)
         gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                          #k_row = treecuts,#k_col = 2,
-                          #margins = c(80,5),
                           dendrogram = "row",
-                          #y_axis_font_size ="1px",
                           col = palette,
                           density.info = 'none',
                           key.title = 'Correlation \n differences',
@@ -684,7 +662,6 @@ type <- cor <- c()
 #' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
 #' in Shiny/Knittr (F)
 #' @param metabName string of select metabName
-#' @return a highcharter object
 #'
 #' @examples
 #' \dontrun{
@@ -769,7 +746,6 @@ PlotGMPair<- function(inputData,stype=NULL,geneName,metabName,palette = "Set1",
     line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
 
     ds <- highcharter::list_parse(data)
-    #cols=c("blue","pink")
 
         hc <- highcharter::highchart(width = 350, height = 350 ) %>%
                 highcharter::hc_title(text=paste(geneName,' vs. ', metabName, sep = '')) %>%
@@ -795,7 +771,6 @@ PlotGMPair<- function(inputData,stype=NULL,geneName,metabName,palette = "Set1",
 #' scatter plot of metabolite-gene pairs (based on user selection)
 #'
 #' @import magrittr
-#' @import highcharter
 #'
 #' @param inputData IntLimObject output of ReadData() or FilterData()
 #' @param stype category to color-code by
@@ -1044,7 +1019,6 @@ PlotMMPair<- function(inputData,stype=NULL,metab1Name,metab2Name,palette = "Set1
 #' scatter plot of metabolite-metabolite pairs (based on user selection)
 #'
 #' @import magrittr
-#' @import highcharter
 #'
 #' @param inputData IntLimObject output of ReadData() or FilterData()
 #' @param stype category to color-code by
@@ -1405,7 +1379,6 @@ InteractionCoefficientGraph<-function(inputResults,
 
 #' Creates a dataframe of the marginal effect of phenotype
 #'
-#' @import stats
 #' @import margins
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
@@ -1469,7 +1442,6 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest,
 
 #' Creates a dataframe of the marginal effect of phenotype
 #'
-#' @import stats
 #' @import margins
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
@@ -1542,7 +1514,6 @@ MarginalEffectsGraphDataframeMetabolitePairs<-function(inputResults, inputData,
 
 #' Creates a dataframe of the marginal effect of phenotype
 #'
-#' @import stats
 #' @import margins
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
@@ -1626,7 +1597,7 @@ MarginalEffectsGraph<-function(dataframe, title){
       form <- paste(form, '+', covariates[i])
     }
   }
-  model = glm(formula = form, data=dataframe)
+  model = stats::glm(formula = form, data=dataframe)
   cplot(model, "type", data = dataframe, what = "prediction", main = title)
   return(model)
 
@@ -1750,5 +1721,69 @@ HistogramGGPairs <- function(inputResults, type = 'outcome', breaks = 50){
          breaks = breaks, xlab = 'Gene pairs based on independent gene')
   }else{
     stop("Only two valid types:  outcome or independent.  Invalid type entered")
+  }
+}
+
+#' For each sample, save a plot of phenotype predictions from each edge in the
+#' IntLIM graph. The edge weight is the phenotype prediction
+#' using the pair of analytes connected to the edge. Weights correspond to color
+#' in the graph. A color bar is shown for reference, and the true phenotype is
+#' listed at the top of the plot.
+#' @param graphWithPredictions An igraph object. This graph is the co-regulation graph
+#' generated using IntLIM analysis of analyte pairs. Weights correspond to phenotype
+#' predictions.
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
+#' metabolite abundances, and associated meta-data
+#' @param stype The phenotype of interest. This should correspond to a column in the
+#' input data.
+#' @param dirName The name of the directory where the output images will be saved.
+#' @param continuous A boolean indicating whether the phenotype is continuous (TRUE)
+#' or discrete (FALSE).
+#' @export
+SaveGraphPredictionPlots <- function(graphWithPredictions, inputData, stype, dirName,
+                                     continuous = TRUE){
+  # Create folder.
+  dir.create(dirName)
+  
+  # Save each graph.
+  for(name in names(graphWithPredictions)){
+    
+    # Connect to the file.
+    grDevices::png(paste0(paste(dirName, make.names(name), sep = "\\"), ".png"))
+    
+    # Extract graph for the subject of interest.
+    g <- graphWithPredictions[[name]]
+    
+    # Set up the layout and margins.
+    graphics::layout(t(1:2),widths=c(5.5,1.5))
+    par(mar=c(0,0,2,3))
+    
+    # Plot the graph.
+    plot(g, layout = igraph::layout.fruchterman.reingold, vertex.label = NA)
+    
+    # Add the true phenotype and subject ID.
+    inputDat <- inputData@phenoData$expression$main@data
+    true_phen <- inputDat[which(rownames(inputDat) == name), stype]
+    graphics::text(x = -1, y = 1.2, paste0(name, " (true phenotype is ", true_phen, ")"), pos = 4)
+    
+    # Add information about conversion to factors for discrete data.
+    if(continuous == FALSE){
+      inputDataPhen <- as.factor(inputDat[,stype])
+      graphics::text(x = -1, y = 1.1, paste(levels(inputDataPhen)[1], " <= 0"), pos = 4)
+      graphics::text(x = -1, y = 1.0, paste(levels(inputDataPhen)[2], " >= 1"), pos = 4)
+    }
+    
+    # Add the color bar.
+    color <- igraph::edge_attr(g, name = "color")[order(igraph::edge_attr(g, name = "weight"))]
+    labs <- igraph::edge_attr(g, name = "weight")[order(igraph::edge_attr(g, name = "weight"))]
+    lab_quants <- seq(min(labs), max(labs), by = (max(labs)-min(labs))/5)
+    graphics::image(y=1:100,z=t(1:100), col=color, axes=FALSE, main="Prediction", cex.main=.8)
+    graphics::axis(4,cex.axis=0.8, at = seq(0, 100, by = 20), labels = format(as.list(lab_quants), 
+                                                                    digits=0, 
+                                                                    scientific=FALSE), 
+         las = 1)
+    
+    # Close the file connection.
+    grDevices::dev.off()
   }
 }
