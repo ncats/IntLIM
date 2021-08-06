@@ -1787,3 +1787,68 @@ SaveGraphPredictionPlots <- function(graphWithPredictions, inputData, stype, dir
     grDevices::dev.off()
   }
 }
+
+#' Plot the graph with edges colored by weight in the final outcome.
+#' @param graph The co-regulation graph.
+#' @param results A modelResults object.
+#' @export
+PlotGraphWeights <- function(graph, results){
+  
+  # Set up the layout and margins.
+  graphics::layout(t(1:2),widths=c(5.5,1.5))
+  par(mar=c(0,0,2,3))
+  
+  # Match the weights to graph edges.
+  g <- igraph::as_data_frame(graph)
+  g$to <- make.names(g$to)
+  g$from <- make.names(g$from)
+  weights <- results@current.weights
+  if(results@weights.after.pooling == TRUE){
+    S <- results@pooling.filter@filter
+    weights <- t(matrix(rep(weights, dim(S)[1]), ncol = dim(S)[1]))
+    sum_S <- colSums(S)
+    S.weighted <- S * weights / sum_S
+    S.flat <- rowSums(S.weighted)
+    weights <- S.flat
+  }
+  names(weights) <- rownames(results@model.input@node.wise.prediction)
+  weights_by_edge_name <- lapply(1:dim(g)[1], function(edge){
+    forwards <- paste(g$from[edge], g$to[edge], sep = "__")
+    backwards <- paste(g$to[edge], g$from[edge], sep = "__")
+    which_weight <- union(which(names(weights) == forwards), 
+                          which(names(weights) == backwards))
+    the_weight <- NA
+    if(length(which_weight) > 0){
+      the_weight <- weights[which_weight]
+    }
+    return(the_weight)
+  })
+  
+  # Add the weights to the data frame.
+  g$weight <- unlist(weights_by_edge_name)
+  g <- g[which(!is.na(g$weight)),]
+  
+  # Map weights to colors.
+  pal <- grDevices::colorRampPalette(c("blue", "red"))(100)
+  range_weight <- range(g$weight)
+  color_scale <- pal[findInterval(g$weight, seq(range_weight[1], range_weight[2], 
+                                            length.out = length(pal)+1), all.inside = TRUE)]
+  g$color <- color_scale
+
+  # Plot the graph.
+  new_graph <- igraph::graph_from_data_frame(g, directed = FALSE)
+  plot(new_graph, layout = igraph::layout.fruchterman.reingold, vertex.label = NA,
+       vertex.size = 3)
+  
+  # Add the color bar.
+  color <- igraph::edge_attr(new_graph, name = "color")[order(igraph::edge_attr(new_graph, 
+                                                                                name = "weight"))]
+  labs <- igraph::edge_attr(new_graph, name = "weight")[order(igraph::edge_attr(new_graph, 
+                                                                                name = "weight"))]
+  lab_quants <- seq(min(labs), max(labs), by = (max(labs)-min(labs))/5)
+  graphics::image(y=1:100,z=t(1:100), col=color, axes=FALSE, main="Weight", cex.main=.8)
+  graphics::axis(4,cex.axis=0.8, at = seq(0, 100, by = 20), labels = format(as.list(lab_quants), 
+                                                                            digits=0, 
+                                                                            scientific=FALSE), 
+                 las = 1)
+}

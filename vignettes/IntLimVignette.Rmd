@@ -323,11 +323,34 @@ predictions_mg <- IntLIM::RunPairwisePrediction(myres.mg.sig, inputDatafilt, sty
 predictions_gg <- IntLIM::RunPairwisePrediction(myres.gg.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
 
 # Project predictions onto graph.
-predictions_graph <- IntLIM::ProjectPredictionsOntoGraph(list(predictions_gm, predictions_mm, predictions_mg, predictions_gg), coreg_graph)
-IntLIM::SaveGraphPredictionPlots(graphWithPredictions=predictions_graph, 
+prediction_graphs <- IntLIM::ProjectPredictionsOntoGraph(list(predictions_gm, predictions_mm, predictions_mg, predictions_gg), coreg_graph)
+IntLIM::SaveGraphPredictionPlots(graphWithPredictions=prediction_graphs, 
                          inputData=inputDatafilt, stype="PBO_vs_Leukemia", 
                          dirName=paste(result_dir, "Predictions", sep = "\\"),
                                      continuous = FALSE)
+```
+
+# Train a graph learning based prediction model.
+```{r}
+# Format the input for training.
+modelInputs <- IntLIM::formatTrainingInput(predictionGraphs=prediction_graphs, inputData = inputDatafilt, stype = "PBO_vs_Leukemia", stype.class = "categorical")
+
+# Create pooling filter.
+poolingFilter <- IntLIM::CreatePoolingFilter(modelInputs = modelInputs, k = length(prediction_graphs), poolType = "median")
+
+# Initialize model.
+modelResultsInit <- IntLIM::InitializeGraphLearningModel(modelInputs, poolingFilter,
+                                                     iterations = 1000,
+                                                     convergenceCutoff = 0.0001,
+                                                     learningRate = 0.2,
+                                                     activationType = "tanh",
+                                                     optimizationType = "momentum",
+                                                     weightsAfterPooling = TRUE)
+
+# Train model.
+modelResultsFinal <- IntLIM::TrainGraphLearningModel(modelResults = modelResultsInit)
+PlotGraphWeights(coreg_graph, modelResultsFinal)
+write.csv(modelResultsFinal@iteration.tracking,paste(result_dir, "model.results.csv", sep = "\\"))
 ```
 
 ##References
