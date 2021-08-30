@@ -177,8 +177,9 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,common=T,
     biobase_pdata <- Biobase::pData(inputData[["expression"]])
   }
 
-  if(is.null(stype)) {
-		warning("The resulting PCA plot is not color-coded because you did not provide a category in 'stype'")
+  if(is.null(stype) || is.numeric(biobase_pdata[,stype]) == TRUE) {
+		warning("The resulting PCA plot is not color-coded because you did not provide 
+		        a categorical variable in 'stype'")
 		mytype <- NULL
   } else if (length(intersect(colnames(biobase_pdata),stype))!=1) {
 		stop(paste0("You provided ",stype, "as your stype variable but it does not exist in your data"))
@@ -209,7 +210,7 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,common=T,
 	    stop("A dataset not containing both expression and metabolite data cannot run
 	         with 'common' set to TRUE. Set 'common' to FALSE.")
 	  } else {
-	    if(is.null(stype)) {
+	    if(is.null(stype) || is.numeric(biobase_pdata[,stype]) == TRUE) {
   			incommon <- getCommon(inputData)
   			mygene <- incommon$gene
   			gpca <- stats::prcomp(t(mygene),center=T,scale=F)
@@ -264,7 +265,7 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,common=T,
 		}
 	} else { # common == F
 	  
-	  if(!is.null(stype)) {
+	  if(!is.null(stype) || is.numeric(biobase_pdata[,stype]) == TRUE) {
       # Compute PC's.
       gtypes <- NULL
       mtypes <- NULL
@@ -1385,11 +1386,11 @@ InteractionCoefficientGraph<-function(inputResults,
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
 #' @param metaboliteOfInterest metabolite in gene-metabolite pair
 #' @param geneOfInterest gene in gene-metabolite pair
-#' @param continuous whether the outcome is continuous
+#' @param continuous whether or not the outcome is continuous (TRUE or FALSE)
 #' @return dataframe for further analysis
 #' @export
 MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest, 
-                                        metaboliteOfInterest, continuous = FALSE){
+                                        metaboliteOfInterest, continuous){
 
   if (class(inputData) != "MultiDataSet") {
     stop("input data is not a MultiDataSet class")
@@ -1419,9 +1420,6 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest,
   #Add gene, phenotype and metabolite data for glm
   forglm  = data.frame(row.names = 1:length(gene_data))
   forglm$g = gene_data
-  if(continuous == TRUE){
-    forglm$g = as.numeric(as.character(gene_data))
-  }
   forglm$type = pheno
   forglm$Y = as.numeric(metab_data)
 
@@ -1598,7 +1596,12 @@ MarginalEffectsGraph<-function(dataframe, title){
     }
   }
   model = stats::glm(formula = form, data=dataframe)
-  cplot(model, "type", data = dataframe, what = "prediction", main = title)
+  tryCatch({
+    cplot(model, "type", data = dataframe, what = "prediction", main = title)
+  }, error = function(cond){
+    print("Could not plot the data. Check to see whether your outcome is continuous.
+          Only categorical outcomes are valid for this function.")
+  })
   return(model)
 
 }
@@ -1631,11 +1634,15 @@ HistogramGMPairs <- function(inputResults, type = 'metabolite', breaks = 50){
   if (type == 'metabolite'){
     metab.pairs <- data.frame(table(x$Metabolite))
     metab.pairs.number <- as.vector(metab.pairs$Freq)
-    hist(metab.pairs.number, breaks = breaks, main = "Number of gene-metabolite pairs based on metabolite", xlab = 'Gene-metabolite pairs based on metabolite')
+    hist(metab.pairs.number, breaks = breaks, main = "Number of gene-metabolite 
+         pairs based on metabolite", xlab = 'Gene-metabolite pairs based on metabolite')
   }else if (type == 'gene'){
     gene.pairs <- data.frame(table(x$Gene))
     gene.pairs.number <- as.vector(gene.pairs$Freq)
-    hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", breaks = breaks, xlab = 'Gene-metabolite pairs based on gene')
+    str(x)
+    str(x$Gene)
+    hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", 
+         breaks = breaks, xlab = 'Gene-metabolite pairs based on gene')
   }else{
       stop("Only two valid types:  gene or metabolite.  Invalid type entered")
   }
@@ -1851,4 +1858,54 @@ PlotGraphWeights <- function(graph, results){
                                                                             digits=0, 
                                                                             scientific=FALSE), 
                  las = 1)
+}
+
+#' Plot the graph as a heatmap with edges colored by weight in the final outcome.
+#' @param graph The co-regulation graph.
+#' @param results A modelResults object.
+#' @export
+PlotGraphWeightsHeatmap <- function(graph, results){
+  # Match the weights to graph edges.
+  g <- igraph::as_data_frame(graph)
+  g$to <- make.names(g$to)
+  g$from <- make.names(g$from)
+  weights <- results@current.weights
+  if(results@weights.after.pooling == TRUE){
+    S <- results@pooling.filter@filter
+    weights <- t(matrix(rep(weights, dim(S)[1]), ncol = dim(S)[1]))
+    sum_S <- colSums(S)
+    S.weighted <- S * weights / sum_S
+    S.flat <- rowSums(S.weighted)
+    weights <- S.flat
+  }
+  names(weights) <- rownames(results@model.input@node.wise.prediction)
+  weights_by_edge_name <- lapply(1:dim(g)[1], function(edge){
+    forwards <- paste(g$from[edge], g$to[edge], sep = "__")
+    backwards <- paste(g$to[edge], g$from[edge], sep = "__")
+    which_weight <- union(which(names(weights) == forwards), 
+                          which(names(weights) == backwards))
+    the_weight <- NA
+    if(length(which_weight) > 0){
+      the_weight <- weights[which_weight]
+    }
+    return(the_weight)
+  })
+  
+  # Add the weights to the data frame.
+  g$weight <- unlist(weights_by_edge_name)
+  g <- g[which(!is.na(g$weight)),]
+  
+  # Map weights to colors.
+  pal <- grDevices::colorRampPalette(c("blue", "red"))(100)
+  range_weight <- range(g$weight)
+  color_scale <- pal[findInterval(g$weight, seq(range_weight[1], range_weight[2], 
+                                                length.out = length(pal)+1), all.inside = TRUE)]
+  g$color <- color_scale
+  
+  # Create an adjacency matrix.
+  new_graph <- igraph::graph_from_data_frame(g, directed = FALSE)
+  heat <- igraph::as_adjacency_matrix(new_graph, sparse = FALSE, attr = "weight")
+  
+  # Plot the heatmap.
+  heatmap(heat)
 }

@@ -19,5 +19,9 @@ each node corresponds to a pair of analytes.}
 and clinical covariates}
 
 \item{\code{outcome.type}}{"numeric" or "categorical"}
+
+\item{\code{coregulation.graph}}{the original co-regulation graph for the input data.}
+
+\item{\code{line.graph}}{the line graph of the input data.}
 }}
 

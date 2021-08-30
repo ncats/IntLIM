@@ -324,33 +324,178 @@ predictions_gg <- IntLIM::RunPairwisePrediction(myres.gg.sig, inputDatafilt, sty
 
 # Project predictions onto graph.
 prediction_graphs <- IntLIM::ProjectPredictionsOntoGraph(list(predictions_gm, predictions_mm, predictions_mg, predictions_gg), coreg_graph)
-IntLIM::SaveGraphPredictionPlots(graphWithPredictions=prediction_graphs, 
-                         inputData=inputDatafilt, stype="PBO_vs_Leukemia", 
-                         dirName=paste(result_dir, "Predictions", sep = "\\"),
-                                     continuous = FALSE)
+
+# Plot predictions.
+stype <- "PBO_vs_Leukemia"
+lt_blue <- rgb(0,0,153,max = 255, alpha = 80, names = "lt.blue")
+lt_pink <- rgb(153,0,0, max = 255, alpha = 80, names = "lt.pink")
+lt_green <- rgb(0,153,0, max = 255, alpha = 80, names = "lt.green")
+lt_gray <- rgb(64,64,64, max = 255, alpha = 80, names = "lt.gray")
+for(samp in setdiff(colnames(predictions_gm), c("from", "to"))){
+  gm_hist <- hist(as.numeric(predictions_gm[,samp]), breaks = 100, plot = FALSE)
+  mm_hist <- hist(as.numeric(predictions_mm[,samp]), breaks = 100, plot = FALSE)
+  mg_hist <- hist(as.numeric(predictions_mg[,samp]), breaks = 100, plot = FALSE)
+  gg_hist <- hist(as.numeric(predictions_gg[,samp]), breaks = 100, plot = FALSE)
+  min_x <- min(c(gm_hist$breaks, mm_hist$breaks, mg_hist$breaks, gg_hist$breaks))
+  max_x <- max(c(gm_hist$breaks, mm_hist$breaks, mg_hist$breaks, gg_hist$breaks))
+  max_y <- max(c(gm_hist$counts, mm_hist$counts, mg_hist$counts, gg_hist$counts))
+  plot(gm_hist, xlab = paste("Predicted", stype), main = samp, xlim = c(min_x, max_x),
+       ylim = c(0, max_y), ylab = "Number of Nodes with Prediction", col = lt_blue, 
+       lty="blank")
+  plot(mm_hist, xlab = "", main = "", ylab = "", col= lt_pink, lty="blank", 
+       xlim = c(min_x, max_x), ylim = c(0, max_y), add = TRUE)
+  plot(mg_hist, xlab = "", main = "", ylab = "", col= lt_green, lty="blank", 
+       add = TRUE, xlim = c(min_x, max_x), ylim = c(0, max_y))
+  plot(gg_hist, xlab = "", main = "", ylab = "", col = lt_gray, lty="blank", 
+       add = TRUE, xlim = c(min_x, max_x), ylim = c(0, max_y))
+  legend(x = min_x + (max_x - min_x) * 0.75, y = max_y * 0.75, legend = c("GM", "MM", "MG", "GG"),
+         fill = c(lt_blue, lt_pink, lt_green, lt_gray))
+}
+```
+
+```{r}
+# Plot.
+coreg_weightless <- igraph::as_adjacency_matrix(coreg_graph, sparse = FALSE)
+coreg_weightless[which(coreg_weightless != 0)] <- 1
+coreg_weightless_g <- igraph::graph_from_adjacency_matrix(coreg_weightless)
+dist <- igraph::distances(coreg_weightless_g)
+dist[which(!is.finite(dist))] <- NA
+max_dist <- max(dist[which(!is.na(dist))])
+dist[which(is.na(dist))] <- 2 * max_dist
+hier <- stats::hclust(as.dist(dist), method = "average")
+dend <- as.dendrogram(hier)
+for(i in 1:length(prediction_graphs)){
+  g <- prediction_graphs[[i]]
+  adj <- igraph::as_adjacency_matrix(g, sparse = FALSE, attr = "weight")
+  adj <- adj[rownames(coreg_weightless), colnames(coreg_weightless)]
+  colors<- colorRampPalette(c("white", "red", "darkgreen"))(256)
+  gplots::heatmap.2(adj, Colv=dend,Rowv=rev(dend),labRow=NA, density.info="none",
+                    trace="none", col = colors)
+}
 ```
 
 # Train a graph learning based prediction model.
 ```{r}
 # Format the input for training.
-modelInputs <- IntLIM::formatTrainingInput(predictionGraphs=prediction_graphs, inputData = inputDatafilt, stype = "PBO_vs_Leukemia", stype.class = "categorical")
+modelInputs <- IntLIM::formatTrainingInput(predictionGraphs=prediction_graphs, coregulationGraph=coreg_graph, inputData = inputDatafilt, stype = "PBO_vs_Leukemia", stype.class = "categorical")
 
+# Compute distances between edges.
+# g <- igraph::graph_from_adjacency_matrix(modelInputs@line.graph)
+# dist <- igraph::distances(g)
+# dist[which(!is.finite(dist))] <- dim(dist)[1] * 2
+# diffs <- lapply(1:ncol(modelInputs@node.wise.prediction), function(i){
+#   predictions <- modelInputs@node.wise.prediction[,i]
+#   differences <- matrix(0, nrow(dist), ncol(dist))
+#   rownames(differences) <- rownames(dist)
+#   colnames(differences) <- colnames(dist)
+#   for(j in 1:length(rownames(dist))){
+#     r <- rownames(dist)[j]
+#     pred_r <- predictions[r]
+#     for(c in colnames(dist)){
+#       pred_c <- predictions[c]
+#       differences[r,c] <- abs(pred_r - pred_c)
+#     }
+#   }
+#   print(colnames(modelInputs@node.wise.prediction)[i])
+#   return(differences)
+# })
+```
+
+```{r}
+# Make plots.
+# for(i in 1:ncol(modelInputs@node.wise.prediction)){
+#   diff <- diffs[[i]]
+#   samp <- colnames(modelInputs@node.wise.prediction)[i]
+#   diff_which_adjacent <- as.vector(diff[which(dist == 1)])
+#   diff_which_not_adjacent <- as.vector(diff[which(dist > 1)])
+#   h_adj <- hist(diff_which_adjacent, breaks = 1000, plot = FALSE)
+#   h_nadj <- hist(diff_which_not_adjacent, breaks = 1000, plot = FALSE)
+#   plot(h_adj, col = rgb(173,216,230,max = 255, alpha = 80, names = "lt.blue"), lty="blank", main = samp, ylab = "Pair Count", xlab = "Prediction Difference Between Linear Model Pairs")
+#   plot(h_nadj, col = rgb(255,192,203, max = 255, alpha = 80, names = "lt.pink"), lty="blank", main = "", ylab = "", xlab = "", add = TRUE)
+#   text(x = max(diff_which_adjacent)*0.75, y = max(h_adj$counts)*0.75, paste("Wilcoxon Test p-Value", formatC(wilcox.test(diff_which_adjacent, diff_which_not_adjacent, alternative = "less")$p.value, format = "e", digits = 2)))
+# }
+```
+
+```{r}
+# Make plots.
+# dist <- igraph::distances(g)
+# dist[which(!is.finite(dist))] <- max(dist) * 2
+# for(i in 1:ncol(modelInputs@node.wise.prediction)){
+#   diff <- diffs[[i]]
+#   samp <- colnames(modelInputs@node.wise.prediction)[i]
+#   dist_vec <- as.vector(dist)
+#   diff_vec <- as.vector(diff)
+#   plot(diff_vec, dist_vec, col = rgb(173,216,230,max = 255, alpha = 80, names = "lt.blue"), lty="blank", main = samp, ylab = "Graph Distance", xlab = "Prediction Difference")
+# }
+```
+
+```{r}
 # Create pooling filter.
-poolingFilter <- IntLIM::CreatePoolingFilter(modelInputs = modelInputs, k = length(prediction_graphs), poolType = "median")
+hier <- IntLIM::doHierarchicalClustering(modelInputs = modelInputs)
+
+# Create the dendrogram.
+dend <- as.dendrogram(hier)
+dendrogram_data <- ggdendro::dendro_data(dend)
+dendrogram_segments <- dendrogram_data$segments
+dendrogram_ends <- dplyr::filter(dendrogram_segments, yend == 0)
+dendrogram_ends <- dplyr::left_join(filtered_yend, dendrogram_data$labels, by = "x")
+dendrogram_ends <- dplyr::rename(joined_by_x, node_name = label)
+
+# Plot each dendrogram with predictions.
+plot_dendrogram = function(i){
+  # Add predictions to dendrogram.
+  all_pred <- dendrogram_ends
+  all_pred$pred <- modelInputs@node.wise.prediction[dend_info$node_name, i]
+  
+  # Make the plot.
+  ggplot2::ggplot() + 
+    geom_segment(data = dendrogram_segments, aes(x=x, y=y, xend=xend, yend=yend)) +
+    geom_segment(data = all_pred, aes(x=x, y=y.x, xend=xend, yend=yend, color=pred)) +
+    scale_color_gradient(low = "red", high = "blue")+
+    scale_y_reverse() +
+    coord_flip() +
+    theme_bw() +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), axis.title.x=element_blank(),
+          axis.title.y=element_blank(), axis.text.x=element_blank(),
+          axis.text.y=element_blank(), axis.ticks.x=element_blank(),
+          axis.ticks.y=element_blank()) +
+    labs(color='Prediction') +
+    ggtitle(colnames(modelInputs@node.wise.prediction)[i])
+}
+for(i in 1:length(prediction_graphs)){
+  plot_dendrogram(i)
+}
+```
+
+```{r}
+var <- IntLIM::findHierarchicalClusteringVariance(hier)
+poolingFilter <- IntLIM::CreatePoolingFilterKMeans(modelInputs = modelInputs, k = length(prediction_graphs), poolType = "median")
+
+# Plot.
+# for(i in 1:length(prediction_graphs)){
+#   line_graph <- modelInputs@line.graph
+#   line_graph[which(line_graph != 0)] <- 0
+#   for(clust in poolingFilter){
+#     line_graph[clust[[1]], clust[[1]]] <- mean(modelInputs@node.wise.prediction[clust[[1]]
+#                                                                                 ,i])
+#   }
+#   gplots::heatmap.2(line_graph, density.info="none", trace="none", col = col)
+# }
 
 # Initialize model.
 modelResultsInit <- IntLIM::InitializeGraphLearningModel(modelInputs, poolingFilter,
-                                                     iterations = 1000,
+                                                     iterations = 10000,
                                                      convergenceCutoff = 0.0001,
-                                                     learningRate = 0.2,
-                                                     activationType = "tanh",
-                                                     optimizationType = "momentum",
-                                                     weightsAfterPooling = TRUE)
+                                                     learningRate = 0.9,
+                                                     activationType = "sigmoid",
+                                                     optimizationType = "BGD",
+                                                     weightsAfterPooling = FALSE)
 
 # Train model.
 modelResultsFinal <- IntLIM::TrainGraphLearningModel(modelResults = modelResultsInit)
-PlotGraphWeights(coreg_graph, modelResultsFinal)
-write.csv(modelResultsFinal@iteration.tracking,paste(result_dir, "model.results.csv", sep = "\\"))
+#PlotGraphWeightsHeatmap(coreg_graph, modelResultsFinal)
+#write.csv(modelResultsFinal@iteration.tracking,paste(result_dir, "model.results.csv", sep = "\\"))
 ```
 
 ##References

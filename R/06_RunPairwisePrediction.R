@@ -3,15 +3,14 @@
 #' m ~ beta0 + beta1(g) + beta2(phenotype) + beta3(g:phenotype) + beta4...n(covariates)
 #' Therefore, to predict phenotype given the betas learned by IntLIM, we use the
 #' following model:
-#' p ~ (beta0 + beta1(g) + beta4...n(covariates) - m) / -(beta2 + beta3(g))
+#' p ~ (m - (beta0 + beta1(g) + beta4...n(covariates)) / (beta2 + beta3(g))
 #' @param inputResults A list of IntLimResults objects. Each object must include
 #'  model and processing results (output of ProcessResults()). All results must
 #'  include learned covariate weights (i.e. must be run with save.covar.pvals = TRUE)
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
 #' metabolite abundances, and associated meta-data
 #' @param stype The phenotype (outcome) to predict. This can be either a categorical
-#' or numeric outcome. The predictions will be numeric and will be converted into factors
-#' by later functions.
+#' or numeric outcome.
 #' @param covar The clinical covariates to include in the model. These should be the same
 #' covariates that were included when running the IntLIM linear models.
 #' @param class.covar A vector of covariate types ("numeric" or "categorical") provided in
@@ -31,7 +30,7 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
     }
     incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type)
   }
-  
+
   # Extract data needed for model.
   covariates <- incommon$covar_matrix
   independent.vars <- NULL
@@ -69,33 +68,101 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
   phen_var <- matrix(coefficients$type, nrow=length(coefficients$type), 
                      ncol=dim(independent.vars)[2])
   
-  # Predict phenotype for each subject.
+  # Compute the numerator of the prediction for each subject 
+  # (sans covariate terms)
   ind_term <- independent.vars[coefficients[,1],] * ind_var
   dep_term <- dependent.vars[coefficients[,2],]
-  div_term <- independent.vars[coefficients[,1],] * interact_var
-  div_term <- div_term + phen_var
-  pred_phenotype <- intercept + ind_term - dep_term
+  pred_phenotype <- dep_term - (intercept + ind_term)
+  
+  # If there are covariates, include the covariate terms in the prediction
+  # by subtracting them.
   if(!is.null(covariates)) {
     all_cov_terms<- lapply(covar, function(cov_name){
-      this_coefficient_mat <- matrix(coefficients[,cov_name], 
-                                     nrow=length(coefficients[,cov_name]), 
-                                     ncol=dim(covariates)[1])
-      this_covariate_mat <- t(matrix(covariates[,cov_name], 
-                                     ncol=length(coefficients[,cov_name]), 
-                                     nrow=dim(covariates)[1]))
-      this_covariate_term <- this_coefficient_mat * this_covariate_mat
+      coef_cov_name <- colnames(coefficients)[grepl(cov_name, colnames(coefficients))]
+      cov_cov_name <- colnames(covariates)[grepl(cov_name, colnames(covariates))]
+      this_covariate_term <- NULL
+      
+      # If the term is numeric, simply multiply.
+      if(is.numeric(covariates[,cov_cov_name])){
+        this_coefficient_mat <- matrix(coefficients[,coef_cov_name], 
+                                       nrow=length(coefficients[,coef_cov_name]), 
+                                       ncol=dim(covariates)[1])
+        this_covariate_mat <- t(matrix(covariates[,cov_cov_name], 
+                                       ncol=length(coefficients[,coef_cov_name]), 
+                                       nrow=dim(covariates)[1]))
+        this_covariate_term <- this_coefficient_mat * this_covariate_mat
+      }
+      else if(length(coef_cov_name) == 1){
+        second_part_of_name <- strsplit(coef_cov_name, cov_name)[[1]][2]
+        this_covariate_term <- multiplyCovariate(coefficients, covariates, coef_cov_name, 
+                                                 cov_cov_name, second_part_of_name)
+      }
+      # Add together the multiples of the one-hot-encoded terms.
+      else{
+        these_covariate_terms <-lapply(1:length(coef_cov_name), function(i){
+          second_part_of_name <- strsplit(coef_cov_name[i], cov_name)[[1]][2]
+          cova <- covariates
+          for(j in 1:dim(cova)[2]){
+            cova[,j] <- as.character(cova[,j])
+          }
+          cova[multi.which(cova != second_part_of_name)] <- "Other"
+          current_covariate_term <- multiplyCovariate(coefficients, cova, coef_cov_name[i], 
+                                   cov_cov_name, second_part_of_name)
+          return(current_covariate_term)
+        })
+        this_covariate_term <- Reduce('+', these_covariate_terms)
+      }
       return(this_covariate_term)
     })
+    
+    # Include the covariates in the numerator prediction.
     final_covariate_val <- Reduce('+', all_cov_terms)
-    pred_phenotype <- pred_phenotype + final_covariate_val
+    pred_phenotype <- pred_phenotype - final_covariate_val
   }
+  
+  # Calculate the denominator and divide.
+  div_term <- independent.vars[coefficients[,1],] * interact_var
+  div_term <- div_term + phen_var
   pred_phenotype <- pred_phenotype / div_term 
+  
+  # For discrete phenotypes only, round the value.
+  if(!is.numeric(inputData@phenoData$metabolite$main@data[,stype])){
+    pred_phenotype[multi.which(pred_phenotype >= 1)] <- 1
+    pred_phenotype[multi.which(pred_phenotype <= 0)] <- 0
+    pred_phenotype <- round(pred_phenotype,digits=0)
+  }
   
   # Add analyte information for each prediction.
   pred_phenotype$to <- as.matrix(coefficients[,2])
   pred_phenotype$from <- as.matrix(coefficients[,1])
 
   return(pred_phenotype)
+}
+
+#' Multiply a covariate with its learned coefficients. This is straightforward for
+#' numeric covariates, but requires some conversion for categorical covariates.
+#' @param coefficients The coefficients of the selected covariates.
+#' @param covariates The covariate values.
+#' @param coef_cov_name The covariate name in the coefficient data
+#' @param cov_cov_name The covariate name in the covariate data
+#' @param level1 The level of the vactor which equals "1" in the one-hot encoding.
+multiplyCovariate <- function(coefficients, covariates, coef_cov_name, cov_cov_name, level1){
+  this_coefficient_mat <- matrix(coefficients[,coef_cov_name], 
+                                 nrow=length(coefficients[,coef_cov_name]), 
+                                 ncol=dim(covariates)[1])
+  this_covariate_mat <- t(matrix(covariates[,cov_cov_name], 
+                                 ncol=length(coefficients[,coef_cov_name]), 
+                                 nrow=dim(covariates)[1]))
+  original_mat <- this_covariate_mat
+  this_covariate_df <- as.data.frame(t(this_covariate_mat))
+  for(i in 1:dim(this_covariate_df)[2]){
+    this_covariate_df[,i] <- as.numeric(as.factor(this_covariate_df[,i]))
+  }
+  this_covariate_mat <- as.matrix(t(this_covariate_df))
+  this_covariate_mat[multi.which(original_mat != level1)] <- 0
+  this_covariate_mat[multi.which(original_mat == level1)] <- 1
+  this_covariate_term <- this_coefficient_mat * this_covariate_mat
+  return(this_covariate_term)
 }
 
 #' Given a graph and a phenotype prediction for each significant pair, generate a 
@@ -117,20 +184,21 @@ ProjectPredictionsOntoGraph <- function(predictions_list, coRegulationGraph){
   predictions <- do.call(rbind, predictions_list)
   edges_from <- edges$from
   edges_to <- edges$to
-  edges$from[which(edges_to == predictions$from)] <- edges_to[which(edges_to == predictions$from)]
-  edges$to[which(edges_from == predictions$to)] <- edges_from[which(edges_from == predictions$to)]
+  edges$from[which(edges_to %in% predictions$from)] <- edges_to[which(edges_to %in% predictions$from)]
+  edges$to[which(edges_from %in% predictions$to)] <- edges_from[which(edges_from %in% predictions$to)]
   
   # Define continuous color based on prediction.
   pal = grDevices::colorRampPalette(c("blue", "red"))
-  
+
   # Modify n copies of graph, where n is the number of subjects.
   new_graphs <- lapply(1:(dim(predictions)[2]-2), function(i){
+
     # Modify graph weight.
     subject_graph <- data.frame(edges)
     subject_graph$weight <- predictions[,i]
     
     # Modify color.
-    subject_color_scale = findInterval(predictions[,i], sort(predictions[,i]))
+    subject_color_scale <- findInterval(predictions[,i], sort(predictions[,i]))
     subject_graph$color <- pal(nrow(subject_graph))[subject_color_scale]
     
     # Modify node properties.
@@ -145,4 +213,25 @@ ProjectPredictionsOntoGraph <- function(predictions_list, coRegulationGraph){
   })
   names(new_graphs)<-colnames(predictions)[1:(length(colnames(predictions))-2)]
   return(new_graphs)
+}
+
+# A which for multidimensional arrays.
+# Mark van der Loo 16.09.2011
+#
+# A Array of booleans
+# returns a sum(A) x length(dim(A)) array of multi-indices where A == TRUE
+#
+multi.which <- function(A){
+  if ( is.vector(A) ) return(which(A))
+  d <- dim(A)
+  T <- which(A) - 1
+  nd <- length(d)
+  t( sapply(T, function(t){
+    I <- integer(nd)
+    I[1] <- t %% d[1]
+    sapply(2:nd, function(j){
+      I[j] <<- (t %/% prod(d[1:(j-1)])) %% d[j]
+    })
+    I
+  }) + 1 )
 }

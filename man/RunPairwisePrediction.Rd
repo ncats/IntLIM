@@ -7,7 +7,7 @@ for each sample. Recall that IntLIM models take the following form:
 m ~ beta0 + beta1(g) + beta2(phenotype) + beta3(g:phenotype) + beta4...n(covariates)
 Therefore, to predict phenotype given the betas learned by IntLIM, we use the
 following model:
-p ~ (beta0 + beta1(g) + beta4...n(covariates) - m) / -(beta2 + beta3(g))}
+p ~ (m - (beta0 + beta1(g) + beta4...n(covariates)) / (beta2 + beta3(g))}
 \usage{
 RunPairwisePrediction(
   inputResults,
@@ -26,8 +26,7 @@ include learned covariate weights (i.e. must be run with save.covar.pvals = TRUE
 metabolite abundances, and associated meta-data}
 
 \item{stype}{The phenotype (outcome) to predict. This can be either a categorical
-or numeric outcome. The predictions will be numeric and will be converted into factors
-by later functions.}
+or numeric outcome.}
 
 \item{covar}{The clinical covariates to include in the model. These should be the same
 covariates that were included when running the IntLIM linear models.}
@@ -41,5 +40,5 @@ for each sample. Recall that IntLIM models take the following form:
 m ~ beta0 + beta1(g) + beta2(phenotype) + beta3(g:phenotype) + beta4...n(covariates)
 Therefore, to predict phenotype given the betas learned by IntLIM, we use the
 following model:
-p ~ (beta0 + beta1(g) + beta4...n(covariates) - m) / -(beta2 + beta3(g))
+p ~ (m - (beta0 + beta1(g) + beta4...n(covariates)) / (beta2 + beta3(g))
 }

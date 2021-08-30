@@ -62,11 +62,15 @@ methods::setClass(
 #' @slot true.phenotypes data frame of true phenotypes given analyte pairs
 #' and clinical covariates
 #' @slot outcome.type "numeric" or "categorical"
+#' @slot coregulation.graph the original co-regulation graph for the input data.
+#' @slot line.graph the line graph of the input data.
 methods::setClass(
   Class="ModelInput",
   representation(A.hat="matrix",
                  node.wise.prediction="matrix",
                  true.phenotypes="numeric",
+                 coregulation.graph="matrix",
+                 line.graph="matrix",
                  outcome.type="character")
 )
 #' PoolingFilter class

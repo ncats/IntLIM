@@ -6,12 +6,16 @@
 is computed by taking partial derivatives for each of the model weights. Given
 a learning rate, the weights are adjusted according to the gradient.}
 \usage{
-BackpropagateSingleLayer(modelResults, iteration)
+BackpropagateSingleLayer(modelResults, iteration, convolution, pooling)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}
 
 \item{iteration}{The current iteration.}
+
+\item{convolution}{Whether or not to perform convolution}
+
+\item{pooling}{Whether or not to perform pooling}
 }
 \description{
 Run backpropagation for a single layer. In backpropagation, a gradient is

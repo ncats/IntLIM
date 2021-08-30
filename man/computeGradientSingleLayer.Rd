@@ -2,15 +2,17 @@
 % Please edit documentation in R/gradientfunctions.R
 \name{computeGradientSingleLayer}
 \alias{computeGradientSingleLayer}
-\title{Compute the gradient for a single layer neural network with the output
-transformed by a sigmoid.}
+\title{Compute the gradient for a single layer neural network.}
 \usage{
-computeGradientSingleLayer(modelResults)
+computeGradientSingleLayer(modelResults, convolution, pooling)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}
+
+\item{convolution}{Whether or not to perform convolution}
+
+\item{pooling}{Whether or not to perform pooling}
 }
 \description{
-Compute the gradient for a single layer neural network with the output
-transformed by a sigmoid.
+Compute the gradient for a single layer neural network.
 }

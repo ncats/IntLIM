@@ -9,7 +9,7 @@ MarginalEffectsGraphDataframe(
   inputData,
   geneOfInterest,
   metaboliteOfInterest,
-  continuous = FALSE
+  continuous
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ MarginalEffectsGraphDataframe(
 
 \item{metaboliteOfInterest}{metabolite in gene-metabolite pair}
 
-\item{continuous}{whether the outcome is continuous}
+\item{continuous}{whether or not the outcome is continuous (TRUE or FALSE)}
 }
 \value{
 dataframe for further analysis

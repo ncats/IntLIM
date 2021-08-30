@@ -3,9 +3,11 @@
 #' a learning rate, the weights are adjusted according to the gradient.
 #' @param modelResults An object of the ModelResults class.
 #' @param iteration The current iteration.
-BackpropagateSingleLayer <- function(modelResults, iteration){
+#' @param convolution Whether or not to perform convolution
+#' @param pooling Whether or not to perform pooling
+BackpropagateSingleLayer <- function(modelResults, iteration, convolution, pooling){
   # Calculate gradient.
-  gradient <- computeGradientSingleLayer(modelResults)
+  gradient <- computeGradientSingleLayer(modelResults, convolution, pooling)
   
   # Update gradient.
   modelResults@current.gradient <- as.matrix(gradient)
@@ -65,82 +67,113 @@ BackpropagateSingleLayer <- function(modelResults, iteration){
   return(modelResults)
 }
 
-#' Compute the gradient for a single layer neural network with the output
-#' transformed by a sigmoid.
+#' Compute the gradient for a single layer neural network.
 #' @param modelResults An object of the ModelResults class.
-computeGradientSingleLayer <- function(modelResults){
+#' @param convolution Whether or not to perform convolution
+#' @param pooling Whether or not to perform pooling
+computeGradientSingleLayer <- function(modelResults, convolution, pooling){
   # Components for derivative.
   A.hat <- modelResults@model.input@A.hat
   X <- modelResults@model.input@node.wise.prediction
   Theta.old <- matrix(rep(modelResults@current.weights, dim(X)[2]), ncol = dim(X)[2])
   Y <- modelResults@model.input@true.phenotypes
   
+  # Convolve X.
+  conv <- lapply(1:dim(X)[2], function(i){
+    ret_val <- X[,i]
+    if(convolution == TRUE){
+      ret_val <- A.hat %*% X[,i]
+    }
+    return(ret_val)
+  })
+  
   # Compute filter.
   S <- modelResults@pooling.filter@filter
   S_all <- modelResults@pooling.filter@individual.filters
-  W <- rep(0, dim(S)[2])
-  if(modelResults@weights.after.pooling == TRUE){
-    W <- unlist(lapply(1:length(S_all), function(i){
-      return(sum(t(A.hat %*% X[,i]) %*% S_all[[i]] * Theta.old[,i]))
-    }))
+  Y.pred <- rep(0, dim(S)[2])
+  if(pooling == TRUE){
+    if(modelResults@weights.after.pooling == TRUE){
+      Y.pred <- unlist(lapply(1:length(S_all), function(i){
+        return(sum(t(conv[[i]]) %*% S_all[[i]] * Theta.old[,i]))
+      }))
+    }else{
+      Y.pred <- unlist(lapply(1:length(S_all), function(i){
+        return(sum(t(conv[[i]] * Theta.old[,i]) %*% S_all[[i]]))
+      }))
+    }
   }else{
-    W <- unlist(lapply(1:length(S_all), function(i){
-      return(sum(t(A.hat %*% X[,i] * Theta.old[,i]) %*% S_all[[i]]))
+    Y.pred <- unlist(lapply(1:length(conv), function(i){
+      return(sum(t(conv[[i]] * Theta.old[,i])))
     }))
   }
 
   # Compute activation function.
-  activation <- as.matrix(rep(1, length(W)))
-  d.act.d.wi <- as.matrix(rep(1, length(W)))
+  activation <- as.matrix(Y.pred)
+  d.act.d.pred <- as.matrix(rep(1, length(Y.pred)))
   if(modelResults@model.input@outcome.type == "categorical"){
     if(modelResults@activation.type == "softmax"){
-      activation <- SoftmaxWithCorrection(W)
+      activation <- SoftmaxWithCorrection(Y.pred)
       # Set maximum and minimum values to prevent infinite and infinitecimal values.
-      exp.W <- exp(W)
-      exp.W[which(exp.W > 10000000)] <- 100000000
-      exp.W[which(exp.W < 0.00000001)] <- 0.000000001
-      d.act.d.wi <- (exp.W * (exp.W - sum(exp.W)))/(sum(exp.W)^2)
+      exp.Y.pred <- exp(Y.pred)
+      exp.Y.pred[which(exp.Y.pred > 10000000)] <- 100000000
+      exp.Y.pred[which(exp.Y.pred < 0.00000001)] <- 0.000000001
+      d.act.d.pred <- (exp.Y.pred * (exp.Y.pred - sum(exp.Y.pred)))/(sum(exp.Y.pred)^2)
     }else if(modelResults@activation.type == "tanh"){
-      activation <- TanhWithCorrection(W)
-      d.act.d.wi <- 2 * (1 - (tanh(2*(W-1.5)))^2)
+      activation <- TanhWithCorrection(Y.pred)
+      d.act.d.pred <- 2 * (1 - (tanh(2*(Y.pred-1.5)))^2)
     }else if(modelResults@activation.type == "sigmoid"){
-      activation <- SigmoidWithCorrection(W)
-      exp.W <- exp(1-W)
-      exp.W[which(exp.W > 10000000)] <- 100000000
-      exp.W[which(exp.W < 0.00000001)] <- 0.000000001
-      d.act.d.wi <- -exp.W/((1+exp.W)^2)
+      activation <- SigmoidWithCorrection(Y.pred)
+      exp.Y.pred <- exp(1-Y.pred)
+      exp.Y.pred[which(exp.Y.pred > 10000000)] <- 100000000
+      exp.Y.pred[which(exp.Y.pred < 0.00000001)] <- 0.000000001
+      d.act.d.pred <- -1 * exp.Y.pred/((1+exp.Y.pred)^2)
     }else{
       stop(paste("Invalid activation type", modelResults@activation.type))
     }
   }
   
   # Compute components of gradient based on activation function.
-  V <- Y - activation
-  U <- sum(V^2)/(mean(Y)^2 * length(Y))
+  diff <- Y - activation
 
   # Partial derivative of the loss (gradient). This is obtained via the chain
-  # rule. dLoss/dTheta = dLoss/dU * dU/dTheta
-  d.loss.d.u <- 1 / (2 * sqrt(U))
-  d.wi.d.theta.list <- lapply(1:length(S_all), function(i){
-    S.flat <- rowSums(S_all[[i]])
-    ret_val <- A.hat %*% X[,i] * S.flat
-    if(modelResults@weights.after.pooling == TRUE){
-      ret_val <- t(A.hat %*% X[,i]) %*% S_all[[i]]
-    }
-    return(ret_val)
+  # rule. 
+  # dLoss/dTheta = -dLoss/dSumDiff * dSumDiff/dTheta 
+  # = -Sum(dSquaredDiff/dDiff * dAct/dPred * dPred/dTheta) 
+  d.pred.d.theta.list <- lapply(1:length(conv), function(i){
+    return(conv[[i]])
   })
-  d.wi.d.theta <- 1
-  const.terms <- 1
-  if(modelResults@weights.after.pooling == TRUE){
-    d.wi.d.theta <- do.call(rbind, d.wi.d.theta.list)
-    const.terms <- t(matrix(rep(V * d.act.d.wi, dim(S)[2]), ncol = dim(S)[2]))
-  }else{
-    d.wi.d.theta <- do.call(cbind, d.wi.d.theta.list)
-    const.terms <- t(matrix(rep(V * d.act.d.wi, dim(X)[1]), ncol = dim(X)[1]))
+  if(pooling == TRUE){
+    d.pred.d.theta.list <- lapply(1:length(S_all), function(i){
+      S.flat <- rowSums(S_all[[i]])
+      ret_val <- conv[[i]] * S.flat
+      if(modelResults@weights.after.pooling == TRUE){
+        ret_val <- t(conv[[i]]) %*% S_all[[i]]
+      }
+      return(ret_val)
+    })
   }
-  d.u.d.theta.to.sum <- d.wi.d.theta * const.terms
-  d.u.d.theta <- rowSums(d.u.d.theta.to.sum)
-  gradient <- d.u.d.theta
+  if(modelResults@weights.after.pooling == TRUE && pooling == TRUE){
+    d.pred.d.theta <- do.call(rbind, d.pred.d.theta.list)
+    const.terms <- t(matrix(rep(2 * diff * d.act.d.pred, dim(S)[2]), ncol = dim(S)[2]))
+  }else{
+    d.pred.d.theta <- do.call(cbind, d.pred.d.theta.list)
+    const.terms <- t(matrix(rep(2 * diff * d.act.d.pred, dim(X)[1]), ncol = dim(X)[1]))
+  }
+  d.loss.d.theta.to.sum <- d.pred.d.theta * const.terms
+  d.loss.d.theta <- -1 * rowSums(d.loss.d.theta.to.sum)
+  gradient <- d.loss.d.theta
+  
+  # Clip gradients (this helps to address exploding gradients, which can occur
+  # with continuous data). We limit the weight update to a single unit averaged
+  # across all nodes.
+  #avg_val <- 1 / length(d.loss.d.theta)
+  #gradient[which(gradient > avg_val)] <- avg_val
+  #gradient[which(gradient < -1 * avg_val)] <- -1 * avg_val
+  
+  # Scale gradient update so that the update to weights is unitary.
+  gradient <- gradient / sum(abs(gradient))
+
+  # Return gradient.
   return(gradient)
 }
 

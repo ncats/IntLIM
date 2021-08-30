@@ -23,6 +23,7 @@ Imports:
 	grDevices,
     highcharter,
 	igraph,
+	lsa,
     magrittr,
     margins,
     methods,
@@ -65,6 +66,7 @@ Collate:
     '07_LearnGraphPredictionModel.R'
     'IntLimResults_extendedfunctions.R'
     'MultiDataSet_extendedfunctions.R'
+    'clusteringfunctions.R'
     'gradientfunctions.R'
     'plottingfunctions.R'
     'ramplinkedinfunctions.R'

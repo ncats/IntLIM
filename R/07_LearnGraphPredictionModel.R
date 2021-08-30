@@ -9,10 +9,12 @@
 #' metabolite abundances, and associated meta-data
 #' @param predictionGraphs A list of igraph objects, each of which includes
 #' predictions for each edge.
+#' @param coregulationGraph An igraph object containing the coregulation graph.
 #' @param stype The outcome
 #' @param stype.class The class of the outcome ("numeric" or "categorical")
 #' @export
-formatTrainingInput <- function(predictionGraphs, inputData, stype, stype.class){
+formatInput <- function(predictionGraphs, coregulationGraph,
+                                inputData, stype, stype.class){
   
   # Extract edge-wise predictions.
   predictions_by_node <- lapply(names(predictionGraphs), function(sampName){
@@ -59,7 +61,9 @@ formatTrainingInput <- function(predictionGraphs, inputData, stype, stype.class)
   
   # Create a ModelInput object and return it.
   newModelInput <- methods::new("ModelInput", A.hat=A_hat, node.wise.prediction=t(predictions_flattened),
-                       true.phenotypes=Y, outcome.type=stype.class)
+                       true.phenotypes=Y, outcome.type=stype.class, 
+                       coregulation.graph=igraph::get.adjacency(coregulationGraph, sparse = FALSE), 
+                       line.graph=as.matrix(A))
   return(newModelInput)
 }
 
@@ -69,6 +73,39 @@ formatTrainingInput <- function(predictionGraphs, inputData, stype, stype.class)
 #' @param poolType One of "mean", "median", "max", or "min".
 #' @export
 CreatePoolingFilter <- function(modelInputs, k, poolType){
+  
+  # Perform hierarchical clustering.
+  hier <- doHierarchicalClustering(modelInputs)
+  clusters_as_sets <- initializeClusters(hier)
+  hier <- initializeMergeDataFrame(hier)
+ 
+  # Find the clusters.
+  clusters <- findKClusters(modelInputs=modelInputs, clusters=clusters_as_sets,
+                           hClustResults=hier, k=k, allClusters={}, allVariances = {})
+  cluster_names <- sort(names(clusters))
+  
+  # Arrange cluster mappings in matrix.
+  mappings <- matrix(0, ncol = k, nrow = length(igraph::V(g)))
+  cluster_length <- matrix(0, length(unique(clusters)))
+  for(i in 1:length(cluster_names)){
+    which_in_cluster <- which(rownames(modelInputs@line.graph) %in% 
+                                unlist(clusters[[cluster_names[i]]]))
+    mappings[which_in_cluster, i] <- 1
+    cluster_length[i] <- length(which_in_cluster)
+  }
+  
+  # Return pooling filter.
+  newPoolingFilter <- methods::new("PoolingFilter", filter=mappings, filter.type=poolType,
+                                   cluster.sizes=cluster_length, individual.filters=list())
+  return(newPoolingFilter)
+}
+
+#' Create the graph pooling filter, given the adjacency matrix of the input graph.
+#' @param modelInputs An object of type "ModelInputs".
+#' @param k The output dimensionality of the filter.
+#' @param poolType One of "mean", "median", "max", or "min".
+#' @export
+CreatePoolingFilterKMeans <- function(modelInputs, k, poolType){
   
   # Extract the normalized graph Laplacian.
   graph <- modelInputs@A.hat
@@ -199,7 +236,9 @@ InitializeGraphLearningModel <- function(modelInputs, poolingFilter, iterations,
   tracking.frame$Iteration[1] <- 0
 
   # Initialize weights with uniform distribution.
-  weights <- as.matrix(stats::runif(weights_count))
+  max_phen <- max(modelInputs@true.phenotypes)
+  num_nodes <- dim(modelInputs@node.wise.prediction)[1]
+  weights <- as.matrix(rep(1 / num_nodes, num_nodes))
   tracking.frame[1,3:(2+weights_count)] <- weights
   
   # Initialize and return results.
@@ -222,7 +261,7 @@ InitializeGraphLearningModel <- function(modelInputs, poolingFilter, iterations,
 #' class and storing the results in the ModelResults class.
 #' @param modelResults An object of the ModelResults class.
 #' @export
-TrainGraphLearningModel <- function(modelResults){
+TrainGraphLearningModel <- function(modelResults, pooling, convolution){
   
   # Start the first iteration and calculate a dummy weight delta.
   modelResults@current.iteration <- 1
@@ -232,15 +271,15 @@ TrainGraphLearningModel <- function(modelResults){
   
   # Repeat the training process for all iterations, until the maximum is reached
   # or until convergence.
-  while(modelResults@current.iteration < modelResults@max.iterations - 1
-        && (weight.delta > modelResults@convergence.cutoff) || 
-        (modelResults@current.iteration < 10)){
-    modelResults <- DoSingleTrainingIteration(modelResults, modelResults@current.iteration)
+  while(modelResults@current.iteration < (modelResults@max.iterations - 1)
+        && (weight.delta > modelResults@convergence.cutoff)){
+    modelResults <- DoSingleTrainingIteration(modelResults, modelResults@current.iteration,
+                                              pooling, convolution)
     modelResults@current.iteration <- modelResults@current.iteration + 1
     modelResults@iteration.tracking$Iteration[modelResults@current.iteration+1]<-
       modelResults@current.iteration
     weight.delta <- sqrt(sum((modelResults@current.weights - modelResults@previous.weights)^2))
-    if(modelResults@current.iteration %% 1 == 0){
+    if(modelResults@current.iteration %% 1 == 0){#%% 100 == 0){
       print(paste("iteration", modelResults@current.iteration, ": weight delta is", weight.delta,
                   "and error is", 
                   modelResults@iteration.tracking$Error[modelResults@current.iteration]))
@@ -256,29 +295,48 @@ TrainGraphLearningModel <- function(modelResults){
 #' class and storing the results in the ModelResults class.
 #' @param modelResults An object of the ModelResults class.
 #' @param iteration The current iteration.
-DoSingleTrainingIteration <- function(modelResults, iteration){
+#' @param pooling Whether or not to pool the weights.
+#' @param convolution Whether or not to perform convolution.
+DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolution){
   # Propagate forward.
   A.hat <- modelResults@model.input@A.hat
   X <- modelResults@model.input@node.wise.prediction
   Theta.old <- matrix(rep(modelResults@current.weights, dim(X)[2]), ncol = dim(X)[2])
-  if(modelResults@weights.after.pooling == TRUE){
-    S_all <- modelResults@pooling.filter@individual.filters
-    if(modelResults@current.iteration == 1){
-      S_all <- CreateFilter(poolingFilter = modelResults@pooling.filter, A.hat = A.hat, 
-                            X = X)
+  Y.pred <- X
+  # If convolution is to be performed, perform convolution.
+  if(convolution == TRUE){
+    Y.pred.list <- lapply(1:dim(X)[2], function(i){
+      return(A.hat %*% X[,i])
+    })
+    Y.pred <- do.call(cbind, Y.pred.list)
+  }
+  # If pooling is to be performed, multiply by pool either after or before weights
+  # are learned, respectively.
+  if(pooling == TRUE){
+    if(modelResults@weights.after.pooling == TRUE){
+      S_all <- modelResults@pooling.filter@individual.filters
+      if(modelResults@current.iteration == 1){
+        S_all <- CreateFilter(poolingFilter = modelResults@pooling.filter, A.hat = A.hat, 
+                              X = X)
+        modelResults@pooling.filter@individual.filters <- S_all
+      }
+      Y.pred <- unlist(lapply(1:length(S_all), function(i){
+        return(sum(t(Y.pred[,i]) %*% S_all[[i]] * Theta.old[,i]))
+      }))
+    }else{
+      S_all <- AdjustFilter(poolingFilter = modelResults@pooling.filter, A.hat = A.hat, 
+                            X = X, Theta = Theta.old)
       modelResults@pooling.filter@individual.filters <- S_all
+      Y.pred <- unlist(lapply(1:length(S_all), function(i){
+        return(sum(t(Y.pred[,i] * Theta.old[,i]) %*% S_all[[i]]))
+      }))
     }
-    Y.pred <- unlist(lapply(1:length(S_all), function(i){
-      return(sum(t(A.hat %*% X[,i]) %*% S_all[[i]] * Theta.old[,i]))
-    }))
   }else{
-    S_all <- AdjustFilter(poolingFilter = modelResults@pooling.filter, A.hat = A.hat, 
-                          X = X, Theta = Theta.old)
-    modelResults@pooling.filter@individual.filters <- S_all
-    Y.pred <- unlist(lapply(1:length(S_all), function(i){
-      return(sum(t(A.hat %*% X[,i] * Theta.old[,i]) %*% S_all[[i]]))
+    Y.pred <- unlist(lapply(1:(dim(Theta.old)[2]), function(i){
+      return(sum(t(Y.pred[,i] * Theta.old[,i])))
     }))
   }
+  
   
   # Use activation function if output is of a character type. Note that all character
   # types are converted into factors, and since only binary factors are accepted by
@@ -292,13 +350,16 @@ DoSingleTrainingIteration <- function(modelResults, iteration){
     }else{
       Y.pred <- round(SigmoidWithCorrection(Y.pred))
     }
+  }else{
+    Y.pred <- Y.pred / dim(Theta.old)[1]
   }
   modelResults@outcome.prediction <- Y.pred
   
   # Backpropagate and calculate the error.
   Theta.new <- Theta.old
   error <- modelResults@iteration.tracking$Error[iteration-1]
-  modelResults <- BackpropagateSingleLayer(modelResults, iteration)
+  modelResults <- BackpropagateSingleLayer(modelResults, iteration, convolution,
+                                           pooling)
   if(modelResults@model.input@outcome.type == "categorical"){
     modelResults@iteration.tracking$Error[iteration+1] <- 
       ComputeClassificationError(modelResults@model.input@true.phenotypes, Y.pred)
@@ -309,6 +370,82 @@ DoSingleTrainingIteration <- function(modelResults, iteration){
   
   # Modify the model results and return.
   return(modelResults)
+}
+
+#' Run a prediction on new data using the graph learning model.
+#' @param modelResults An object of the ModelResults class.
+#' @param iteration The current iteration.
+#' @param pooling Whether or not to pool the weights.
+#' @param convolution Whether or not to perform convolution.
+#' @param testInput An object of the ModelInput class.
+#' @export
+PredictTesting <- function(modelResults, pooling, convolution, testInput){
+  # Propagate forward.
+  A.hat <- modelResults@model.input@A.hat
+  X <- testInput@node.wise.prediction
+  Theta.old <- matrix(rep(modelResults@current.weights, dim(X)[2]), ncol = dim(X)[2])
+  Y.pred <- X
+  # If convolution is to be performed, perform convolution.
+  if(convolution == TRUE){
+    Y.pred.list <- lapply(1:dim(X)[2], function(i){
+      return(A.hat %*% X[,i])
+    })
+    Y.pred <- do.call(cbind, Y.pred.list)
+  }
+  # If pooling is to be performed, multiply by pool either after or before weights
+  # are learned, respectively.
+  if(pooling == TRUE){
+    if(modelResults@weights.after.pooling == TRUE){
+      S_all <- modelResults@pooling.filter@individual.filters
+      if(modelResults@current.iteration == 1){
+        S_all <- CreateFilter(poolingFilter = modelResults@pooling.filter, A.hat = A.hat, 
+                              X = X)
+        modelResults@pooling.filter@individual.filters <- S_all
+      }
+      Y.pred <- unlist(lapply(1:length(S_all), function(i){
+        return(sum(t(Y.pred[,i]) %*% S_all[[i]] * Theta.old[,i]))
+      }))
+    }else{
+      S_all <- AdjustFilter(poolingFilter = modelResults@pooling.filter, A.hat = A.hat, 
+                            X = X, Theta = Theta.old)
+      modelResults@pooling.filter@individual.filters <- S_all
+      Y.pred <- unlist(lapply(1:length(S_all), function(i){
+        return(sum(t(Y.pred[,i] * Theta.old[,i]) %*% S_all[[i]]))
+      }))
+    }
+  }else{
+    Y.pred <- unlist(lapply(1:(dim(Theta.old)[2]), function(i){
+      return(sum(t(Y.pred[,i] * Theta.old[,i])))
+    }))
+  }
+  
+  
+  # Use activation function if output is of a character type. Note that all character
+  # types are converted into factors, and since only binary factors are accepted by
+  # the package, the values will be 1 (for the alphanumerically lowest level) and 2
+  # (for the alphanumerically highest level).
+  if(modelResults@model.input@outcome.type == "categorical"){
+    if(modelResults@activation.type == "softmax"){
+      Y.pred <- round(SoftmaxWithCorrection(Y.pred))
+    }else if(modelResults@activation.type == "tanh"){
+      Y.pred <- round(TanhWithCorrection(Y.pred))
+    }else{
+      Y.pred <- round(SigmoidWithCorrection(Y.pred))
+    }
+  }else{
+    Y.pred <- Y.pred / dim(Theta.old)[1]
+  }
+  
+  # Calculate error.
+  error <- 1
+  if(modelResults@model.input@outcome.type == "categorical"){
+    error <- ComputeClassificationError(testInput@true.phenotypes, Y.pred)
+  }else{
+    error <- ComputeNRMSE(testInput@true.phenotypes, Y.pred)
+  }
+  
+  # Modify the model results and return.
+  return(list("Y.pred" = Y.pred, "Error" = error))
 }
 
 #' Compute classification error.
@@ -329,8 +466,9 @@ ComputeClassificationError <- function(true.Y, pred.Y){
 #' Compute the normalized root mean squared error.
 #' @param true.Y The true phenotype of each sample.
 #' @param pred.Y The predicted phenotype of each sample.
+#' @export
 ComputeNRMSE <- function(true.Y, pred.Y){
   RMSD <- sqrt(sum((true.Y - pred.Y)^2) / length(true.Y))
-  NRMSE <- RMSD / mean(true.Y)
+  NRMSE <- RMSD / (max(true.Y) - min(true.Y))
   return(NRMSE)
 }

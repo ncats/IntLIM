@@ -5,12 +5,16 @@
 \title{Train the graph learning model, using the specifications in the ModelResults
 class and storing the results in the ModelResults class.}
 \usage{
-DoSingleTrainingIteration(modelResults, iteration)
+DoSingleTrainingIteration(modelResults, iteration, pooling, convolution)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}
 
 \item{iteration}{The current iteration.}
+
+\item{pooling}{Whether or not to pool the weights.}
+
+\item{convolution}{Whether or not to perform convolution.}
 }
 \description{
 Train the graph learning model, using the specifications in the ModelResults

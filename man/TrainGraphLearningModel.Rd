@@ -5,7 +5,7 @@
 \title{Train the graph learning model, using the specifications in the ModelResults.
 class and storing the results in the ModelResults class.}
 \usage{
-TrainGraphLearningModel(modelResults)
+TrainGraphLearningModel(modelResults, pooling, convolution)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}

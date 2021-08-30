@@ -128,6 +128,7 @@ CreateIntLimObject <- function(genefdata, metabfdata, pdata, geneid, metabid,
 #' @param stype category to color-code by (can be more than two categories)
 #' @param covar vector of additional variables to be incorporated into model
 #' @param class.covar class of additional variables
+#' @export
 getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL) {
    incommon<-MultiDataSet::commonSamples(inputData)
    mp <- Biobase::pData(incommon[["metabolite"]])
