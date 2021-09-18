@@ -9,7 +9,8 @@ formatSingleOmicInput(
   stype = NULL,
   covar = NULL,
   class.covar = NULL,
-  type = NULL
+  type = NULL,
+  continuous = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ formatSingleOmicInput(
 \item{class.covar}{class of additional variables}
 
 \item{type}{either "metabolite" or "expression"}
+
+\item{continuous}{boolean value indicating whether outcome is continuous}
 }
 \description{
 Function that returns a list of all data for samples in metabolite or gene dataset.

@@ -51,7 +51,7 @@ ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=
                                  genedata=pieces[["GData"]],
                                  logmetab=pieces[["logmetab"]],
                                  loggene=pieces[["loggene"]])
-    
+
     print("CreateMultiDataSet created")
     return(GMdata)
 }
@@ -71,7 +71,6 @@ ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=
 #' @return Named list of components for MultiDataSet
 CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE){
   # Check that file exists
-  print(inputFile)
   if (!file.exists(inputFile)) {
     stop("CSV input file does not exist")
   }
@@ -92,21 +91,22 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
   mymatches <- as.numeric(lapply(mytypes,function(x) 
     length(which(rownames(csvfile)==x))))
   if(sum(mymatches)!=5) {
-    stop("The column 'type' contains non-allowed entries (See Description). The 
-	         CSV input file must contain 6 rows (if optional meta data files for metabolites 
-	         and genes are not to be input, have the corresponding filenames be blanks.")
+    stop(paste("The column 'type' contains non-allowed entries (See Description). The",
+               "CSV input file must contain 6 rows (if optional meta data files for metabolites",
+               "and genes are not to be input, have the corresponding filenames be blanks."))
   }
   
   mydir <- base::dirname(inputFile)
   
-  if((as.character(csvfile['geneData',]) == "") & (as.character(csvfile['metabData',]) == "")){
+  if((is.na(as.character(csvfile['geneData',])) && is.na(as.character(csvfile['metabData',])))
+     || ((as.character(csvfile['geneData',]) == "") && as.character(csvfile['metabData',]) == "")){
     stop("No data provided.")
   }
   else{
     # Check that files exist then read them in one by one
-    if(as.character(csvfile['metabData',])=="") {
-      warning("No data provided for metabolites. This means you cannot run 
-                metabolite-metabolite or gene-metabolite analyses.\n")
+    if(is.na(csvfile['metabData',]) || as.character(csvfile['metabData',])=="") {
+      warning(paste("No data provided for metabolites. This means you cannot run",
+                    "metabolite-metabolite or gene-metabolite analyses.\n"))
       ;GData<-NULL;} 
     else{
       temp <- paste0(mydir,"/",as.character(csvfile['metabData',]))
@@ -116,18 +116,18 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
       else {
         ids <- utils::read.csv(temp,check.names=F)[,1]
         if(length(ids) != length(unique(ids))) {
-          stop(paste("Error: your input file",temp,"contains has duplicate 
-                       entries in column 1. Please make sure you have one row per 
-                       metabolite"))
+          stop(paste("Error: your input file",temp,"has duplicate", 
+                       "entries in column 1. Please make sure you have one row per", 
+                       "metabolite"))
         } 
         else {
           MData<-utils::read.csv(temp,row.names = 1,check.names=F)
         }
       }
     }
-    if(as.character(csvfile['geneData',])=="") {
-      warning("No data provided for genes. This means you cannot run gene-gene 
-                or gene-metabolite analyses.\n")
+    if(is.na(csvfile['geneData',]) || as.character(csvfile['geneData',])=="") {
+      warning(paste("No data provided for genes. This means you cannot run",
+                    "gene-gene or gene-metabolite analyses.\n"))
       ;GData<-NULL;} 
     else {
       temp <- paste0(mydir,"/",as.character(csvfile['geneData',]))
@@ -135,8 +135,8 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
         stop(paste("File", temp, "does not exist"))} else {
           ids <- utils::read.csv(temp,check.names=F)[,1]
           if(length(ids) != length(unique(ids))) {
-            stop(paste("Error: your input file",temp,"contains has duplicate 
-                           entries in column 1. Please make sure you have one row per gene"))
+            stop(paste("Error: your input file",temp,"has duplicate", 
+                           "entries in column 1. Please make sure you have one row per gene"))
           } else {
             GData<-utils::read.csv(temp,row.names = 1,check.names=F)}
         }
@@ -204,7 +204,6 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FAL
 
   # For each fold, extract the samples from the data set.
   trainTestObjects <- lapply(fold_samps, function(fold){
-     
     # Include all but the current fold in the training data.
     GmetaData <- pieces[["GmetaData"]]
     MmetaData <- pieces[["MmetaData"]]
@@ -224,11 +223,15 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FAL
                                  genedata=GData_train,
                                  logmetab=logmetab,
                                  loggene=loggene)
-  
+
     # Include the current fold in the testing data.
     pData_test <- pieces[["pData"]][fold,]
-    MData_test <- pieces[["MData"]][,fold]
-    GData_test <- pieces[["GData"]][,fold]
+    MData_test <- as.data.frame(pieces[["MData"]][,fold])
+    GData_test <- as.data.frame(pieces[["GData"]][,fold])
+    rownames(MData_test) <- rownames(pieces[["MData"]])
+    colnames(MData_test) <- rownames(pData_test)
+    rownames(GData_test) <- rownames(pieces[["GData"]])
+    colnames(GData_test) <- rownames(pData_test)
     testing <- CreateIntLimObject(genefdata=GmetaData, 
                                    metabfdata=MmetaData,
                                    metabid=metabid,

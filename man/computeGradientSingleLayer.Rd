@@ -4,7 +4,13 @@
 \alias{computeGradientSingleLayer}
 \title{Compute the gradient for a single layer neural network.}
 \usage{
-computeGradientSingleLayer(modelResults, convolution, pooling)
+computeGradientSingleLayer(
+  modelResults,
+  convolution,
+  pooling,
+  ridgeRegressionWeight,
+  varianceWeight
+)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}
@@ -12,6 +18,13 @@ computeGradientSingleLayer(modelResults, convolution, pooling)
 \item{convolution}{Whether or not to perform convolution}
 
 \item{pooling}{Whether or not to perform pooling}
+
+\item{ridgeRegressionWeight}{The hyperparameter weight assigned
+to the ridge regression parameter (often referred to as lambda in the
+literature)}
+
+\item{varianceWeight}{The hyperparameter weight assigned to the difference
+in variances between Y and the predicted value of Y.}
 }
 \description{
 Compute the gradient for a single layer neural network.

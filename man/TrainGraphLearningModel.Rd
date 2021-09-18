@@ -5,10 +5,33 @@
 \title{Train the graph learning model, using the specifications in the ModelResults.
 class and storing the results in the ModelResults class.}
 \usage{
-TrainGraphLearningModel(modelResults, pooling, convolution)
+TrainGraphLearningModel(
+  modelResults,
+  pooling,
+  convolution,
+  stochastic,
+  ridgeRegressionWeight,
+  varianceWeight,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}
+
+\item{pooling}{Whether or not to perform pooling during training.}
+
+\item{convolution}{Whether or not to perform convolution during training.}
+
+\item{stochastic}{Whether or not training should be stochastic.}
+
+\item{ridgeRegressionWeight}{The hyperparameter weight assigned
+to the ridge regression parameter (often referred to as lambda in the
+literature)}
+
+\item{varianceWeight}{The hyperparameter weight assigned to the difference
+in variances between Y and the predicted value of Y.}
+
+\item{verbose}{Whether to print results as you run the model.}
 }
 \description{
 Train the graph learning model, using the specifications in the ModelResults.

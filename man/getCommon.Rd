@@ -4,7 +4,13 @@
 \alias{getCommon}
 \title{Function that returns a list of all data for samples in common between metabolite and gene datasets}
 \usage{
-getCommon(inputData, stype = NULL, covar = NULL, class.covar = NULL)
+getCommon(
+  inputData,
+  stype = NULL,
+  covar = NULL,
+  class.covar = NULL,
+  continuous = FALSE
+)
 }
 \arguments{
 \item{inputData}{MultiDataSet object (output of ReadData())}
@@ -14,6 +20,8 @@ getCommon(inputData, stype = NULL, covar = NULL, class.covar = NULL)
 \item{covar}{vector of additional variables to be incorporated into model}
 
 \item{class.covar}{class of additional variables}
+
+\item{continuous}{boolean value indicating whether outcome is continuous}
 }
 \description{
 Function that returns a list of all data for samples in common between metabolite and gene datasets

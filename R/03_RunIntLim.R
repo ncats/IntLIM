@@ -46,21 +46,26 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
 
     incommon <- inputData
     if(any(mytypes == "expression") && any(mytypes == "metabolite")){
-        incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
+        incommon <- getCommon(inputData,stype,covar,class.covar=class.covar,
+                              continuous=continuous)
     }else{
         type <- "metabolite"
         if(any(mytypes == "expression")){
             type <- "expression"
         }
-        incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type)
+        incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type,
+                                          continuous=continuous)
     }
     if(!continuous & length(unique(stats::na.omit(incommon$p))) != 2) {
 	    stop(paste("IntLim currently requires only two categories.  Make sure the 
 	               column",stype,"only has two unique values"))
     }
-
     print("Running the analysis on")
-    print(table(incommon$p))
+    if(continuous == FALSE){
+        print(table(incommon$p))
+    }else{
+        print(range(incommon$p))
+    }
 
     ptm <- proc.time()
 

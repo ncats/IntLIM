@@ -6,7 +6,14 @@
 is computed by taking partial derivatives for each of the model weights. Given
 a learning rate, the weights are adjusted according to the gradient.}
 \usage{
-BackpropagateSingleLayer(modelResults, iteration, convolution, pooling)
+BackpropagateSingleLayer(
+  modelResults,
+  iteration,
+  convolution,
+  pooling,
+  ridgeRegressionWeight,
+  varianceWeight
+)
 }
 \arguments{
 \item{modelResults}{An object of the ModelResults class.}
@@ -16,6 +23,13 @@ BackpropagateSingleLayer(modelResults, iteration, convolution, pooling)
 \item{convolution}{Whether or not to perform convolution}
 
 \item{pooling}{Whether or not to perform pooling}
+
+\item{ridgeRegressionWeight}{The hyperparameter weight assigned
+to the ridge regression parameter (often referred to as lambda in the
+literature)}
+
+\item{varianceWeight}{The hyperparameter weight assigned to the difference
+in variances between Y and the predicted value of Y.}
 }
 \description{
 Run backpropagation for a single layer. In backpropagation, a gradient is

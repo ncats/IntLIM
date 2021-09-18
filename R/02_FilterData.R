@@ -2,6 +2,103 @@
 #'
 #' Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
 #'
+#' @param csvfile The path to the CSV file that contains the full dataset.
+#' @param inputDataFolds list of MultiDataSet objects (output of CreateCrossValFolds()) with gene expression, 
+#' metabolite abundances, and associated meta-data
+#' @param geneperc percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 
+#' < 'geneperc' percentile) (default: 0)
+#' @param metabperc percentile cutoff (0-1) for filtering metabolites (default: no filtering of metabolites) (default:0)
+#' @param metabmiss missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)
+#' @return filtData list of MultiDataSet objects with input data after filtering
+#' @export
+FilterDataFolds <- function(csvfile, inputDataFolds,geneperc=0,metabperc=0, metabmiss=0) {
+	# First, read the original data set.
+	inputData <- ReadData(csvfile,metabid='id',geneid='id')
+	filtdata <- FilterData(inputData,geneperc=geneperc, metabperc=metabperc, metabmiss = metabmiss)
+	
+	# Filter the original data set.
+	genekeepers = NULL
+	metabkeepers = NULL
+	mytypes <- names(Biobase::assayData(filtdata))
+	if(any(mytypes=="expression")){
+	  genes <- Biobase::assayDataElement(filtdata[["expression"]], 'exprs')
+	  genekeepers <- rownames(genes)
+	}
+	if(any(mytypes=="metabolite")){
+	  metabolites <- Biobase::assayDataElement(filtdata[["metabolite"]], 'metabData')
+	  metabkeepers <- rownames(metabolites)
+	}
+
+	# Now, filter each fold so that the metabolites and genes in the set match the metabolites
+	# and genes.
+	for(i in 1:length(inputDataFolds)){
+
+		# Filter training and testing data.
+		inputDataFolds[[i]]$training <- FilterFromKeepers(inputData = inputDataFolds[[i]]$training,
+		                                                  metabkeepers = metabkeepers,
+		                                                  genekeepers = genekeepers)
+		inputDataFolds[[i]]$testing <- FilterFromKeepers(inputData = inputDataFolds[[i]]$testing,
+		                                                  metabkeepers = metabkeepers,
+		                                                  genekeepers = genekeepers)
+	}
+	return(inputDataFolds)
+}
+
+#' Filter a data set given the metabolites and genes to keep.
+#'
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression, 
+#' metabolite abundances, and associated meta-data
+#' @param metabkeepers Metabolites to keep.
+#' @param genekeepers Genes to keep.
+#' @return filtData MultiDataSet object with input data after filtering
+FilterFromKeepers <- function(inputData,genekeepers, metabkeepers) {
+  # Extract metabolite and gene data to keep.
+  mytypes <- names(Biobase::assayData(inputData))
+  
+  # Create new data set.
+  filteredData <- MultiDataSet::createMultiDataSet()
+  
+  # Filter genes.
+  if(any(mytypes=="expression")){
+    # Filter the assay data.
+    mygenes <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
+    samps <- colnames(mygenes)
+    mygenes <- as.matrix(mygenes[genekeepers,])
+    colnames(mygenes) <- samps
+    
+    # Create a new expression set from the filtered assay data.
+    gene.set <- Biobase::ExpressionSet(assayData=mygenes)
+    fgenes <- Biobase::fData(inputData[["expression"]])[genekeepers,]
+    Biobase::fData(gene.set) <- fgenes
+    Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
+    
+    # Add gene expression to the filtered data set.
+    filteredData <- MultiDataSet::add_genexp(filteredData, gene.set)
+  }
+  
+  # Filter metabolites.
+  if(any(mytypes=="metabolite")){
+    # Filter the assay data.
+    mymetab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
+    samps <- colnames(mymetab)
+    mymetab <- as.matrix(mymetab[metabkeepers,])
+    colnames(mymetab) <- samps
+    rownames(mymetab) <- metabkeepers
+    
+    # Create a new 
+    fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[metabkeepers,]
+    metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
+                              phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
+                              featureData =  fmetab)
+    filteredData <- add_metabolite(filteredData, metab.set)
+  }
+  return(filteredData)
+}
+
+#' Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).
+#'
+#' Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
+#'
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression, 
 #' metabolite abundances, and associated meta-data
 #' @param geneperc percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 

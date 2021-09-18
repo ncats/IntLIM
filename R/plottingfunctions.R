@@ -1639,8 +1639,6 @@ HistogramGMPairs <- function(inputResults, type = 'metabolite', breaks = 50){
   }else if (type == 'gene'){
     gene.pairs <- data.frame(table(x$Gene))
     gene.pairs.number <- as.vector(gene.pairs$Freq)
-    str(x)
-    str(x$Gene)
     hist(gene.pairs.number, main = "Number of gene-metabolite pairs based on gene", 
          breaks = breaks, xlab = 'Gene-metabolite pairs based on gene')
   }else{
@@ -1907,5 +1905,5 @@ PlotGraphWeightsHeatmap <- function(graph, results){
   heat <- igraph::as_adjacency_matrix(new_graph, sparse = FALSE, attr = "weight")
   
   # Plot the heatmap.
-  heatmap(heat)
+  stats::heatmap(heat)
 }

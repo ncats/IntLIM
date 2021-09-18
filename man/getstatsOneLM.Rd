@@ -4,7 +4,7 @@
 \alias{getstatsOneLM}
 \title{Function that runs linear models for one gene vs all metabolites}
 \usage{
-getstatsOneLM(form, clindata, arraydata)
+getstatsOneLM(form, clindata, arraydata, analytename)
 }
 \arguments{
 \item{form}{LM formulat (typically m~g+t+g:t)}
@@ -13,6 +13,8 @@ getstatsOneLM(form, clindata, arraydata)
 sample type (e.g. cancer/non-cancer)}
 
 \item{arraydata}{matrix of metabolite values}
+
+\item{analytename}{name of dependent analyte in the model}
 }
 \description{
 Function that runs linear models for one gene vs all metabolites

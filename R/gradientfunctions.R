@@ -5,9 +5,16 @@
 #' @param iteration The current iteration.
 #' @param convolution Whether or not to perform convolution
 #' @param pooling Whether or not to perform pooling
-BackpropagateSingleLayer <- function(modelResults, iteration, convolution, pooling){
+#' @param ridgeRegressionWeight The hyperparameter weight assigned
+#' to the ridge regression parameter (often referred to as lambda in the
+#' literature)
+#' @param varianceWeight The hyperparameter weight assigned to the difference
+#' in variances between Y and the predicted value of Y.
+BackpropagateSingleLayer <- function(modelResults, iteration, convolution, pooling,
+                                     ridgeRegressionWeight, varianceWeight){
   # Calculate gradient.
-  gradient <- computeGradientSingleLayer(modelResults, convolution, pooling)
+  gradient <- computeGradientSingleLayer(modelResults, convolution, pooling,
+                                         ridgeRegressionWeight, varianceWeight)
   
   # Update gradient.
   modelResults@current.gradient <- as.matrix(gradient)
@@ -58,6 +65,12 @@ BackpropagateSingleLayer <- function(modelResults, iteration, convolution, pooli
     modelResults@current.weights <- modelResults@previous.weights - update.vec
     modelResults@previous.momentum <- m
     modelResults@previous.update.vector <- v
+  }else if(modelResults@optimization.type == "newton"){
+    # Calculate Hessian and update weights.
+    hessian <- computeHessianSingleLayer(modelResults, convolution, pooling)
+    update <- MASS::ginv(hessian) %*% modelResults@current.gradient
+    modelResults@current.weights <- modelResults@previous.weights - 
+      (modelResults@learning.rate * update)
   }
   modelResults@iteration.tracking[iteration+1,
                                   which(grepl("Weight", 
@@ -67,11 +80,12 @@ BackpropagateSingleLayer <- function(modelResults, iteration, convolution, pooli
   return(modelResults)
 }
 
-#' Compute the gradient for a single layer neural network.
+#' Compute the Hessian for a single layer neural network.
+#' Note that this function is currently not implemented for categorical outcomes.
 #' @param modelResults An object of the ModelResults class.
 #' @param convolution Whether or not to perform convolution
 #' @param pooling Whether or not to perform pooling
-computeGradientSingleLayer <- function(modelResults, convolution, pooling){
+computeHessianSingleLayer <- function(modelResults, convolution, pooling){
   # Components for derivative.
   A.hat <- modelResults@model.input@A.hat
   X <- modelResults@model.input@node.wise.prediction
@@ -87,6 +101,70 @@ computeGradientSingleLayer <- function(modelResults, convolution, pooling){
     return(ret_val)
   })
   
+  # Compute filter.
+  S <- modelResults@pooling.filter@filter
+  S_all <- modelResults@pooling.filter@individual.filters
+  
+  # Compute the convolution values.
+  convolution.val <- lapply(1:length(conv), function(i){
+    return(conv[[i]])
+  })
+  if(pooling == TRUE){
+    convolution.val <- lapply(1:length(S_all), function(i){
+      S.flat <- rowSums(S_all[[i]])
+      ret_val <- conv[[i]] * S.flat
+      if(modelResults@weights.after.pooling == TRUE){
+        ret_val <- t(conv[[i]]) %*% S_all[[i]]
+      }
+      return(ret_val)
+    })
+  }
+  
+  # Create array, where each matrix is one sample. These will be summed
+  # together to obtain the Hessian.
+  hessian.single.samples <- lapply(1:dim(X)[2], function(i){
+    mat.X <- matrix(rep(X[,i], dim(X)[1]), nrow = dim(X)[1], ncol = dim(X)[1])
+    return(mat.X * t(mat.X))
+  })
+  
+  # Sum these together to obtain the Hessian.
+  hessian <- hessian.single.samples[[1]]
+  if(length(hessian.single.samples)>1){
+    for(i in 2:length(hessian.single.samples)){
+      hessian <- hessian + hessian.single.samples[[i]]
+    }
+  }
+  
+  # Return Hessian.
+  return(hessian)
+}
+
+#' Compute the gradient for a single layer neural network.
+#' @param modelResults An object of the ModelResults class.
+#' @param convolution Whether or not to perform convolution
+#' @param pooling Whether or not to perform pooling
+#' @param ridgeRegressionWeight The hyperparameter weight assigned
+#' to the ridge regression parameter (often referred to as lambda in the
+#' literature)
+#' @param varianceWeight The hyperparameter weight assigned to the difference
+#' in variances between Y and the predicted value of Y.
+computeGradientSingleLayer <- function(modelResults, convolution, pooling,
+                                       ridgeRegressionWeight, varianceWeight){
+  # Components for derivative.
+  A.hat <- modelResults@model.input@A.hat
+  X <- modelResults@model.input@node.wise.prediction
+  Theta.old <- matrix(rep(modelResults@current.weights, dim(X)[2]), ncol = dim(X)[2])
+  Y <- modelResults@model.input@true.phenotypes
+
+  # Convolve X.
+  conv <- lapply(1:dim(X)[2], function(i){
+    ret_val <- X[,i]
+    if(convolution == TRUE){
+      ret_val <- A.hat %*% X[,i]
+    }
+    return(ret_val)
+  })
+
   # Compute filter.
   S <- modelResults@pooling.filter@filter
   S_all <- modelResults@pooling.filter@individual.filters
@@ -131,7 +209,7 @@ computeGradientSingleLayer <- function(modelResults, convolution, pooling){
       stop(paste("Invalid activation type", modelResults@activation.type))
     }
   }
-  
+
   # Compute components of gradient based on activation function.
   diff <- Y - activation
 
@@ -162,18 +240,30 @@ computeGradientSingleLayer <- function(modelResults, convolution, pooling){
   d.loss.d.theta.to.sum <- d.pred.d.theta * const.terms
   d.loss.d.theta <- -1 * rowSums(d.loss.d.theta.to.sum)
   gradient <- d.loss.d.theta
+
+  # Add regularization term (ridge regression).
+  ridge <- 2 * ridgeRegressionWeight * Theta.old[,1]
   
-  # Clip gradients (this helps to address exploding gradients, which can occur
-  # with continuous data). We limit the weight update to a single unit averaged
-  # across all nodes.
-  #avg_val <- 1 / length(d.loss.d.theta)
-  #gradient[which(gradient > avg_val)] <- avg_val
-  #gradient[which(gradient < -1 * avg_val)] <- -1 * avg_val
-  
-  # Scale gradient update so that the update to weights is unitary.
-  gradient <- gradient / sum(abs(gradient))
+  # Add variance minimization term.
+  # Note that we want to minimize (Var(Y)-Var(Y.pred))^2. The first derivative
+  # is: 2(Var(Y)-Var(Y.pred))*(-d(Var(Y.pred*X))) = 
+  # 2(Var(Y)-Var(Y.pred))*(-Mean(2(Y.pred-Mean(Y.pred))*(Y.pred.i-Mean(Y.pred.i))))
+  # = 2(Var(Y)-Var(Y.pred))*(Mean(2(Mean(Y.pred.i)-Y.pred.i)*(X.i-Mean(X.i))))
+  # Note that this term is only defined for batch training, not stochastic, as
+  # we cannot compute a variance on a single training sample.
+  variance.diff <- 2 * stats::var(Y) - stats::var(Y.pred)
+  d.std.dev.Y.pred.list <- lapply(1:length(Y), function(i){
+    Y.pred.stdev <- 2 * (mean(Y.pred) - Y.pred[i])
+    Y.pred.stdev.vec <- rep(Y.pred.stdev, dim(d.pred.d.theta)[1])
+    weightless.pred.stdev <- (d.pred.d.theta[,i] - rowMeans(d.pred.d.theta))/2
+    return(Y.pred.stdev * weightless.pred.stdev)
+  })
+  d.std.dev.y.pred <- do.call(rbind, d.std.dev.Y.pred.list)
+  mean.std.dev.Y.pred <- colMeans(d.std.dev.y.pred)
+  variance <- varianceWeight * variance.diff * mean.std.dev.Y.pred
 
   # Return gradient.
+  gradient <- gradient + ridge + variance
   return(gradient)
 }
 

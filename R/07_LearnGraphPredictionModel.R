@@ -67,38 +67,38 @@ formatInput <- function(predictionGraphs, coregulationGraph,
   return(newModelInput)
 }
 
-#' Create the graph pooling filter, given the adjacency matrix of the input graph.
-#' @param modelInputs An object of type "ModelInputs".
-#' @param k The output dimensionality of the filter.
-#' @param poolType One of "mean", "median", "max", or "min".
-#' @export
-CreatePoolingFilter <- function(modelInputs, k, poolType){
-  
-  # Perform hierarchical clustering.
-  hier <- doHierarchicalClustering(modelInputs)
-  clusters_as_sets <- initializeClusters(hier)
-  hier <- initializeMergeDataFrame(hier)
- 
-  # Find the clusters.
-  clusters <- findKClusters(modelInputs=modelInputs, clusters=clusters_as_sets,
-                           hClustResults=hier, k=k, allClusters={}, allVariances = {})
-  cluster_names <- sort(names(clusters))
-  
-  # Arrange cluster mappings in matrix.
-  mappings <- matrix(0, ncol = k, nrow = length(igraph::V(g)))
-  cluster_length <- matrix(0, length(unique(clusters)))
-  for(i in 1:length(cluster_names)){
-    which_in_cluster <- which(rownames(modelInputs@line.graph) %in% 
-                                unlist(clusters[[cluster_names[i]]]))
-    mappings[which_in_cluster, i] <- 1
-    cluster_length[i] <- length(which_in_cluster)
-  }
-  
-  # Return pooling filter.
-  newPoolingFilter <- methods::new("PoolingFilter", filter=mappings, filter.type=poolType,
-                                   cluster.sizes=cluster_length, individual.filters=list())
-  return(newPoolingFilter)
-}
+#' #' Create the graph pooling filter, given the adjacency matrix of the input graph.
+#' #' @param modelInputs An object of type "ModelInputs".
+#' #' @param k The output dimensionality of the filter.
+#' #' @param poolType One of "mean", "median", "max", or "min".
+#' #' @export
+#' CreatePoolingFilter <- function(modelInputs, k, poolType){
+#'   
+#'   # Perform hierarchical clustering.
+#'   hier <- doHierarchicalClustering(modelInputs)
+#'   clusters_as_sets <- initializeClusters(hier)
+#'   hier <- initializeMergeDataFrame(hier)
+#'  
+#'   # Find the clusters.
+#'   clusters <- findKClusters(modelInputs=modelInputs, clusters=clusters_as_sets,
+#'                            hClustResults=hier, k=k, allClusters={}, allVariances = {})
+#'   cluster_names <- sort(names(clusters))
+#'   
+#'   # Arrange cluster mappings in matrix.
+#'   mappings <- matrix(0, ncol = k, nrow = length(igraph::V(g)))
+#'   cluster_length <- matrix(0, length(unique(clusters)))
+#'   for(i in 1:length(cluster_names)){
+#'     which_in_cluster <- which(rownames(modelInputs@line.graph) %in% 
+#'                                 unlist(clusters[[cluster_names[i]]]))
+#'     mappings[which_in_cluster, i] <- 1
+#'     cluster_length[i] <- length(which_in_cluster)
+#'   }
+#'   
+#'   # Return pooling filter.
+#'   newPoolingFilter <- methods::new("PoolingFilter", filter=mappings, filter.type=poolType,
+#'                                    cluster.sizes=cluster_length, individual.filters=list())
+#'   return(newPoolingFilter)
+#' }
 
 #' Create the graph pooling filter, given the adjacency matrix of the input graph.
 #' @param modelInputs An object of type "ModelInputs".
@@ -260,8 +260,19 @@ InitializeGraphLearningModel <- function(modelInputs, poolingFilter, iterations,
 #' Train the graph learning model, using the specifications in the ModelResults.
 #' class and storing the results in the ModelResults class.
 #' @param modelResults An object of the ModelResults class.
+#' @param pooling Whether or not to perform pooling during training.
+#' @param convolution Whether or not to perform convolution during training.
+#' @param stochastic Whether or not training should be stochastic.
+#' @param ridgeRegressionWeight The hyperparameter weight assigned
+#' to the ridge regression parameter (often referred to as lambda in the
+#' literature)
+#' @param varianceWeight The hyperparameter weight assigned to the difference
+#' in variances between Y and the predicted value of Y.
+#' @param verbose Whether to print results as you run the model.
 #' @export
-TrainGraphLearningModel <- function(modelResults, pooling, convolution){
+TrainGraphLearningModel <- function(modelResults, pooling, convolution,
+                                    stochastic, ridgeRegressionWeight,
+                                    varianceWeight, verbose = TRUE){
   
   # Start the first iteration and calculate a dummy weight delta.
   modelResults@current.iteration <- 1
@@ -273,31 +284,78 @@ TrainGraphLearningModel <- function(modelResults, pooling, convolution){
   # or until convergence.
   while(modelResults@current.iteration < (modelResults@max.iterations - 1)
         && (weight.delta > modelResults@convergence.cutoff)){
-    modelResults <- DoSingleTrainingIteration(modelResults, modelResults@current.iteration,
-                                              pooling, convolution)
+    # For stochastic training, permute the samples, then compute the gradient one
+    # sample at a time.
+    # For batch training, compute the gradient over all samples.
+    if(stochastic == TRUE){
+      # Permute samples.
+      perm_samples <- sample(1:dim(modelResults@model.input@node.wise.prediction)[2],
+                             dim(modelResults@model.input@node.wise.prediction)[2])
+      for(i in perm_samples){
+        # Do training iteration for each sample.
+        newModelResults <- modelResults
+        newModelResults@model.input@node.wise.prediction <- 
+          as.matrix(modelResults@model.input@node.wise.prediction[,i])
+        newModelResults@model.input@true.phenotypes <- 
+          modelResults@model.input@true.phenotypes[i]
+        newModelResults <- DoSingleTrainingIteration(newModelResults, modelResults@current.iteration,
+                                                  pooling, convolution, ridgeRegressionWeight,
+                                                  varianceWeight)
+        # Update weights and gradient in the model results according to the
+        # results of this sample.
+        modelResults@current.weights <- newModelResults@current.weights
+        modelResults@previous.weights <- newModelResults@previous.weights
+        modelResults@current.gradient <- newModelResults@current.gradient
+        modelResults@outcome.prediction <- newModelResults@outcome.prediction
+        modelResults@previous.momentum <- newModelResults@previous.momentum
+        modelResults@previous.update.vector <- newModelResults@previous.update.vector
+        modelResults@iteration.tracking <- newModelResults@iteration.tracking
+      }
+      # Compute the prediction error over all samples.
+      Y.pred <- DoPrediction(modelResults, modelResults@current.iteration,
+                                                           pooling, convolution)
+      if(modelResults@model.input@outcome.type == "categorical"){
+        modelResults@iteration.tracking$Error[modelResults@current.iteration+1] <- 
+          ComputeClassificationError(modelResults@model.input@true.phenotypes, Y.pred)
+      }else{
+        modelResults@iteration.tracking$Error[modelResults@current.iteration+1] <- 
+          ComputeNRMSE(modelResults@model.input@true.phenotypes, Y.pred)
+      }
+      
+    # This is the batch case.  
+    }else{
+      modelResults <- DoSingleTrainingIteration(modelResults, modelResults@current.iteration,
+                                                pooling, convolution, ridgeRegressionWeight,
+                                                varianceWeight)
+    }
+    
+    # Update the iteration.
     modelResults@current.iteration <- modelResults@current.iteration + 1
     modelResults@iteration.tracking$Iteration[modelResults@current.iteration+1]<-
       modelResults@current.iteration
+    
+    # Print the weight delta and error.
     weight.delta <- sqrt(sum((modelResults@current.weights - modelResults@previous.weights)^2))
-    if(modelResults@current.iteration %% 1 == 0){#%% 100 == 0){
+    if(modelResults@current.iteration %% 1 == 0 && verbose == TRUE){
       print(paste("iteration", modelResults@current.iteration, ": weight delta is", weight.delta,
                   "and error is", 
                   modelResults@iteration.tracking$Error[modelResults@current.iteration]))
     }
   }
+  # If we exited before the maximum number of iterations, remove the rest of the
+  # tracking data.
   if(modelResults@current.iteration < modelResults@max.iterations){
     modelResults@iteration.tracking <- modelResults@iteration.tracking[1:modelResults@current.iteration,]
   }
   return(modelResults)
 }
   
-#' Train the graph learning model, using the specifications in the ModelResults
-#' class and storing the results in the ModelResults class.
+#' Predict Y given current weights.
 #' @param modelResults An object of the ModelResults class.
 #' @param iteration The current iteration.
 #' @param pooling Whether or not to pool the weights.
 #' @param convolution Whether or not to perform convolution.
-DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolution){
+DoPrediction <- function(modelResults, iteration, pooling, convolution){
   # Propagate forward.
   A.hat <- modelResults@model.input@A.hat
   X <- modelResults@model.input@node.wise.prediction
@@ -337,7 +395,6 @@ DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolut
     }))
   }
   
-  
   # Use activation function if output is of a character type. Note that all character
   # types are converted into factors, and since only binary factors are accepted by
   # the package, the values will be 1 (for the alphanumerically lowest level) and 2
@@ -353,13 +410,37 @@ DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolut
   }else{
     Y.pred <- Y.pred / dim(Theta.old)[1]
   }
+  
+  # Return the prediction.
+  return(Y.pred)
+}
+
+#' Train the graph learning model, using the specifications in the ModelResults
+#' class and storing the results in the ModelResults class.T
+#' @param modelResults An object of the ModelResults class.
+#' @param iteration The current iteration.
+#' @param pooling Whether or not to pool the weights.
+#' @param convolution Whether or not to perform convolution.
+#' @param ridgeRegressionWeight The hyperparameter weight assigned
+#' to the ridge regression parameter (often referred to as lambda in the
+#' literature)
+#' @param varianceWeight The hyperparameter weight assigned to the difference
+#' in variances between Y and the predicted value of Y.
+DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolution,
+                                      ridgeRegressionWeight, varianceWeight){
+  # Predict Y.
+  A.hat <- modelResults@model.input@A.hat
+  X <- modelResults@model.input@node.wise.prediction
+  Theta.old <- matrix(rep(modelResults@current.weights, dim(X)[2]), ncol = dim(X)[2])
+  Y.pred <- DoPrediction(modelResults, iteration, pooling, convolution)
   modelResults@outcome.prediction <- Y.pred
   
   # Backpropagate and calculate the error.
   Theta.new <- Theta.old
   error <- modelResults@iteration.tracking$Error[iteration-1]
   modelResults <- BackpropagateSingleLayer(modelResults, iteration, convolution,
-                                           pooling)
+                                           pooling, ridgeRegressionWeight,
+                                           varianceWeight)
   if(modelResults@model.input@outcome.type == "categorical"){
     modelResults@iteration.tracking$Error[iteration+1] <- 
       ComputeClassificationError(modelResults@model.input@true.phenotypes, Y.pred)
@@ -374,7 +455,6 @@ DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolut
 
 #' Run a prediction on new data using the graph learning model.
 #' @param modelResults An object of the ModelResults class.
-#' @param iteration The current iteration.
 #' @param pooling Whether or not to pool the weights.
 #' @param convolution Whether or not to perform convolution.
 #' @param testInput An object of the ModelInput class.
@@ -469,6 +549,9 @@ ComputeClassificationError <- function(true.Y, pred.Y){
 #' @export
 ComputeNRMSE <- function(true.Y, pred.Y){
   RMSD <- sqrt(sum((true.Y - pred.Y)^2) / length(true.Y))
-  NRMSE <- RMSD / (max(true.Y) - min(true.Y))
+  NRMSE <- RMSD
+  if(length(true.Y) > 1){
+    NRMSE <- RMSD / (max(true.Y) - min(true.Y))
+  }
   return(NRMSE)
 }
