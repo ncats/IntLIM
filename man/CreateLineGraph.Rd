@@ -5,12 +5,17 @@
 \title{Create a line graph given the original, unweighted graph. In a line graph,
 edges are nodes, and edges connected by a node are edges.}
 \usage{
-CreateLineGraph(predictionsByEdge, graphWithPredictions)
+CreateLineGraph(predictionsByEdge, graphWithPredictions, edgeTypeList)
 }
 \arguments{
 \item{predictionsByEdge}{Prediction levels corresponding to each edge.}
 
 \item{graphWithPredictions}{Original graph data frame.}
+
+\item{edgeTypeList}{List containing one or more of the following:
+- "shared.outcome.analyte"
+- "shared.independent.analyte"
+- "analyte.chain"}
 }
 \description{
 Create a line graph given the original, unweighted graph. In a line graph,

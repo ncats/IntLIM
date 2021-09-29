@@ -147,7 +147,10 @@ getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL,
    # Force the order to be the same, in case it isn't
    p <- mp[rownames(gp),]
    p.0 <- p
-   metab <- metab[,colnames(gene)]
+   rmetab <- rownames(metab)
+   cmetab <- colnames(metab)
+   metab <- as.data.frame(metab[,colnames(gene)])
+   colnames(metab) <- cmetab
 
    if(!is.null(stype)) {
 	p <- p[,stype]
@@ -627,60 +630,50 @@ getStatsAllLM <- function(outcome, gene, metab, type, covar, covarMatrix,
       mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                             arraydata = arraydata,
                             analytename = rownames(gene)[i])
-      # If the solution could not be found algebraically (e.g. because the
-      # system is computationally singular), a null will be returned.
-      if(is.null(mlin)){
-        list.pvals[[i]] <-  NULL
-        list.coefficients[[i]] <- NULL
-        list.rsquared[[i]] <- NULL
-        list.covariate.pvals[[i]] <- NULL
-        list.covariate.coefficients[[i]] <- NULL
-      }else{
-        term.pvals <- rownames(mlin$p.value.coeff)
+      term.pvals <- rownames(mlin$p.value.coeff)
         
-        # Return the primary p-values and coefficients.
-        index.interac <- grep('g:type', term.pvals)
-        term.coefficient <- rownames(mlin$coefficients)
-        index.coefficient <-  grep('g:type', term.coefficient)
-        p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-        coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
-        
-        term.rsquared <- rownames(mlin$r.squared.val)
-        r.squared.vector <- as.vector(mlin$r.squared.val)
-        
-        if (numprog != 0){
-          if (i %% numprog == 0) {
-            progX <- round(i/num*100)
-            print(paste(progX,"% complete"))
-          }
+      # Return the primary p-values and coefficients.
+      index.interac <- grep('g:type', term.pvals)
+      term.coefficient <- rownames(mlin$coefficients)
+      index.coefficient <-  grep('g:type', term.coefficient)
+      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+      coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+      
+      term.rsquared <- rownames(mlin$r.squared.val)
+      r.squared.vector <- as.vector(mlin$r.squared.val)
+      
+      if (numprog != 0){
+        if (i %% numprog == 0) {
+          progX <- round(i/num*100)
+          print(paste(progX,"% complete"))
         }
-        list.pvals[[i]] <-  p.val.vector
-        list.coefficients[[i]] <- coefficient.vector
-        list.rsquared[[i]] <- r.squared.vector
+      }
+      list.pvals[[i]] <-  p.val.vector
+      list.coefficients[[i]] <- coefficient.vector
+      list.rsquared[[i]] <- r.squared.vector
+      
+      if(save.covar.pvals == TRUE){
+        # Save covariate p-values.
+        covariate.pvals <- lapply(term.pvals, function(covariate){
+          return(mlin$p.value.coeff[covariate,])
+        })
+        covariate.pvals.df <- do.call("cbind", covariate.pvals)
+        rownames(covariate.pvals.df) <- paste(rownames(gene)[i], 
+                                              rownames(covariate.pvals.df),
+                                              sep="__")
+        colnames(covariate.pvals.df) <- term.pvals
+        list.covariate.pvals[[i]] <- covariate.pvals.df
         
-        if(save.covar.pvals == TRUE){
-          # Save covariate p-values.
-          covariate.pvals <- lapply(term.pvals, function(covariate){
-            return(mlin$p.value.coeff[covariate,])
-          })
-          covariate.pvals.df <- do.call("cbind", covariate.pvals)
-          rownames(covariate.pvals.df) <- paste(rownames(gene)[i], 
-                                                rownames(covariate.pvals.df),
-                                                sep="__")
-          colnames(covariate.pvals.df) <- term.pvals
-          list.covariate.pvals[[i]] <- covariate.pvals.df
-          
-          # Save covariate coefficients.
-          covariate.coefficients <- lapply(term.coefficient, function(covariate){
-            return(mlin$coefficients[covariate,])
-          })
-          covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
-          rownames(covariate.coefficients.df) <- paste(rownames(gene)[i],
-                                                       rownames(covariate.coefficients.df), 
-                                                       sep="__")
-          colnames(covariate.coefficients.df) <- term.pvals
-          list.covariate.coefficients[[i]] <- covariate.coefficients.df
-        }
+        # Save covariate coefficients.
+        covariate.coefficients <- lapply(term.coefficient, function(covariate){
+          return(mlin$coefficients[covariate,])
+        })
+        covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
+        rownames(covariate.coefficients.df) <- paste(rownames(gene)[i],
+                                                     rownames(covariate.coefficients.df), 
+                                                     sep="__")
+        colnames(covariate.coefficients.df) <- term.pvals
+        list.covariate.coefficients[[i]] <- covariate.coefficients.df
       }
     }
   } else if (outcome=="gene") {
@@ -840,55 +833,47 @@ getStatsAllLMMetabolitePairs <- function(metab, type, covar, covarMatrix,
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = arraydata,
                           analytename = rownames(metab)[i])
-    if(is.null(mlin)){
-      list.pvals[[i]] <-  NULL
-      list.coefficients[[i]] <- NULL
-      list.rsquared[[i]] <- NULL
-      list.covariate.pvals[[i]] <- NULL
-      list.covariate.coefficients[[i]] <- NULL
-    }else{
-      term.pvals <- rownames(mlin$p.value.coeff)
-      
-      # Return the primary p-values and coefficients.
-      index.interac <- grep('m:type', term.pvals)
-      term.coefficient <- rownames(mlin$coefficients)
-      index.coefficient <-  grep('m:type', term.coefficient)
-      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-      coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
-  
-      term.rsquared <- rownames(mlin$r.squared.val)
-      r.squared.vector <- as.vector(mlin$r.squared.val)
-      
-      if (numprog != 0){
-        if (i %% numprog == 0) {
-          progX <- round(i/num*100)
-          print(paste(progX,"% complete"))
-        }
+    term.pvals <- rownames(mlin$p.value.coeff)
+    
+    # Return the primary p-values and coefficients.
+    index.interac <- grep('m:type', term.pvals)
+    term.coefficient <- rownames(mlin$coefficients)
+    index.coefficient <-  grep('m:type', term.coefficient)
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+    coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+
+    term.rsquared <- rownames(mlin$r.squared.val)
+    r.squared.vector <- as.vector(mlin$r.squared.val)
+    
+    if (numprog != 0){
+      if (i %% numprog == 0) {
+        progX <- round(i/num*100)
+        print(paste(progX,"% complete"))
       }
-      list.pvals[[i]] <-  p.val.vector
-      list.coefficients[[i]] <- coefficient.vector
-      list.rsquared[[i]] <- r.squared.vector
-      if(save.covar.pvals == TRUE){
-        # Save covariate p-values.
-        covariate.pvals <- lapply(term.pvals, function(covariate){
-          return(mlin$p.value.coeff[covariate,])
-        })
-        covariate.pvals.df <- do.call("cbind", covariate.pvals)
-        rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                              rownames(metab)[i], sep="__")
-        colnames(covariate.pvals.df) <- term.pvals
-        list.covariate.pvals[[i]] <- covariate.pvals.df
-        
-        # Save covariate coefficients.
-        covariate.coefficients <- lapply(term.coefficient, function(covariate){
-          return(mlin$coefficients[covariate,])
-        })
-        covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
-        rownames(covariate.coefficients.df) <- paste(rownames(covariate.coefficients.df), 
-                                                     rownames(metab)[i], sep="__")
-        colnames(covariate.coefficients.df) <- term.pvals
-        list.covariate.coefficients[[i]] <- covariate.coefficients.df
-      }
+    }
+    list.pvals[[i]] <-  p.val.vector
+    list.coefficients[[i]] <- coefficient.vector
+    list.rsquared[[i]] <- r.squared.vector
+    if(save.covar.pvals == TRUE){
+      # Save covariate p-values.
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                            rownames(metab)[i], sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
+      list.covariate.pvals[[i]] <- covariate.pvals.df
+      
+      # Save covariate coefficients.
+      covariate.coefficients <- lapply(term.coefficient, function(covariate){
+        return(mlin$coefficients[covariate,])
+      })
+      covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
+      rownames(covariate.coefficients.df) <- paste(rownames(covariate.coefficients.df), 
+                                                   rownames(metab)[i], sep="__")
+      colnames(covariate.coefficients.df) <- term.pvals
+      list.covariate.coefficients[[i]] <- covariate.coefficients.df
     }
   }
   covariate.pvals <- do.call(rbind, list.covariate.pvals)
@@ -1035,56 +1020,48 @@ getStatsAllLMGenePairs <- function(gene, type, covar, covarMatrix, continuous,
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = arraydata,
                           analytename = rownames(gene)[i])
-    if(is.null(mlin)){
-      list.pvals[[i]] <-  NULL
-      list.coefficients[[i]] <- NULL
-      list.rsquared[[i]] <- NULL
-      list.covariate.pvals[[i]] <- NULL
-      list.covariate.coefficients[[i]] <- NULL
-    }else{
-      term.pvals <- rownames(mlin$p.value.coeff)
+    term.pvals <- rownames(mlin$p.value.coeff)
       
-      # Return the primary p-values and coefficients.
-      index.interac <- grep('g:type', term.pvals)
-      term.coefficient <- rownames(mlin$coefficients)
-      index.coefficient <-  grep('g:type', term.coefficient)
-      p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-      coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
-      
-      term.rsquared <- rownames(mlin$r.squared.val)
-      r.squared.vector <- as.vector(mlin$r.squared.val)
-      
-      if (numprog != 0){
-        if (i %% numprog == 0) {
-          progX <- round(i/num*100)
-          print(paste(progX,"% complete"))
-        }
+    # Return the primary p-values and coefficients.
+    index.interac <- grep('g:type', term.pvals)
+    term.coefficient <- rownames(mlin$coefficients)
+    index.coefficient <-  grep('g:type', term.coefficient)
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+    coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+    
+    term.rsquared <- rownames(mlin$r.squared.val)
+    r.squared.vector <- as.vector(mlin$r.squared.val)
+    
+    if (numprog != 0){
+      if (i %% numprog == 0) {
+        progX <- round(i/num*100)
+        print(paste(progX,"% complete"))
       }
-      list.pvals[[i]] <-  p.val.vector
-      list.coefficients[[i]] <- coefficient.vector
-      list.rsquared[[i]] <- r.squared.vector
+    }
+    list.pvals[[i]] <-  p.val.vector
+    list.coefficients[[i]] <- coefficient.vector
+    list.rsquared[[i]] <- r.squared.vector
+    
+    if(save.covar.pvals == TRUE){
+      # Save covariate p-values.
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
+                                            rownames(gene)[i], sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
+      list.covariate.pvals[[i]] <- covariate.pvals.df
       
-      if(save.covar.pvals == TRUE){
-        # Save covariate p-values.
-        covariate.pvals <- lapply(term.pvals, function(covariate){
-          return(mlin$p.value.coeff[covariate,])
-        })
-        covariate.pvals.df <- do.call("cbind", covariate.pvals)
-        rownames(covariate.pvals.df) <- paste(rownames(covariate.pvals.df), 
-                                              rownames(gene)[i], sep="__")
-        colnames(covariate.pvals.df) <- term.pvals
-        list.covariate.pvals[[i]] <- covariate.pvals.df
-        
-        # Save covariate coefficients.
-        covariate.coefficients <- lapply(term.coefficient, function(covariate){
-          return(mlin$coefficients[covariate,])
-        })
-        covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
-        rownames(covariate.coefficients.df) <- paste(rownames(covariate.coefficients.df), 
-                                                     rownames(gene)[i], sep="__")
-        colnames(covariate.coefficients.df) <- term.pvals
-        list.covariate.coefficients[[i]] <- covariate.coefficients.df
-      }
+      # Save covariate coefficients.
+      covariate.coefficients <- lapply(term.coefficient, function(covariate){
+        return(mlin$coefficients[covariate,])
+      })
+      covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
+      rownames(covariate.coefficients.df) <- paste(rownames(covariate.coefficients.df), 
+                                                   rownames(gene)[i], sep="__")
+      colnames(covariate.coefficients.df) <- term.pvals
+      list.covariate.coefficients[[i]] <- covariate.coefficients.df
     }
   }
   covariate.pvals <- do.call(rbind, list.covariate.pvals)

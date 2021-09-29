@@ -10,7 +10,8 @@ CreateCrossValFolds(
   geneid = NULL,
   logmetab = FALSE,
   loggene = FALSE,
-  folds
+  folds,
+  suppressWarnings = FALSE
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ CreateCrossValFolds(
 \item{loggene}{whether or not to log gene values (T/F)}
 
 \item{folds}{number of folds to create}
+
+\item{suppressWarnings}{whether to suppress warnings}
 }
 \value{
 A set of MultiDataSet training and testing sets, of the following format:

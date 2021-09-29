@@ -8,7 +8,14 @@ each node corresponds to a pair of analytes.
 2. A prediction value for each node of the line graph, for each sample X.
 3. The true prediction values Y for each sample X.}
 \usage{
-formatInput(predictionGraphs, coregulationGraph, inputData, stype, stype.class)
+formatInput(
+  predictionGraphs,
+  coregulationGraph,
+  inputData,
+  stype,
+  stype.class,
+  edgeTypeList
+)
 }
 \arguments{
 \item{predictionGraphs}{A list of igraph objects, each of which includes
@@ -22,6 +29,12 @@ metabolite abundances, and associated meta-data}
 \item{stype}{The outcome}
 
 \item{stype.class}{The class of the outcome ("numeric" or "categorical")}
+
+\item{edgeTypeList}{List containing one or more of the following to include
+in the line graph:
+- "shared.outcome.analyte"
+- "shared.independent.analyte"
+- "analyte.chain"}
 }
 \description{
 Format the input for graph-based learning. This input consists of:

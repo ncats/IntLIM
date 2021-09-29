@@ -9,7 +9,8 @@ CreateIntLimObjectPieces(
   metabid = NULL,
   geneid = NULL,
   logmetab = FALSE,
-  loggene = FALSE
+  loggene = FALSE,
+  suppressWarnings = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ CreateIntLimObjectPieces(
 \item{logmetab}{whether or not to log metabolite values (T/F)}
 
 \item{loggene}{whether or not to log gene values (T/F)}
+
+\item{suppressWarnings}{whether to suppress warnings}
 }
 \value{
 Named list of components for MultiDataSet

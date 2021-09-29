@@ -47,7 +47,7 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
   }else{
     dependent.vars <- as.data.frame(incommon$gene)
   }
-  
+
   # Extract coefficients.
   which_start <- which(colnames(inputResults@filt.results) == "rsquared")[1]
   if(is.na(which_start)){
@@ -73,7 +73,7 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
   ind_term <- independent.vars[coefficients[,1],] * ind_var
   dep_term <- dependent.vars[coefficients[,2],]
   pred_phenotype <- dep_term - (intercept + ind_term)
-  
+
   # If there are covariates, include the covariate terms in the prediction
   # by subtracting them.
   if(!is.null(covariates)) {
@@ -119,18 +119,19 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
     final_covariate_val <- Reduce('+', all_cov_terms)
     pred_phenotype <- pred_phenotype - final_covariate_val
   }
-  
+
   # Calculate the denominator and divide.
   div_term <- independent.vars[coefficients[,1],] * interact_var
   div_term <- div_term + phen_var
   pred_phenotype <- pred_phenotype / div_term 
-  
+
   # For discrete phenotypes only, round the value.
   if(!is.numeric(inputData@phenoData$metabolite$main@data[,stype])){
     pred_phenotype[multi.which(pred_phenotype >= 1)] <- 1
     pred_phenotype[multi.which(pred_phenotype <= 0)] <- 0
     pred_phenotype <- round(pred_phenotype,digits=0)
   }
+  pred_phenotype = as.data.frame(pred_phenotype)
   
   # Add analyte information for each prediction.
   pred_phenotype$to <- as.matrix(coefficients[,2])
@@ -182,13 +183,9 @@ ProjectPredictionsOntoGraph <- function(predictions_list, coRegulationGraph){
   
   # Concatenate all predictions into a single frame.
   predictions <- do.call(rbind, predictions_list)
-  edges_from <- edges$from
-  edges_to <- edges$to
-  edges$from[which(edges_to %in% predictions$from)] <- edges_to[which(edges_to %in% predictions$from)]
-  edges$to[which(edges_from %in% predictions$to)] <- edges_from[which(edges_from %in% predictions$to)]
   
   # Define continuous color based on prediction.
-  pal = grDevices::colorRampPalette(c("blue", "red"))
+  pal <- grDevices::colorRampPalette(c("limegreen", "purple"))
 
   # Modify n copies of graph, where n is the number of subjects.
   new_graphs <- lapply(1:(dim(predictions)[2]-2), function(i){
@@ -198,17 +195,18 @@ ProjectPredictionsOntoGraph <- function(predictions_list, coRegulationGraph){
     subject_graph$weight <- predictions[,i]
     
     # Modify color.
-    subject_color_scale <- findInterval(predictions[,i], sort(predictions[,i]))
-    subject_graph$color <- pal(nrow(subject_graph))[subject_color_scale]
+    bin_count <- 100
+    intervals <- seq(range(predictions[,i])[1], range(predictions[,i])[2], 
+                     by = (range(predictions[,i])[2] - range(predictions[,i])[1])
+                     / (bin_count - 1))
+    subject_color_scale <- findInterval(predictions[,i], intervals)
+    subject_graph$color <- pal(bin_count + 1)[subject_color_scale]
     
     # Modify node properties.
-    node_df = data.frame(node = unique(c(as.character(predictions$to), 
-                                         as.character(predictions$from))), 
-                            size = 5)
+    node_df <- igraph::as_data_frame(coRegulationGraph, what = "vertices")
     
     # Create graph.
-    final_graph = igraph::graph_from_data_frame(subject_graph, directed = FALSE,
-                                        vertices = node_df)
+    final_graph = igraph::graph_from_data_frame(subject_graph, vertices = node_df)
     return(final_graph)
   })
   names(new_graphs)<-colnames(predictions)[1:(length(colnames(predictions))-2)]

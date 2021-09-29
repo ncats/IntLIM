@@ -68,8 +68,10 @@ ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=
 #'	(required if a gene meta data file is present, must match gene expression data)
 #' @param logmetab whether or not to log metabolite values (T/F)
 #' @param loggene whether or not to log gene values (T/F)
+#' @param suppressWarnings whether to suppress warnings
 #' @return Named list of components for MultiDataSet
-CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE){
+CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE,
+                                     suppressWarnings=FALSE){
   # Check that file exists
   if (!file.exists(inputFile)) {
     stop("CSV input file does not exist")
@@ -105,10 +107,15 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
   else{
     # Check that files exist then read them in one by one
     if(is.na(csvfile['metabData',]) || as.character(csvfile['metabData',])=="") {
-      warning(paste("No data provided for metabolites. This means you cannot run",
-                    "metabolite-metabolite or gene-metabolite analyses.\n"))
-      ;GData<-NULL;} 
-    else{
+      if(suppressWarnings == FALSE){
+        warning(paste("No data provided for metabolites. This means you cannot run",
+                      "metabolite-metabolite or gene-metabolite analyses.\n"))
+        ;MData<-NULL;
+      }
+      else{
+        MData<-NULL
+      }
+    }else{
       temp <- paste0(mydir,"/",as.character(csvfile['metabData',]))
       if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))
@@ -126,42 +133,66 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
       }
     }
     if(is.na(csvfile['geneData',]) || as.character(csvfile['geneData',])=="") {
-      warning(paste("No data provided for genes. This means you cannot run",
-                    "gene-gene or gene-metabolite analyses.\n"))
-      ;GData<-NULL;} 
-    else {
+      if(suppressWarnings == FALSE){
+        warning(paste("No data provided for genes. This means you cannot run",
+                      "gene-gene or gene-metabolite analyses.\n"))
+        ;GData<-NULL;
+      }
+      else{
+        GData<-NULL
+      }
+    }else {
       temp <- paste0(mydir,"/",as.character(csvfile['geneData',]))
       if(!file.exists(temp)) {
-        stop(paste("File", temp, "does not exist"))} else {
-          ids <- utils::read.csv(temp,check.names=F)[,1]
-          if(length(ids) != length(unique(ids))) {
-            stop(paste("Error: your input file",temp,"has duplicate", 
-                           "entries in column 1. Please make sure you have one row per gene"))
-          } else {
-            GData<-utils::read.csv(temp,row.names = 1,check.names=F)}
+        stop(paste("File", temp, "does not exist"))
+      } else {
+        ids <- utils::read.csv(temp,check.names=F)[,1]
+        if(length(ids) != length(unique(ids))) {
+          stop(paste("Error: your input file",temp,"has duplicate", 
+                         "entries in column 1. Please make sure you have one row per gene"))
+        } else {
+          GData<-utils::read.csv(temp,row.names = 1,check.names=F)
         }
+      }
     }
     
     temp <- paste0(mydir,"/",as.character(csvfile['metabMetaData',]))
     if(as.character(csvfile['metabMetaData',])=="") {
-      warning("No metadata provided for metabolites");MmetaData<-NULL;metabid=NULL; } else if
-    (!file.exists(temp)) {
-      stop(paste("File", temp, "does not exist"))} else {
+      if(suppressWarnings == FALSE){
+        warning("No metadata provided for metabolites");MmetaData<-NULL;metabid=NULL; 
+      }
+      else{
+        MmetaData<-NULL
+        metabid=NULL
+      }
+    }else if(!file.exists(temp)) {
+      stop(paste("File", temp, "does not exist"))
+    } else {
         MmetaData<-utils::read.csv(temp)
-        colnames(MmetaData)[which(colnames(MmetaData)==metabid)]="id"}
+        colnames(MmetaData)[which(colnames(MmetaData)==metabid)]="id"
+    }
     
     temp <- paste0(mydir,"/",as.character(csvfile['geneMetaData',]))
     if(as.character(csvfile['geneMetaData',])=="") {
-      warning("No metadata provided for genes");GmetaData<-NULL;geneid=NULL} else if
-    (!file.exists(temp)) {
-      stop(paste("File", temp, "does not exist"))} else {
+      if(suppressWarnings == FALSE){
+        warning("No metadata provided for genes");GmetaData<-NULL;geneid=NULL; 
+      }
+      else{
+        GmetaData<-NULL
+        metabid=NULL
+      }
+    }else if(!file.exists(temp)) {
+      stop(paste("File", temp, "does not exist"))
+    } else {
         GmetaData<-utils::read.csv(temp)
-        colnames(GmetaData)[which(colnames(GmetaData)==geneid)]="id"}
-    
+        colnames(GmetaData)[which(colnames(GmetaData)==geneid)]="id"
+    }
     temp <- paste0(mydir,"/",as.character(csvfile['sampleMetaData',]))
     if(!file.exists(temp)) {
-      stop(paste("File", temp, "does not exist"))} else {
-        pData<-utils::read.csv(temp,row.names = 1)}
+      stop(paste("File", temp, "does not exist"))
+    } else {
+        pData<-utils::read.csv(temp,row.names = 1)
+    }
     
     # Return data.
     pieces <- list("GmetaData" = GmetaData, "MmetaData" = MmetaData, 
@@ -184,18 +215,25 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
 #' @param logmetab whether or not to log metabolite values (T/F)
 #' @param loggene whether or not to log gene values (T/F)
 #' @param folds number of folds to create
+#' @param suppressWarnings whether to suppress warnings
 #' @return A set of MultiDataSet training and testing sets, of the following format:
 #' list(list("train" = MultiDataSet, "test" = MultiDataSet), ... list("train" = MultiDataSet,
 #' "test" = MultiDataSet))
 #' @export
 CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE,
-                                folds) {
+                                folds, suppressWarnings=FALSE) {
   
   # Create the components of the input.
-  pieces <- CreateIntLimObjectPieces(inputFile,metabid,geneid, logmetab,loggene)
+  pieces <- CreateIntLimObjectPieces(inputFile,metabid,geneid, logmetab,loggene,
+                                     suppressWarnings)
   
   # Extract all samples.
   samps <- rownames(pieces[["pData"]])
+  
+  # Stop if the number of folds is greater than the number of samples.
+  if(folds > length(samps)){
+    stop("ERROR: The number of folds is greater than the number of samples!")
+  }
 
   # Permute samples and divide into folds.
   sets_of <- ceiling(length(samps) / folds)
@@ -204,16 +242,40 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FAL
 
   # For each fold, extract the samples from the data set.
   trainTestObjects <- lapply(fold_samps, function(fold){
+    # Initialize.
+    GmetaData <- pieces$GmetaData
+    MmetaData <- pieces$MmetaData
+    metabid <- pieces$metabid
+    geneid <- pieces$geneid
+    pData_train <- pieces$pData[setdiff(samps, fold),]
+    pData_test <- pieces$pData[fold,]
+    MData_train <- NULL
+    MData_test <- NULL
+    GData_train <- NULL
+    GData_test <- NULL
+    logmetab_train <- NULL
+    logmetab_test <- NULL
+    loggene_train <- NULL
+    loggene_test <- NULL
+    
     # Include all but the current fold in the training data.
-    GmetaData <- pieces[["GmetaData"]]
-    MmetaData <- pieces[["MmetaData"]]
-    metabid <- pieces[["metabid"]]
-    geneid <- pieces[["geneid"]]
-    pData_train <- pieces[["pData"]][setdiff(samps, fold),]
-    MData_train <- pieces[["MData"]][,setdiff(samps, fold)]
-    GData_train <- pieces[["GData"]][,setdiff(samps, fold)]
-    logmetab_train <- pieces[["logmetab"]]
-    loggene_train <- pieces[["loggene"]]
+    if(!is.null(pieces$MData)){
+      MData_train <- pieces$MData[,setdiff(samps, fold)]
+      MData_test <- as.data.frame(pieces$MData[,fold])
+      logmetab_train <- pieces$logmetab
+      logmetab_test <- pieces$logmetab
+      rownames(MData_test) <- rownames(pieces$MData)
+      colnames(MData_test) <- rownames(pData_test)
+    }
+    if(!is.null(pieces$GData)){
+      GData_train <- pieces$GData[,setdiff(samps, fold)]
+      GData_test <- as.data.frame(pieces$GData[,fold])
+      loggene_train <- pieces$loggene
+      loggene_test <- pieces$loggene
+      rownames(GData_test) <- rownames(pieces$GData)
+      colnames(GData_test) <- rownames(pData_test)
+    }
+    
     training <- CreateIntLimObject(genefdata=GmetaData, 
                                  metabfdata=MmetaData,
                                  metabid=metabid,
@@ -225,13 +287,6 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FAL
                                  loggene=loggene)
 
     # Include the current fold in the testing data.
-    pData_test <- pieces[["pData"]][fold,]
-    MData_test <- as.data.frame(pieces[["MData"]][,fold])
-    GData_test <- as.data.frame(pieces[["GData"]][,fold])
-    rownames(MData_test) <- rownames(pieces[["MData"]])
-    colnames(MData_test) <- rownames(pData_test)
-    rownames(GData_test) <- rownames(pieces[["GData"]])
-    colnames(GData_test) <- rownames(pData_test)
     testing <- CreateIntLimObject(genefdata=GmetaData, 
                                    metabfdata=MmetaData,
                                    metabid=metabid,

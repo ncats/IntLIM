@@ -220,16 +220,16 @@ test_that("Duplicate analytes cause early termination", {
   # Check that error is thrown.
   fname_metab_dup <- paste(getwd(), "metab_file_dup.csv", sep = "/")
   expect_error(IntLIM::ReadData(fname_metab_dup_ref),
-                 paste("Error: your input file",fname_metab_dup, "has duplicate",
-                       "entries in column 1. Please make sure you have one row per metabolite"),
-                 ignore.case = TRUE)
+               paste("Error: your input file",fname_metab_dup,"has duplicate", 
+                     "entries in column 1. Please make sure you have one row per", 
+                     "metabolite"), fixed = TRUE)
 
   # Check that error is thrown.
   fname_gene_dup <- paste(getwd(), "gene_file_dup.csv", sep = "/")
   expect_error(IntLIM::ReadData(fname_gene_dup_ref),
-                 paste("Error: your input file",fname_gene_dup, "has duplicate",
-                       "entries in column 1. Please make sure you have one row per gene"),
-                 ignore.case = TRUE)
+                paste("Error: your input file",fname_gene_dup,"has duplicate", 
+                     "entries in column 1. Please make sure you have one row per gene"),
+               fixed = TRUE)
   
   # Remove files.
   file.remove(fname_metab)
@@ -244,342 +244,699 @@ test_that("Duplicate analytes cause early termination", {
   file.remove(fname_metab_dup_ref)
   file.remove(fname_gene_dup_ref)
 })
-# 
-# # If a data file is not accessible on the system, an error should be thrown.
-# test_that("Inaccessible data files cause early termination.", {
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Create metabolite file.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   
-#   # Create metabolite metadata file.
-#   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
-#                                 c("Metab1", "Metab2", "Metab3"))
-#   write.csv("metab_metadata_file.csv", metabMetaData, quote=FALSE)
-#   
-#   # Create gene file.
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   
-#   # Create gene metadata file.
-#   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
-#                                c("Gene1", "Gene2", "Gene3"))
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   
-#   # Create patient data file.
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   
-#   # Create reference file that points to nonexistent metabolite file.
-#   missing_metab_df = data.frame("filenames"=c("?!%","gene_file.csv","metabolite_metadata_file.csv"
-#                                               ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(missing_metab_df) <- expected
-#   write.csv("missing_metabdata_file.csv", missing_metab_df, quote=FALSE)
-#   
-#   # Check that an error is thrown.
-#   expect_error(IntLIM::ReadData("missing_metabdata_file.csv"), 
-#                  paste("File", base::dirname("missing_metabdata_file.csv"), "/?!%",
-#                        "does not exist"), ignore.case = TRUE)
-#   
-#   # Create reference file that points to nonexistent gene file.
-#   missing_gene_df = data.frame("filenames"=c("metabolite_file.csv","?!%", "metabolite_metadata_file.csv"
-#                                              ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(missing_gene_df) <- expected
-#   write.csv("missing_gene_file.csv", missing_gene_df, quote=FALSE)
-#   
-#   # Check that an error is thrown.
-#   expect_error(IntLIM::ReadData("missing_gene_file.csv"), 
-#                  paste("File", base::dirname("missing_gene_file.csv"), "/?!%",
-#                        "does not exist"), ignore.case = TRUE)
-# })
-# 
-# # If analyte metadata files are missing, this should throw a warning but not lead
-# # to early termination.
-# test_that("Missing metadata causes a warning.", {
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
-#                                 c("Metab1", "Metab2", "Metab3"))
-#   write.csv("metab_metadata_file.csv", metabMetaData, quote=FALSE)
-#   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
-#                                 c("Gene1", "Gene2", "Gene3"))
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   
-#   # Check when only metabolite data is missing.
-#   missing_metab_df = data.frame("filenames"=c("metab_file","gene_file.csv","?!%"
-#                                               ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(missing_metab_df) <- expected
-#   write.csv("missing_metab_metadata_file.csv", missing_metab_df, quote=FALSE)
-#   expect_warning(IntLIM::ReadData("missing_metab_metadata_file.csv"), 
-#                  paste("File", base::dirname("missing_metab_metadata_file.csv"), "/?!%",
-#                        "does not exist"), ignore.case = TRUE)
-#   
-#   # Check when only gene data is missing.
-#   missing_gene_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
-#                                               ,"?!%","pdata_file.csv"))
-#   rownames(missing_gene_df) <- expected
-#   write.csv("missing_gene_metadata_file.csv", missing_gene_df, quote=FALSE)
-#   expect_warning(IntLIM::ReadData("missing_gene_metadata_file.csv"), 
-#                  paste("File", base::dirname("missing_gene_metadata_file.csv"), "/?!%",
-#                        "does not exist"), ignore.case = TRUE)
-# })
-# 
-# # If patient data file is missing, this should cause early termination of the
-# # program.
-# test_that("Missing patient data leads to early termination", {
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
-#                                 c("Metab1", "Metab2", "Metab3"))
-#   write.csv("metab_metadata_file.csv", metabMetaData, quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   
-#   # Check when patient data is missing.
-#   missing_pdata_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
-#                                               ,"gene_metadata_file.csv","?%!"))
-#   rownames(missing_pdata_df) <- expected
-#   write.csv("missing_pdata_file.csv", missing_pdata_df, quote=FALSE)
-#   expect_error(IntLIM::ReadData("missing_pdata_file.csv"), 
-#                  paste("File", base::dirname("missing_pdata_file.csv"), "/?!%",
-#                        "does not exist"), ignore.case = TRUE)
-# })
-# 
-# # If the id column is missing from the metabolite metadata, this should lead to early
-# # termination of the program.
-# test_that("Missing 'id' column in metabolite metadata leads to early termination.",{
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   metabMetaData <- data.frame("metabname" = c("Metab1","Metab2","Metab3"))
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE, rownames=FALSE)
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   
-#   # Remove the ID column.
-#   metabMetaData <- data.frame("metabname"=
-#                                 c("Metab1", "Metab2", "Metab3"))
-#   write.csv("metab_metadata_file.csv", metabMetaData, quote=FALSE)
-#   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
-#                                 c("Gene1", "Gene2", "Gene3"))
-#   
-#   # Check that error is thrown.
-#   all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
-#                                               ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(all_df) <- expected
-#   write.csv("all.csv", all_df, quote=FALSE)
-#   expect_error(IntLIM::ReadData("all.csv"), 
-#                  stop(paste("metabid provided id",
-#                                   "does not exist in metabolite meta data file")), 
-#                  ignore.case = TRUE)
-# })
-# 
-# # If the id column is missing from the gene metadata, this should lead to early
-# # termination of the program.
-# test_that("Missing 'id' column in gene metadata leads to early termination.",{
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   metabMetaData <- data.frame("metabname" = c("Metab1","Metab2","Metab3"))
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE, rownames=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
-#                                 c("Metab1", "Metab2", "Metab3"))
-#   write.csv("metab_metadata_file.csv", metabMetaData, quote=FALSE)
-#   
-#   # Remove the ID column.
-# 
-#   geneMetaData <- data.frame("genename"=
-#                                c("Gene1", "Gene2", "Gene3"))
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   
-#   # Check that error is thrown.
-#   all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
-#                                     ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(all_df) <- expected
-#   write.csv("all.csv", all_df, quote=FALSE)
-#   expect_error(IntLIM::ReadData("all.csv"), 
-#                stop(paste("metabid provided id",
-#                           "does not exist in metabolite meta data file")), 
-#                ignore.case = TRUE)
-# })
-# 
-# # If the ID's in the metadata file do not match the ID's in the metabolite
-# # file, program should terminate.
-# test_that("Discrepancy between metabolite names and metabolite metadata
-#           leads to early termination.",{
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   metabMetaData <- data.frame("id"=c("Metab1","FruityPebbles","Metab3"),
-#                               "metabname" = c("Metab1","Metab2","Metab3"))
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE, rownames=FALSE)
-#   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
-#                                c("Gene1", "Gene2", "Gene3"))
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   
-#   # Check when only metabolite data is missing.
-#   all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
-#                                     ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(all_df) <- expected
-#   write.csv("all.csv", all_df, quote=FALSE)
-#   expect_warning(IntLIM::ReadData("all.csv"), 
-#                  stop("Metabolites in abundance data file and metabolite meta 
-#                  data file are not equal"), 
-#                  ignore.case = TRUE)
-# })
-# 
-# # If the patient ID does not match the ID's in the analyte data, the program should
-# # terminate early.
-# test_that("Discrepancy between samples in patient data and analyte data files
-#           leads to early termination.",{
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Dino")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   metabMetaData <- data.frame("id"=c("Metab1","Metab2","Metab3"),
-#                               "metabname" = c("Metab1","Metab2","Metab3"))
-#   write.csv("metab_file.csv", t(metabData), quote=FALSE, rownames=FALSE)
-#   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
-#                                c("Gene1", "Gene2", "Gene3"))
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   
-#   all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
-#                                     ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(all_df) <- expected
-#   write.csv("all.csv", all_df, quote=FALSE)
-#   expect_warning(IntLIM::ReadData("all.csv"), 
-#                  stop("All samples in abundance data file must be in metabolite 
-#                       meta data file"), 
-#                  ignore.case = TRUE)
-# })
-# 
-# # When all fields are present, a MultiDataSet object should be created.
-# # All fields should be populated appropriately.
-# # NEEDS TO BE FILLED IN
-# test_that("All fields are present", {
-#   # Data types expected
-#   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
-#                 "sampleMetaData")
-#   
-#   # Save files.
-#   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-#   rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("metabolite_file.csv", t(metabData), quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-#   rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("pdata_file.csv", pData, quote=FALSE)
-#   correct_df = data.frame("filenames"=c("metab_file","gene_file.csv","metab_metadata_file"
-#                                               ,"gene_metadata_file.csv","pdata_file.csv"))
-#   rownames(correct_df) <- expected
-#   write.csv("correct_data.csv", correct_df, quote=FALSE)
-#   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
-#                                 c("Metab1", "Metab2", "Metab3"))
-#   write.csv("metab_metadata_file.csv", metabMetaData, quote=FALSE)
-#   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
-#                                 c("Gene1", "Gene2", "Gene3"))
-#   write.csv("gene_metadata_file.csv", geneMetaData, quote=FALSE)
-#   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-#   rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-#   write.csv("gene_file.csv", t(geneData), quote=FALSE)
-#   
-#   # Build the data set that should be built.
-#   multi <- MultiDataSet::createMultiDataSet()
-#   metab.set <- methods::new("MetaboliteSet",metabData = metabdata,
-#                          phenoData = metabphenoData, featureData = metabfeatureData)
-#   gene.set <- Biobase::ExpressionSet(assayData=as.matrix(genedata))
-#   multi <- add_metabolite(multi, metab.set)
-#   multi <- MultiDataSet::add_genexp(multi, gene.set)
-#   
-#   # Check that data format is correct.
-#   expect_identical(IntLIM::ReadData("missing_pdata_file.csv"), 
-#                  paste("File", base::dirname("missing_pdata_file.csv"), "/?!%",
-#                        "does not exist"), ignore.case = TRUE)
-# })
+
+# If a data file is not accessible on the system, an error should be thrown.
+test_that("Inaccessible data files cause early termination.", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+
+  # Create metabolite file.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+
+  # Create metabolite metadata file.
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE)
+
+  # Create gene file.
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+
+  # Create gene metadata file.
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE)
+
+  # Create patient data file.
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+
+  # Create reference file that points to nonexistent metabolite file.
+  missing_metab_df = data.frame("filenames"=c("?!%","gene_file.csv","metab_metadata_file.csv"
+                                              ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(missing_metab_df) <- expected
+  fname_missing_metab <- paste(getwd(), "missing_metabdata_file.csv", sep = "/")
+  write.csv(missing_metab_df, file = fname_missing_metab, quote=FALSE)
+
+  # Check that an error is thrown.
+  expect_error(IntLIM::ReadData("missing_metabdata_file.csv"),
+                 paste("File", paste0(base::dirname("missing_metabdata_file.csv"), "/?!%"),
+                       "does not exist"), fixed = TRUE)
+
+  # Create reference file that points to nonexistent gene file.
+  missing_gene_df = data.frame("filenames"=c("metab_file.csv","?!%", "metabolite_metadata_file.csv"
+                                             ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(missing_gene_df) <- expected
+  fname_missing_gene <- paste(getwd(), "missing_gene_file.csv", sep = "/")
+  write.csv(missing_gene_df, file = fname_missing_gene, quote=FALSE)
+
+  # Check that an error is thrown.
+  expect_error(IntLIM::ReadData("missing_gene_file.csv"),
+                 paste("File", paste0(base::dirname("missing_gene_file.csv"), "/?!%"),
+                       "does not exist"), fixed = TRUE)
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(fname_missing_metab)
+  file.remove(fname_missing_gene)
+})
+
+# If analyte metadata files are missing, this should throw a warning but not lead
+# to early termination. 
+test_that("Missing metadata causes a warning.", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+
+  # Save metabolite file.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  # Save gene file.
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  # Save patient data file.
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  # Save metadata files.
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                                c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+
+  # Check when only metabolite data is missing.
+  missing_metab_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv", "",
+                                              "gene_metadata_file.csv","pdata_file.csv"))
+  rownames(missing_metab_df) <- expected
+  fname_metab_missing <- paste(getwd(), "missing_metab_metadata_file.csv", sep = "/")
+  write.csv(missing_metab_df, file = fname_metab_missing, quote=FALSE)
+  expect_warning(IntLIM::ReadData(fname_metab_missing),
+                 "No metadata provided for metabolites", fixed = TRUE)
+
+  # Check when only gene data is missing.
+  missing_gene_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv",
+                                             "metab_metadata_file.csv","",
+                                             "pdata_file.csv"))
+  rownames(missing_gene_df) <- expected
+  fname_gene_missing <- paste(getwd(), "missing_gene_metadata_file.csv", sep = "/")
+  write.csv(missing_gene_df, file = fname_gene_missing, quote=FALSE)
+  expect_warning(IntLIM::ReadData(fname_gene_missing),
+                 "No metadata provided for genes", fixed = TRUE)
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(fname_metab_missing)
+  file.remove(fname_gene_missing)
+})
+
+# If patient data file is missing, this should cause early termination of the
+# program.
+test_that("Missing patient data leads to early termination", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), file = "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene_meta, quote=FALSE)
+
+  # Check when patient data is missing.
+  missing_pdata_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                              ,"gene_metadata_file.csv","?%!"))
+  rownames(missing_pdata_df) <- expected
+  fname_pdata_missing <- paste(getwd(), "missing_pdata_file.csv", sep = "/")
+  write.csv(missing_pdata_df, file = fname_pdata_missing, quote=FALSE)
+  expect_error(IntLIM::ReadData(fname_pdata_missing),
+                 paste("File", paste(getwd(), "?%!", sep = "/"),
+                       "does not exist"), fixed = TRUE)
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(fname_pdata_missing)
+})
+
+# If the id column is missing from the metadata, this should lead to early
+# termination of the program.
+test_that("Missing 'id' column in metadata leads to early termination.",{
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  metabMetaDataMissing <- data.frame("metabname" = c("Metab1","Metab2","Metab3"))
+  fname_metab_meta_missing <- paste(getwd(), "metab_metadata_missing_file.csv", sep = "/")
+  write.csv(metabMetaDataMissing, file = fname_metab_meta_missing, quote=FALSE,
+            row.names = FALSE)
+  
+  geneMetaDataMissing <- data.frame("genename" = c("Gene1","Gene2","Gene3"))
+  fname_gene_meta_missing <- paste(getwd(), "gene_metadata_missing_file.csv", sep = "/")
+  write.csv(geneMetaDataMissing, file = fname_gene_meta_missing, quote=FALSE,
+            row.names = FALSE)
+
+  # Check that error is thrown.
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_missing_file.csv"
+                                              ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  fname_metab_meta_noid <- paste(getwd(), "metab_metadata_noid_file.csv", sep = "/")
+  write.csv(all_df, file = fname_metab_meta_noid, quote=FALSE)
+  expect_error(IntLIM::ReadData(fname_metab_meta_noid),
+                 paste("metabid provided  does not exist in metabolite meta data file"),
+                 fixed = TRUE)
+  
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_missing_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  fname_gene_meta_noid <- paste(getwd(), "gene_metadata_noid_file.csv", sep = "/")
+  write.csv(all_df, file = fname_gene_meta_noid, quote=FALSE)
+  expect_error(IntLIM::ReadData(fname_gene_meta_noid),
+               paste("geneid provided  does not exist in gene meta data file"),
+               fixed = TRUE)
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(fname_metab_meta_noid)
+  file.remove(fname_gene_meta_noid)
+})
+# If the ID's in the metadata file do not match the ID's in the analyte
+# file, program should terminate.
+test_that("Discrepancy between metabolite names and metabolite metadata
+          leads to early termination.",{
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  metabMetaDataWrong <- data.frame("id"=c("Metab1","FruityPebbles","Metab3"),
+                              "metabname" = c("Metab1","Metab2","Metab3"))
+  fname_metab_meta_wrong <- paste(getwd(), "metab_metadata_file_wrong.csv", sep = "/")
+  write.csv(metabMetaDataWrong, file = fname_metab_meta_wrong, quote=FALSE, row.names = FALSE)
+  
+  geneMetaDataWrong <- data.frame("id"=c("Gene1","CocoaPebbles","Gene3"),
+                                   "genename" = c("Gene1","Gene2","Gene3"))
+  fname_gene_meta_wrong <- paste(getwd(), "gene_metadata_file_wrong.csv", sep = "/")
+  write.csv(geneMetaDataWrong, file = fname_gene_meta_wrong, quote=FALSE, row.names = FALSE)
+
+  # Check when only metabolite data is missing.
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file_wrong.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  fname_metab_meta_wrong_ref <- paste(getwd(), "gene_metadata_wrong_file.csv", sep = "/")
+  write.csv(all_df, file = fname_metab_meta_wrong_ref, quote=FALSE)
+  expect_error(IntLIM::ReadData(fname_metab_meta_wrong_ref), 
+               "Metabolites in abundance data file and metabolite meta data file are not equal",
+                 fixed = TRUE)
+  
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file_wrong.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  fname_gene_meta_wrong_ref <- paste(getwd(), "gene_genedata_wrong_file.csv", sep = "/")
+  write.csv(all_df, file = fname_gene_meta_wrong_ref, quote=FALSE)
+  expect_error(IntLIM::ReadData(fname_gene_meta_wrong_ref),
+               "Genes in expression data file and gene meta data file are not equal",
+               fixed = TRUE)
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(fname_gene_meta_wrong)
+  file.remove(fname_metab_meta_wrong)
+  file.remove(fname_metab_meta_wrong_ref)
+  file.remove(fname_gene_meta_wrong_ref)
+})
+# When all fields are present, a MultiDataSet object should be created.
+# All fields should be populated appropriately.
+test_that("All fields are present", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+
+  # Check the characteristics of the data set (both gene and metabolite).
+  dataset <- IntLIM::ReadData(ref_file)
+  expect_identical(names(dataset), c("metabolite", "expression"))
+  expect_identical(colnames(dataset@phenoData$metabolite$main@data), c("Feat1",
+                                                                       "Feat2",
+                                                                       "Feat3",
+                                                                       "id"))
+  expect_identical(dataset@phenoData$metabolite$main@data$id, c("Fred",
+                                                                       "Wilma",
+                                                                       "Pebbles",
+                                                                       "Bambam"))
+  expect_identical(colnames(dataset@phenoData$expression$main@data), c("Feat1",
+                                                                       "Feat2",
+                                                                       "Feat3",
+                                                                       "id"))
+  expect_identical(dataset@phenoData$expression$main@data$id, c("Fred",
+                                                                "Wilma",
+                                                                "Pebbles",
+                                                                "Bambam"))
+  expect_identical(dataset@featureData$metabolite$main@data$id, c("Metab1",
+                                                                       "Metab2",
+                                                                       "Metab3"))
+  expect_identical(dataset@featureData$expression$main@data$id, c("Gene1",
+                                                                  "Gene2",
+                                                                  "Gene3"))
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+})
+
+# When there are more fields than samples, building data folds should terminate early.
+test_that("Inputting too many fields causes early termination.", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+  
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+  
+  # Check that error is thrown.
+  expect_error(IntLIM::CreateCrossValFolds(inputFile = ref_file, folds = 100),
+               "ERROR: The number of folds is greater than the number of samples!",
+               fixed = TRUE)
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+})
+
+# Check that we are still able to run without the metadata.
+test_that("Function still returns all folds when metadata is missing.", {
+  
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+  
+  # Save metabolite file.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  # Save gene file.
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  # Save patient data file.
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  # Save metadata files.
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  # Check when only metabolite data is missing.
+  missing_metab_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv", "",
+                                              "gene_metadata_file.csv","pdata_file.csv"))
+  rownames(missing_metab_df) <- expected
+  fname_metab_missing <- paste(getwd(), "missing_metab_metadata_file.csv", sep = "/")
+  write.csv(missing_metab_df, file = fname_metab_missing, quote=FALSE)
+  datafolds_metab <- IntLIM::CreateCrossValFolds(fname_metab_missing, folds = 4,
+                                                 suppressWarnings = TRUE)
+  expect_warning(IntLIM::CreateCrossValFolds(fname_metab_missing, folds = 4),
+                 paste("No metadata provided for metabolites"),
+                 fixed = TRUE)
+  expect_equal(length(datafolds_metab), 4)
+  expect_identical(names(datafolds_metab[[1]]$training), c("metabolite", "expression"))
+  expect_identical(colnames(datafolds_metab[[1]]$training@phenoData$metabolite$main@data), c("Feat1",
+                                                                       "Feat2",
+                                                                       "Feat3",
+                                                                       "id"))
+  expect_equal(length(datafolds_metab[[1]]$training@phenoData$metabolite$main@data$id), 3)
+  expect_identical(colnames(datafolds_metab[[1]]$training@phenoData$expression$main@data), c("Feat1",
+                                                                       "Feat2",
+                                                                       "Feat3",
+                                                                       "id"))
+  expect_equal(length(datafolds_metab[[1]]$training@phenoData$expression$main@data$id), 3)
+  expect_identical(datafolds_metab[[1]]$training@featureData$metabolite$main@data$id, NULL)
+  expect_identical(rownames(datafolds_metab[[1]]$training@featureData$metabolite$main@data),
+                   c("Metab1","Metab2","Metab3"))
+  expect_identical(datafolds_metab[[1]]$training@featureData$expression$main@data$id, c("Gene1",
+                                                                  "Gene2",
+                                                                  "Gene3"))
+  
+  # Check when only gene data is missing.
+  missing_gene_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv",
+                                             "metab_metadata_file.csv","",
+                                             "pdata_file.csv"))
+  rownames(missing_gene_df) <- expected
+  fname_gene_missing <- paste(getwd(), "missing_gene_metadata_file.csv", sep = "/")
+  write.csv(missing_gene_df, file = fname_gene_missing, quote=FALSE)
+  datafolds_gene <- IntLIM::CreateCrossValFolds(fname_gene_missing, folds = 4,
+                                                suppressWarnings = TRUE)
+  expect_warning(IntLIM::CreateCrossValFolds(fname_gene_missing, folds = 4),
+               paste("No metadata provided for genes"),
+               fixed = TRUE)
+  expect_equal(length(datafolds_gene), 4)
+  expect_identical(names(datafolds_gene[[1]]$training), c("metabolite", "expression"))
+  expect_identical(colnames(datafolds_gene[[1]]$training@phenoData$metabolite$main@data), c("Feat1",
+                                                                                    "Feat2",
+                                                                                    "Feat3",
+                                                                                    "id"))
+  expect_equal(length(datafolds_gene[[1]]$training@phenoData$metabolite$main@data$id), 3)
+  expect_identical(colnames(datafolds_gene[[1]]$training@phenoData$expression$main@data), c("Feat1",
+                                                                                    "Feat2",
+                                                                                    "Feat3",
+                                                                                    "id"))
+  expect_equal(length(datafolds_gene[[1]]$training@phenoData$expression$main@data$id), 3)
+  expect_identical(datafolds_gene[[1]]$training@featureData$metabolite$main@data$id, c("Metab1",
+                                                                               "Metab2",
+                                                                               "Metab3"))
+  expect_identical(datafolds_gene[[1]]$training@featureData$expression$main@data$id,
+                   c("Gene1","Gene2","Gene3"))
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(fname_metab_missing)
+  file.remove(fname_gene_missing)
+})
+
+# Check that we are able to build folds with both single-omic and multi-omic data.
+test_that("Single-omic data gives expected results.", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+  
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  metab_df = data.frame("filenames"=c("metab_file.csv","", "metab_metadata_file.csv"
+                                    ,"", "pdata_file.csv"))
+  rownames(metab_df) <- expected
+  ref_file_metab <- paste(getwd(), "metab_ref.csv", sep = "/")
+  write.csv(metab_df, file = ref_file_metab, quote=FALSE)
+  
+  gene_df = data.frame("filenames"=c("", "gene_file.csv", "", "gene_metadata_file.csv"
+                                      ,"pdata_file.csv"))
+  rownames(gene_df) <- expected
+  ref_file_gene <- paste(getwd(), "gene_ref.csv", sep = "/")
+  write.csv(gene_df, file = ref_file_gene, quote=FALSE)
+  
+  # Check that single-omic data is filled in properly.
+  metab_folds <- IntLIM::CreateCrossValFolds(inputFile = ref_file_metab, folds = 4,
+                                             suppressWarnings = TRUE)
+  gene_folds <- IntLIM::CreateCrossValFolds(inputFile = ref_file_gene, folds = 4,
+                                            suppressWarnings = TRUE)
+  
+  expect_equal(length(metab_folds), 4)
+  expect_identical(names(metab_folds[[1]]$training), c("metabolite"))
+  expect_identical(colnames(metab_folds[[1]]$training@phenoData$metabolite$main@data), c("Feat1",
+                                                                                             "Feat2",
+                                                                                             "Feat3",
+                                                                                             "id"))
+  expect_equal(length(metab_folds[[1]]$training@phenoData$metabolite$main@data$id), 3)
+  expect_identical(metab_folds[[1]]$training@featureData$metabolite$main@data$id,
+                   c("Metab1","Metab2","Metab3"))
+  expect_equal(length(gene_folds), 4)
+  expect_identical(names(gene_folds[[1]]$training), c("expression"))
+  expect_identical(colnames(gene_folds[[1]]$training@phenoData$expression$main@data), c("Feat1",
+                                                                                         "Feat2",
+                                                                                         "Feat3",
+                                                                                         "id"))
+  expect_equal(length(gene_folds[[1]]$training@phenoData$expression$main@data$id), 3)
+  expect_identical(gene_folds[[1]]$training@featureData$expression$main@data$id,
+                   c("Gene1","Gene2","Gene3"))
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file_metab)
+  file.remove(ref_file_gene)
+})
+
+# If data is not divisible by fold number
+test_that("When number of samples is not divisible by fold count, make sure the samples
+          are evenly divided", {
+  # Data types expected
+  expected <- c("metabData","geneData","metabMetaData","geneMetaData",
+                "sampleMetaData")
+  
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0,0), "Metab2"=c(0,0,0,0,0), "Metab3"=c(0,0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Deeno")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+  
+  geneData <- data.frame("Gene1"=c(0,0,0,0,0), "Gene2"=c(0,0,0,0,0), "Gene3"=c(0,0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Deeno")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+  
+  pData <- data.frame("Feat1"=c(0,0,0,0,0), "Feat2"=c(0,0,0,0,0), "Feat3"=c(0,0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Deeno")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+  
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+  
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+  
+  ref_data = data.frame("filenames"=c("metab_file.csv", "gene_file.csv", 
+                                     "metab_metadata_file.csv", "gene_metadata_file.csv"
+                                     ,"pdata_file.csv"))
+  rownames(ref_data) <- expected
+  ref_file <- paste(getwd(), "ref_file.csv", sep = "/")
+  write.csv(ref_data, file = ref_file, quote=FALSE)
+  
+  # Check that the groups are divided evenly.
+  datafolds <- IntLIM::CreateCrossValFolds(inputFile = ref_file, folds = 3,
+                                             suppressWarnings = TRUE)
+  expect_equal(length(datafolds), 3)
+  expect_lte(length(rownames(datafolds[[1]]$testing@phenoData$metabolite$main@data)), 2)
+  expect_lte(length(rownames(datafolds[[1]]$testing@phenoData$expression$main@data)), 2) 
+  
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+})

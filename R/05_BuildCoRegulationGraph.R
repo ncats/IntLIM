@@ -8,28 +8,36 @@
 #'  model and processing results (output of ProcessResults()).
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
 #' metabolite abundances, and associated meta-data
+#' @param vertexSize Width of each vertex in pixels
 #' @export
-BuildCoRegulationGraph <- function(inputResults, inputData){
+BuildCoRegulationGraph <- function(inputResults, inputData, vertexSize=15){
+  # Set vertex colors.
+  color <- "gray"
+  framecolor <- "gray"
   
   # Build each data frame.
   all_graph_df = lapply(inputResults, function(result){
     return(BuildGraphDataFrame(result, inputData))
   })
+
   all_edge_df = lapply(all_graph_df, function(df){
     return(df$edges)
   })
+
   all_node_df = lapply(all_graph_df, function(df){
     return(df$nodes)
   })
-  
+
   # Combine all data frames into a single graph.
-  edge_df = do.call(rbind, all_edge_df)
-  node_df = do.call(rbind, all_node_df)
-  node_df = node_df[!duplicated(node_df$node),]
-  
+  edge_df <- do.call(rbind, all_edge_df)
+  node_df <- do.call(rbind, all_node_df)
+  node_df <- node_df[!duplicated(node_df$node),]
+  node_df$size <- vertexSize
+  node_df$color <- color
+  node_df$frame.color <- framecolor
+
   # Build and return the graph.
-  final_graph = igraph::graph_from_data_frame(edge_df, directed = FALSE, 
-                                      vertices = node_df)
+  final_graph = igraph::graph_from_data_frame(edge_df, vertices = node_df)
   return(final_graph)
 }
 
@@ -41,32 +49,36 @@ BuildCoRegulationGraph <- function(inputResults, inputData){
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
 #' metabolite abundances, and associated meta-data
 BuildGraphDataFrame <- function(inputResults, inputData){
-  
+
   # Add the analytes to the data frame.
   edge_df = data.frame(from = inputResults@filt.results[,1], 
                         to = inputResults@filt.results[,2])
-  
+
   # Add the weights and corresponding colors.
   edge_df$weight = 1
   edge_df$weight[which(inputResults@filt.results$interaction_coeff < 0)] = -1
   edge_df$color = "blue"
   edge_df$color[which(inputResults@filt.results$interaction_coeff < 0)] = "red"
-  
+
   # Build the vertex graph, including the shape of each vertex.
-  node_df_c1 = data.frame(node = unique(inputResults@filt.results[,1]), 
+  node_df = data.frame(node = unique(inputResults@filt.results[,1]), 
                           shape = "square")
   if(inputResults@independent.var.type == "metabolite"){
-    node_df_c1$shape = "circle"
+    node_df$shape = "circle"
   }
-  node_df_c2 = data.frame(node = unique(setdiff(inputResults@filt.results[,2], 
-                                                inputResults@filt.results[,1])), 
-                          shape = "square")
-  if(inputResults@outcome == "metabolite"){
-    node_df_c2$shape = "circle"
+  second_col_only <- setdiff(inputResults@filt.results[,2], 
+                      inputResults@filt.results[,1])
+  if(length(second_col_only) > 0){
+    node_df_c2 = data.frame(node = unique(setdiff(inputResults@filt.results[,2], 
+                                                  inputResults@filt.results[,1])), 
+                            shape = "square")
+    if(inputResults@outcome == "metabolite"){
+      node_df_c2$shape = "circle"
+    }
+    node_df = rbind(node_df, node_df_c2)
   }
-  node_df = rbind(node_df_c1, node_df_c2)
   node_df$size = 5
-  
+
   # Return the data frame.
   return(list(edges = edge_df, nodes = node_df))
 }

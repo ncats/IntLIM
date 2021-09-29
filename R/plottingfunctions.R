@@ -1341,7 +1341,6 @@ InteractionCoefficientGraph<-function(inputResults,
     second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
                                                        interactionCoeffPercentile)[2]
 
-
     toplot = data.frame(tofilter$interaction_coeff)
     colnames(toplot) = c("interaction_coeff")
     toplot$adjpval = tofilter$FDRadjPval

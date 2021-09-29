@@ -12,9 +12,14 @@
 #' @param coregulationGraph An igraph object containing the coregulation graph.
 #' @param stype The outcome
 #' @param stype.class The class of the outcome ("numeric" or "categorical")
+#' @param edgeTypeList List containing one or more of the following to include
+#' in the line graph:
+#' - "shared.outcome.analyte"
+#' - "shared.independent.analyte"
+#' - "analyte.chain"
 #' @export
 formatInput <- function(predictionGraphs, coregulationGraph,
-                                inputData, stype, stype.class){
+                                inputData, stype, stype.class, edgeTypeList){
   
   # Extract edge-wise predictions.
   predictions_by_node <- lapply(names(predictionGraphs), function(sampName){
@@ -35,25 +40,37 @@ formatInput <- function(predictionGraphs, coregulationGraph,
   # If edges were not connected by nodes in the original graph, they may be
   # removed from the line graph. Remove these from the predictions_by_node df.
   A <- CreateLineGraph(predictionsByEdge = predictions_by_node[[1]],
-                       graphWithPredictions = predictionGraphs[[1]])
+                       graphWithPredictions = predictionGraphs[[1]],
+                       edgeTypeList = edgeTypeList)
   predictions_flattened <- predictions_flattened[,colnames(A)]
 
   # Add self-loops.
   A_tilde <- as.matrix(A)
   diag(A_tilde) <- 1
   
-  # Extract the diagonal and raise to the negative half power.
-  diags <- colSums(A_tilde)
-  diags_neg_half <- 1 / sqrt(diags)
-  D_tilde_neg_half <- matrix(0, nrow = nrow(A_tilde), ncol = ncol(A_tilde))
-  diag(D_tilde_neg_half) <- diags_neg_half
+  # Extract the diagonal (in degree) and raise to the negative half power.
+  diags1 <- colSums(A_tilde)
+  diags_neg_half <- 1 / sqrt(diags1)
+  D_tilde_neg_half1 <- matrix(0, nrow = nrow(A_tilde), ncol = ncol(A_tilde))
+  diag(D_tilde_neg_half1) <- diags_neg_half
+  
+  # Extract the diagonal (out degree) and raise to the negative half power.
+  diags2 <- rowSums(A_tilde)
+  diags_neg_half <- 1 / sqrt(diags2)
+  D_tilde_neg_half2 <- matrix(0, nrow = nrow(A_tilde), ncol = ncol(A_tilde))
+  diag(D_tilde_neg_half2) <- diags_neg_half
   
   # Obtain the final matrix.
-  A_hat <- D_tilde_neg_half %*% A_tilde %*% D_tilde_neg_half
+  A_hat <- D_tilde_neg_half1 %*% A_tilde %*% D_tilde_neg_half2
   
   # Obtain the predictions.
   input_data <- inputData@phenoData$expression$main@data
-  Y <- input_data[names(predictions_by_node),stype]
+  Y <- input_data
+  if(dim(input_data)[1] == 1){
+    Y <- unlist(input_data[stype])
+  }else{
+    Y <- input_data[names(predictions_by_node),stype]
+  }
   if(stype.class == "categorical"){
     Y <- as.numeric(as.factor(Y))
   }
@@ -139,30 +156,42 @@ CreatePoolingFilterKMeans <- function(modelInputs, k, poolType){
 #' edges are nodes, and edges connected by a node are edges.
 #' @param predictionsByEdge Prediction levels corresponding to each edge.
 #' @param graphWithPredictions Original graph data frame.
-CreateLineGraph <- function(predictionsByEdge, graphWithPredictions){
+#' @param edgeTypeList List containing one or more of the following:
+#' - "shared.outcome.analyte"
+#' - "shared.independent.analyte"
+#' - "analyte.chain"
+CreateLineGraph <- function(predictionsByEdge, graphWithPredictions, edgeTypeList){
   # Step 1: Define vertices.
   line_graph_vertices <- predictionsByEdge$Node
+  list_to_add <- list()
+  
   # Step 2: Identify edges that share "to" nodes.
-  to_shared_df <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
-                                        graphWithPredictions = graphWithPredictions,
-                                        nodeType1 = "to", nodeType2 = "to")
-  # Step 3: Identify edges that share "from" nodes.
-  from_shared_df <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
-                                        graphWithPredictions = graphWithPredictions,
-                                        nodeType1 = "from", nodeType2 = "from")
-  # Step 4: For each "to" node, identify edges that share a "from" node.
-  to_from_shared_df <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
+  if("shared.outcome.analyte" %in% edgeTypeList){
+    list_to_add[[length(list_to_add)+1]] <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
                                           graphWithPredictions = graphWithPredictions,
-                                          nodeType1 = "to", nodeType2 = "from")
-  # Step 5: For each "from" node, identify edges that share a "to" node.
-  from_to_shared_df <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
-                                             graphWithPredictions = graphWithPredictions,
-                                             nodeType1 = "from", nodeType2 = "to")
+                                          nodeType1 = "to", nodeType2 = "to")
+  }
+
+  # Step 3: Identify edges that share "from" nodes.
+  if("shared.independent.analyte" %in% edgeTypeList){
+    list_to_add[[length(list_to_add)+1]] <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
+                                                                graphWithPredictions = graphWithPredictions,
+                                                                nodeType1 = "from", nodeType2 = "from")
+  }
+
+  # Step 4: For each "to" node, identify edges that share a "from" node.
+  if("analyte.chain" %in% edgeTypeList){
+    list_to_add[[length(list_to_add)+1]] <- FindEdgesSharingNodes(predictionsByEdge = predictionsByEdge,
+                                                                graphWithPredictions = graphWithPredictions,
+                                                                nodeType1 = "to", nodeType2 = "from")
+  }
+
   # Step 6: Concatenate.
-  shared_df <- do.call(rbind, list(to_shared_df, from_shared_df, to_from_shared_df,
-                                   from_to_shared_df))
+  shared_df <- do.call(rbind, list_to_add)
+  
   # Step 7: Convert to graph.
-  line_graph <- igraph::graph_from_data_frame(shared_df, directed = FALSE)
+  line_graph <- igraph::graph_from_data_frame(shared_df)
+  
   # Step 8: Convert to adjacency matrix.
   line_graph_A <- igraph::as_adj(line_graph)
   
@@ -177,26 +206,29 @@ CreateLineGraph <- function(predictionsByEdge, graphWithPredictions){
 #' @param nodeType2 Either "to or "from".
 FindEdgesSharingNodes <- function(predictionsByEdge, graphWithPredictions, nodeType1,
                                   nodeType2){
+  # Convert predictions to data frame.
   graph_df <- igraph::as_data_frame(graphWithPredictions)
+  
+  # Find shared nodes.
   to_shared <- lapply(unique(graph_df[,nodeType1]), function(node){
+    
+    # Find all line graph nodes starting with or ending with the analyte in question.
     combs <- NULL
-    set_starting_with <- predictionsByEdge$Node[which(graph_df[,nodeType1] == node)]
-    if(length(set_starting_with) > 1){
-      if(nodeType1 == nodeType2){
-        combs <- as.data.frame(t(utils::combn(set_starting_with, 2)))
-        colnames(combs) <- c("to", "from")
-      }else{
-        set_ending_with <- predictionsByEdge$Node[which(graph_df[,nodeType2] == node)]
-        set_starting_with_ext <- unlist(lapply(set_starting_with, function(n){
-          return(rep(n, length(set_ending_with)))
-        }))
-        combs <- data.frame(to = set_starting_with_ext,
-                            from = rep(set_ending_with, length(set_starting_with)))
-      }
-    }
+    set_with_1 <- predictionsByEdge$Node[which(graph_df[,nodeType1] == node)]
+    set_with_2 <- predictionsByEdge$Node[which(graph_df[,nodeType2] == node)]
+
+    # If there are multiple line graph nodes including this analyte, return them.
+    combs <- expand.grid(set_with_1, set_with_2)
+    combs$Var1 <- as.character(combs$Var1)
+    combs$Var2 <- as.character(combs$Var2)
+    combs <- combs[which(combs$Var1 != combs$Var2),]
+    colnames(combs) <- c("to", "from")
     return(combs)
   })
+  
+  # Concatenate all shared nodes.
   line_graph_df <- do.call(rbind, to_shared)
+
   return(line_graph_df)
 }
 
@@ -255,6 +287,39 @@ InitializeGraphLearningModel <- function(modelInputs, poolingFilter, iterations,
                         weights.after.pooling=weightsAfterPooling,
                         optimization.type=optimizationType)
   return(newModelResults)
+}
+
+#' Run least squares optimization to optimize the weights
+#' @param modelInput An object of the ModelInput class.
+#' @param convolution Whether or not to convolve the input.
+#' @export
+RunLeastSquaresOptimization <- function(modelInput, convolution){
+  # Compute the value of Y.
+  A.hat <- modelInput@A.hat
+  X <- modelInput@node.wise.prediction
+  Y.formula <- X
+  if(convolution == TRUE){
+    Y.formula.list <- lapply(1:dim(X)[2], function(i){
+      return(A.hat %*% X[,i])
+    })
+    Y.formula <- do.call(cbind, Y.formula.list)
+  }
+  Y.formula <- t(Y.formula)
+  
+  # Compute singular value decomposition.
+  #sv <- svd(Y.formula / dim(A.hat)[2])
+  
+  # Solve Least Squares. (A^TA)^-1 * A^Tb
+  #D <- diag(x = 1 / sv$d, nrow = length(sv$d), ncol = length(sv$d))
+  #Theta <- t(sv$v %*% D %*% t(sv$u)) %*% modelInput@true.phenotypes
+  Theta <- MASS::ginv(t(Y.formula) %*% Y.formula) %*% t(Y.formula) %*% modelInput@true.phenotypes
+  tryCatch({
+    Theta <- solve(t(Y.formula) %*% Y.formula) %*% t(Y.formula) %*% modelInput@true.phenotypes
+  }, error = function(cond){
+    print("Using pseudoinverse")
+  })
+  
+  return(Theta)
 }
 
 #' Train the graph learning model, using the specifications in the ModelResults.
