@@ -12,9 +12,9 @@ MarginalEffectsGraphDataframeMetabolitePairs(
 )
 }
 \arguments{
-\item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
+\item{inputResults}{IntLIMResults with model results (output of RunIntLim())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,}
+\item{inputData}{Data frame object (output of FilterData()) with gene expression,}
 
 \item{metaboliteOfInterest1}{outcome metabolite in metabolite pair}
 

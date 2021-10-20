@@ -4,15 +4,29 @@
 \alias{FilterFromKeepers}
 \title{Filter a data set given the metabolites and genes to keep.}
 \usage{
-FilterFromKeepers(inputData, genekeepers, metabkeepers)
+FilterFromKeepers(
+  inputData,
+  stype,
+  genekeepers,
+  metabkeepers,
+  stype.type,
+  class.covar = NULL
+)
 }
 \arguments{
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression, 
+\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
 metabolite abundances, and associated meta-data}
+
+\item{stype}{phenotype or outcome of interest.}
 
 \item{genekeepers}{Genes to keep.}
 
 \item{metabkeepers}{Metabolites to keep.}
+
+\item{stype.type}{Either "factor" or "numeric". The outcome type.}
+
+\item{class.covar}{class ("numeric" or "character") for each covariate. The following format
+is required: list(covar1="numeric", covar2="character")}
 }
 \value{
 filtData MultiDataSet object with input data after filtering

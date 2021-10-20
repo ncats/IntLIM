@@ -4,7 +4,7 @@
 \alias{OutputResults}
 \title{Output results into a zipped CSV file.  Results include gene and metabolite pairs, along with model interaction p-values, and correlations in each group being evaluated.}
 \usage{
-OutputResults(inputResults = NULL, filename = "~/results.csv")
+OutputResults(inputResults = NULL, filename = "results.csv")
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of ProcessResults())}
@@ -16,12 +16,4 @@ the filename of the CSV file with results named with cohort
 }
 \description{
 Output results into a zipped CSV file.  Results include gene and metabolite pairs, along with model interaction p-values, and correlations in each group being evaluated.
-}
-\examples{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-inputData <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(inputData,stype="PBO_vs_Leukemia")
-myres <- ProcessResults(myres,inputData)
-OutputResults(inputResults=myres,filename="~/results.csv")
 }

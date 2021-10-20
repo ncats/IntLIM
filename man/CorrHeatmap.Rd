@@ -17,9 +17,11 @@ CorrHeatmap(
 )
 }
 \arguments{
-\item{inputResults}{IntLimResults object (output of ProcessResults())}
+\item{inputResults}{Data frame (output of ProcessResults())}
 
-\item{inputData}{IntLimObject output of ReadData() or FilterData()}
+\item{inputData}{Named list (output of 
+FilterData()) with gene expression, metabolite abundances, 
+and associated meta-data}
 
 \item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
 in Shiny/Knittr (F)}
@@ -42,14 +44,4 @@ a highcharter object
 }
 \description{
 Plot correlation heatmap
-}
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-myres <- ProcessResults(myres,mydata)
-CorrHeatmap(myres)
-}
 }

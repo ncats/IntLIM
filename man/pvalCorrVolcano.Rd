@@ -14,9 +14,11 @@ pvalCorrVolcano(
 )
 }
 \arguments{
-\item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
+\item{inputResults}{Data frame with model results (output of ProcessResults())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,}
+\item{inputData}{Named list (output of 
+FilterData()) with gene expression, metabolite abundances, 
+and associated meta-data}
 
 \item{nrpoints}{number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)}
 
@@ -30,13 +32,4 @@ a smoothScatter plot
 \description{
 'volcano' plot (difference in correlations vs p-values)
 of all gene-metabolite pairs
-}
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-pvalCorrVolcano(inputResults=myres,inputData=mydata)
-}
 }

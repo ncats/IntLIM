@@ -20,15 +20,6 @@
 #' to cut the tree into
 #' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @return IntResults object with model results (now includes correlations)
-#'
-#' @examples
-#' \dontrun{
-#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-#' csvfile <- file.path(dir, "NCItestinput.csv")
-#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
-#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-#' myres <- ProcessResults(myres,mydata,treecuts=2)
-#' }
 #' @export
 ProcessResults <- function(inputResults,
 				inputData,
@@ -51,44 +42,27 @@ ProcessResults <- function(inputResults,
   type2 <- NULL
   incommon <- NULL
   if(inputResults@independent.var.type == "gene" && inputResults@outcome == "metabolite"){
-    incommon <- getCommon(inputData,inputResults@stype)
-    type1 <- incommon$gene
-    type2 <- incommon$metab
+    type1 <- inputData$gene
+    type2 <- inputData$metab
     col1name <- "Gene"
     col2name <- "Metabolite"
-    incommon <- getCommon(inputData,inputResults@stype)
   }else if(inputResults@independent.var.type == "metabolite" && inputResults@outcome == "gene"){
-    incommon <- getCommon(inputData,inputResults@stype)
-    type1 <- incommon$metab
-    type2 <- incommon$gene
+    type1 <- inputData$metab
+    type2 <- inputData$gene
     col1name <- "Metabolite"
     col2name <- "Gene"
-    incommon <- getCommon(inputData,inputResults@stype)
   }else if(inputResults@independent.var.type == "metabolite" && inputResults@outcome == "metabolite"){
-    mytypes <- names(Biobase::assayData(inputData))
-    incommon <- NULL
-    if(any(mytypes == "expression")){
-      incommon <- getCommon(inputData,inputResults@stype)
-    }else{
-      incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "metabolite")
-    }
-    type1 <- incommon$metab
-    type2 <- incommon$metab
+    type1 <- inputData$metab
+    type2 <- inputData$metab
     col1name <- "Metab1"
     col2name <- "Metab2"
   }else if(inputResults@independent.var.type == "gene" && inputResults@outcome == "gene"){
-    mytypes <- names(Biobase::assayData(inputData))
-    if(any(mytypes == "metabolite")){
-      incommon <- getCommon(inputData,inputResults@stype)
-    }else{
-      incommon <- formatSingleOmicInput(inputData,inputResults@stype, type = "expression")
-    }
-    type1 <- incommon$gene
-    type2 <- incommon$gene
+    type1 <- inputData$gene
+    type2 <- inputData$gene
     col1name <- "Gene1"
     col2name <- "Gene2"
   }
-	p <- incommon$p
+	p <- inputData$p
 	
 	# Call continuous function if applicable.
 	if(length(unique(p)) !=2 & is.null(diffcorr) & is.null(corrtype)) {
@@ -245,10 +219,35 @@ ProcessResults <- function(inputResults,
 	  cluster <- stats::cutree(hc.rows, k = treecuts)
 	  inputResults@filt.results <- cbind(inputResults@filt.results, cluster)
 	}
+	
+	# Change from "g" and "m" to the more generic "a".
+	colnames(inputResults@filt.results)[1:2] <- c("Analyte1", "Analyte2")
+	if("g" %in% colnames(inputResults@filt.results)){
+	  which_g <- which(colnames(inputResults@filt.results) == "g")
+	  which_int <- grepl("g:", colnames(inputResults@filt.results), fixed = TRUE)
+	  colnames(inputResults@filt.results)[which_g] <- "a"
+	  colnames(inputResults@filt.results)[which_int] <- "a:type"
+	}
+	if("m" %in% colnames(inputResults@filt.results)){
+	  which_g <- which(colnames(inputResults@filt.results) == "m")
+	  which_int <- grepl("m:", colnames(inputResults@filt.results), fixed = TRUE)
+	  colnames(inputResults@filt.results)[which_g] <- "a"
+	  colnames(inputResults@filt.results)[which_int] <- "a:type"
+	}
+	
+	# If outcome isn't "type", change it.
+	which_type <- which(lapply(colnames(inputResults@filt.results), function(name){
+	  retval <- FALSE
+	  if(substr(name, 1, 4) == "type"){
+	    retval <- TRUE
+	  }
+	  return(retval)
+	}) == TRUE)
+	colnames(inputResults@filt.results)[which_type] <- "type"
 
 	# Print and return the results.
   print(paste(nrow(inputResults@filt.results), 'pairs found given cutoffs'))
-  return(inputResults)
+  return(inputResults@filt.results)
 }
 
 #' Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
@@ -363,4 +362,44 @@ ProcessResultsContinuous<- function(inputResults,
   #place in objec to return
   return(inputResults)
 
+}
+
+#' Retrieve significant gene-metabolite pairs, based on adjusted p-values, interaction
+#' coefficient percentile, and r-squared values. This is a wrapper for ProcessResults.
+#'
+#' @include internalfunctions.R
+#'
+#' @param inputResults List of IntLimResults object with model results (output of RunIntLimAllFolds())
+#' @param inputData List of MultiDataSet objects (output of CreateCrossValFolds()) with gene expression,
+#' metabolite abundances, and associated meta-data
+#' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
+#' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
+#' @param corrtype spearman or pearson or other parameters allowed by cor() function 
+#' (default spearman)
+#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
+#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
+#' (high positive coefficients))
+#' @param treecuts user-selected number of clusters (of gene-metabolite pairs) 
+#' to cut the tree into
+#' @param rsquaredCutoff cutoff for lowest r-squared value
+#' @return List of IntResults object with model results (now includes correlations)
+#' @export
+ProcessResultsAllFolds <- function(inputResults,
+                           inputData,
+                           pvalcutoff=0.05,
+                           diffcorr=0.5,
+                           corrtype="spearman",
+                           interactionCoeffPercentile=0.5,
+                           rsquaredCutoff = 0.0,
+                           treecuts = 0){
+  sig <- lapply(1:length(inputResults), function(i){
+    return(gm.sig <- IntLIM::ProcessResults(inputResults = inputResults[[i]], 
+                                            inputData = inputData[[i]]$training, 
+                                            pvalcutoff = pvalcutoff, 
+                                            interactionCoeffPercentile = interactionCoeffPercentile, 
+                                            rsquaredCutoff = rsquaredCutoff, 
+                                            diffcorr = diffcorr, 
+                                            corrtype = corrtype))
+  })
+  return(sig)
 }

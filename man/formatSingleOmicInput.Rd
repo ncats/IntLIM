@@ -4,23 +4,12 @@
 \alias{formatSingleOmicInput}
 \title{Function that returns a list of all data for samples in metabolite or gene dataset.}
 \usage{
-formatSingleOmicInput(
-  inputData,
-  stype = NULL,
-  covar = NULL,
-  class.covar = NULL,
-  type = NULL,
-  continuous = FALSE
-)
+formatSingleOmicInput(inputData, stype = NULL, type = NULL, continuous = FALSE)
 }
 \arguments{
 \item{inputData}{MultiDataSet object (output of ReadData())}
 
 \item{stype}{category to color-code by (can be more than two categories)}
-
-\item{covar}{vector of additional variables to be incorporated into model}
-
-\item{class.covar}{class of additional variables}
 
 \item{type}{either "metabolite" or "expression"}
 

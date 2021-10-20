@@ -4,14 +4,7 @@
 \alias{PlotMGPair}
 \title{scatter plot of metabolite-gene pairs (based on user selection)}
 \usage{
-PlotMGPair(
-  inputData,
-  stype = NULL,
-  metabName,
-  geneName,
-  palette = "Set1",
-  viewer = T
-)
+PlotMGPair(inputData, stype, metabName, geneName, palette = "Set1", viewer = T)
 }
 \arguments{
 \item{inputData}{IntLimObject output of ReadData() or FilterData()}
@@ -33,13 +26,4 @@ a highcharter object
 }
 \description{
 scatter plot of metabolite-gene pairs (based on user selection)
-}
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-PlotGMPair(mydata,stype="PBO_vs_Leukemia","DLG4","(p-Hydroxyphenyl)lactic acid")
-
-}
 }

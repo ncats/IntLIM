@@ -18,16 +18,16 @@ getStatsAllLM(
 \arguments{
 \item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable}
 
-\item{gene}{gene dataset in incommon MultiDataSet object (incommon$gene)}
+\item{gene}{gene dataset (incommon$gene)}
 
-\item{metab}{metabolite dataset in incommon MultiDataSet object (incommon$metab)}
+\item{metab}{metabolite dataset (incommon$metab)}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).
 Only 2 categories are currently supported.}
 
 \item{covar}{vector of additional vectors to consider}
 
-\item{covarMatrix}{covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)}
+\item{covarMatrix}{covariate matrix in (incommon$covar_matrix)}
 
 \item{continuous}{indicate whether data is discrete (FALSE) or continuous (TRUE)}
 

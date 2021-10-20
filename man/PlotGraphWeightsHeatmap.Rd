@@ -2,15 +2,15 @@
 % Please edit documentation in R/plottingfunctions.R
 \name{PlotGraphWeightsHeatmap}
 \alias{PlotGraphWeightsHeatmap}
-\title{Plot the graph as a heatmap with edges colored by weight in the final outcome.}
+\title{Plot the graph as a heatmap with edges colored by interaction coefficient.}
 \usage{
-PlotGraphWeightsHeatmap(graph, results)
+PlotGraphWeightsHeatmap(inputResults, inputData)
 }
 \arguments{
-\item{graph}{The co-regulation graph.}
+\item{inputResults}{The IntLIM results (from RunIntLim())}
 
-\item{results}{A modelResults object.}
+\item{inputData}{The input data (from ReadData())}
 }
 \description{
-Plot the graph as a heatmap with edges colored by weight in the final outcome.
+Plot the graph as a heatmap with edges colored by interaction coefficient.
 }

@@ -36,7 +36,7 @@
 #' @examples
 #' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
 #' csvfile <- file.path(dir, "NCItestinput.csv")
-#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
+#' mydata <- ReadData(inputFile = csvfile,metabid='id',geneid='id')
 #' @export
 ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE){
       
@@ -51,6 +51,7 @@ ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=
                                  genedata=pieces[["GData"]],
                                  logmetab=pieces[["logmetab"]],
                                  loggene=pieces[["loggene"]])
+    
 
     print("CreateMultiDataSet created")
     return(GMdata)
@@ -157,7 +158,7 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
     }
     
     temp <- paste0(mydir,"/",as.character(csvfile['metabMetaData',]))
-    if(as.character(csvfile['metabMetaData',])=="") {
+    if(as.character(csvfile['metabMetaData',])=="" || as.character(csvfile['metabMetaData',])==mydir) {
       if(suppressWarnings == FALSE){
         warning("No metadata provided for metabolites");MmetaData<-NULL;metabid=NULL; 
       }
@@ -173,7 +174,7 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
     }
     
     temp <- paste0(mydir,"/",as.character(csvfile['geneMetaData',]))
-    if(as.character(csvfile['geneMetaData',])=="") {
+    if(as.character(csvfile['geneMetaData',])==""|| as.character(csvfile['metabMetaData',])==mydir) {
       if(suppressWarnings == FALSE){
         warning("No metadata provided for genes");GmetaData<-NULL;geneid=NULL; 
       }
@@ -220,7 +221,8 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
 #' list(list("train" = MultiDataSet, "test" = MultiDataSet), ... list("train" = MultiDataSet,
 #' "test" = MultiDataSet))
 #' @export
-CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE,
+CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, 
+                                logmetab=FALSE,loggene=FALSE,
                                 folds, suppressWarnings=FALSE) {
   
   # Create the components of the input.
@@ -285,6 +287,7 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FAL
                                  genedata=GData_train,
                                  logmetab=logmetab,
                                  loggene=loggene)
+    
 
     # Include the current fold in the testing data.
     testing <- CreateIntLimObject(genefdata=GmetaData, 
@@ -296,6 +299,7 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FAL
                                    genedata=GData_test,
                                    logmetab=logmetab,
                                    loggene=loggene)
+    
     return(list("training"=training, "testing"=testing))
   })
   return(trainTestObjects)

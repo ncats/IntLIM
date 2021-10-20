@@ -6,14 +6,15 @@
 object. This includes the names of the two co-regulated analytes, whether the
 analytes have a positive or negative co-regulation, and the shape of the analytes.}
 \usage{
-BuildGraphDataFrame(inputResults, inputData)
+BuildGraphDataFrame(inputResults, independentVarType, outcome)
 }
 \arguments{
-\item{inputResults}{A list of IntLimResults objects. Each object must include
+\item{inputResults}{A list of data frames. Each object must include
 model and processing results (output of ProcessResults()).}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
-metabolite abundances, and associated meta-data}
+\item{independentVarType}{The independent variable type ("gene" or "metabolite")}
+
+\item{outcome}{The outcome type ("gene" or "metabolite")}
 }
 \description{
 Construct a data frame that includes all information needed to build an igraph

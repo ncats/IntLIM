@@ -2,14 +2,14 @@
 #'
 #' @include internalfunctions.R
 #'
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
-#' metabolite abundances, and associated meta-data
+#' @param inputData Named list (output of 
+#' FilterData()) with gene expression, metabolite abundances, 
+#' and associated meta-data
 #' @param stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.
 #' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
 #' (default is 'metabolite')
 #' @param covar Additional variables from the phenotypic data that be integrated into linear model
-#' @param class.covar Describing whether additional variables are 'numeric' or 'categorial'
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
@@ -20,76 +20,45 @@
 #' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' 
 #' @return IntLimModel object with model results
-#'
-#' @examples
-#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-#' csvfile <- file.path(dir, "NCItestinput.csv")
-#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
-#' \dontrun{
-#' myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-#' }
 #' @export
 RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
-                      class.covar=NULL, continuous = FALSE, metabolite.pairs=FALSE,
+                      continuous = FALSE, metabolite.pairs=FALSE,
                       save.covar.pvals=FALSE, independent.var.type="gene", remove.duplicates = FALSE){
 
-
-    if (class(inputData) != "MultiDataSet") {
-        stop("input data is not a MultiDataSet class")
-    }
-    mytypes <- names(Biobase::assayData(inputData))
-    if(!any(mytypes=="expression") && !any(mytypes=="metabolite")) {
-        stop("input data must contain assayData of type 'metabolite' or 'expression.
-        Try reading in the data with the ReadData function")
-    }
-    if (is.null(stype)) {stop("Please set the variable type (e.g. sample group)")}
-
-    incommon <- inputData
-    if(any(mytypes == "expression") && any(mytypes == "metabolite")){
-        incommon <- getCommon(inputData,stype,covar,class.covar=class.covar,
-                              continuous=continuous)
-    }else{
-        type <- "metabolite"
-        if(any(mytypes == "expression")){
-            type <- "expression"
-        }
-        incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type,
-                                          continuous=continuous)
-    }
-    if(!continuous & length(unique(stats::na.omit(incommon$p))) != 2) {
+    if(!continuous & length(unique(stats::na.omit(inputData$p))) != 2) {
 	    stop(paste("IntLim currently requires only two categories.  Make sure the 
 	               column",stype,"only has two unique values"))
     }
     print("Running the analysis on")
     if(continuous == FALSE){
-        print(table(incommon$p))
+        print(table(inputData$p))
     }else{
-        print(range(incommon$p))
+        print(range(inputData$p))
     }
 
     ptm <- proc.time()
 
     myres <- NULL
     if(independent.var.type == "gene" && outcome == "metabolite"){
-        if(any(mytypes=="expression") && any(mytypes=="metabolite")) {
-            myres <- RunLM(incommon,outcome=outcome,
-                    type=incommon$p,covar=covar, continuous = continuous, 
+        if("gene" %in% names(inputData) && "metab" %in% names(inputData)) {
+            myres <- RunLM(inputData,outcome=outcome,
+                    type=inputData$p,covar=covar, continuous = continuous, 
                     save.covar.pvals=save.covar.pvals)
         }
         else{
             stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == "metabolite" && outcome == "gene"){
-        if(any(mytypes=="expression") && any(mytypes=="metabolite")) {
-            myres <- RunLM(incommon,outcome=outcome,type=incommon$p,covar=covar, 
+        if("gene" %in% names(inputData) && "metab" %in% names(inputData)) {
+            myres <- RunLM(inputData,outcome=outcome,type=inputData$p,covar=covar, 
                            continuous = continuous, save.covar.pvals=save.covar.pvals)
         }
         else{
             stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
-        if(any(mytypes=="metabolite")) {
-            myres <- RunLMMetabolitePairs(incommon,type=incommon$p,covar=covar, 
+        if("metab" %in% names(inputData)) {
+            myres <- RunLMMetabolitePairs(inputData,type=inputData$p,covar=covar, 
                                           continuous = continuous, 
                                           save.covar.pvals=save.covar.pvals, 
                                           keep.highest.pval = remove.duplicates)
@@ -98,8 +67,8 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
             stop("The metabolite data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == "gene" && outcome == "gene"){
-        if(any(mytypes=="expression")) {
-            myres <- RunLMGenePairs(incommon,type=incommon$p,covar=covar, 
+        if("gene" %in% names(inputData)) {
+            myres <- RunLMGenePairs(inputData,type=inputData$p,covar=covar, 
                                     continuous = continuous, 
                                     save.covar.pvals = save.covar.pvals, 
                                     keep.highest.pval = remove.duplicates)
@@ -117,13 +86,51 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
     myres@independent.var.type=independent.var.type
 
     if(!is.null(covar)){
-        covariate <- colnames(incommon$covar_matrix)
+        covariate <- covar
         class.var <- c()
         for(i in 1:length(covar)){
-            class.var[i] <- class(incommon$covar_matrix[,i])
+            class.var[i] <- class(inputData$covar_matrix[,i])
         }
 
         myres@covar <- data.frame(covariate,class.var)
+    }
+    return(myres)
+}
+
+#' Run linear models for all data folds. This is a wrapper to RunIntLim.
+#'
+#' @include internalfunctions.R
+#'
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
+#' metabolite abundances, and associated meta-data
+#' @param stype column name that represents sample type (by default, it will be used
+#' in the interaction term). Only 2 categories are currently supported.
+#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
+#' (default is 'metabolite')
+#' @param covar Additional variables from the phenotypic data that be integrated into linear model
+#' @param continuous boolean to indicate whether the data is continuous or discrete
+#' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time. The default is FALSE.
+#' @param independent.var.type 'metabolite' or 'gene' must be set as independent variable
+#' (default is 'metabolite')
+#' @param remove.duplicates boolean to indicate whether or not to remove the metabolite-metabolite
+#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' 
+#' @return List of IntLimModel objects with model results
+#' @export
+RunIntLimAllFolds <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
+                      continuous = FALSE, metabolite.pairs=FALSE,
+                      save.covar.pvals=FALSE, independent.var.type="gene", remove.duplicates = FALSE){
+    myres <- list()
+    for(i in 1:length(inputData)){
+        # Gene-metabolite
+        myres[i] <- IntLIM::RunIntLim(inputData = inputData[[i]]$training,
+                                         stype=stype, 
+                                         save.covar.pvals = save.covar.pvals, 
+                                         outcome = outcome, 
+                                         independent.var.type = independent.var.type,
+                                         continuous = continuous)
     }
     return(myres)
 }

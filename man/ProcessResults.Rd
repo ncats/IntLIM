@@ -51,12 +51,3 @@ correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
 non-cancer).  Users can then remove pairs with a difference in correlations between
 groups 1 and 2 less than a user-defined threshold.
 }
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-myres <- ProcessResults(myres,mydata,treecuts=2)
-}
-}

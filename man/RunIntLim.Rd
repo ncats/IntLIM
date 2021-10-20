@@ -9,7 +9,6 @@ RunIntLim(
   stype = NULL,
   outcome = "metabolite",
   covar = NULL,
-  class.covar = NULL,
   continuous = FALSE,
   metabolite.pairs = FALSE,
   save.covar.pvals = FALSE,
@@ -18,8 +17,9 @@ RunIntLim(
 )
 }
 \arguments{
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
-metabolite abundances, and associated meta-data}
+\item{inputData}{Named list (output of 
+FilterData()) with gene expression, metabolite abundances, 
+and associated meta-data}
 
 \item{stype}{column name that represents sample type (by default, it will be used
 in the interaction term). Only 2 categories are currently supported.}
@@ -28,8 +28,6 @@ in the interaction term). Only 2 categories are currently supported.}
 (default is 'metabolite')}
 
 \item{covar}{Additional variables from the phenotypic data that be integrated into linear model}
-
-\item{class.covar}{Describing whether additional variables are 'numeric' or 'categorial'}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
 
@@ -49,12 +47,4 @@ IntLimModel object with model results
 }
 \description{
 Run linear models and retrieve relevant statistics
-}
-\examples{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-\dontrun{
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-}
 }

@@ -14,7 +14,9 @@ MarginalEffectsGraphDataframeGenePairs(
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,}
+\item{inputData}{Named list (output of 
+FilterData()) with gene expression, metabolite abundances, 
+and associated meta-data}
 
 \item{geneOfInterest1}{outcome gene in gene pair}
 

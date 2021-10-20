@@ -21,7 +21,7 @@ SaveGraphPredictionPlots(
 generated using IntLIM analysis of analyte pairs. Weights correspond to phenotype
 predictions.}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
+\item{inputData}{Named list (output of FilterData()) with gene expression,
 metabolite abundances, and associated meta-data}
 
 \item{stype}{The phenotype of interest. This should correspond to a column in the

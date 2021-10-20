@@ -14,12 +14,3 @@ PValueBoxPlots(IntLimResults)
 Visualize the distribution of unadjusted p-values for all covariates
 from linear models using a bar chart.
 }
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-DistPvalues(myres)
-}
-}

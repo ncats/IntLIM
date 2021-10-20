@@ -14,7 +14,9 @@ RunLM(
 )
 }
 \arguments{
-\item{incommon}{MultiDataSet object (output of ReadData()) with gene}
+\item{incommon}{Named list (output of 
+FilterData()) with gene expression, metabolite abundances, 
+and associated meta-data}
 
 \item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable
 (default is 'metabolite')}

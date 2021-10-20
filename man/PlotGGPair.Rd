@@ -34,12 +34,3 @@ a highcharter object
 \description{
 scatter plot of metabolite-metabolite pairs (based on user selection)
 }
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-PlotMMPair(mydata,stype="PBO_vs_Leukemia","arginine","(p-Hydroxyphenyl)lactic acid")
-
-}
-}

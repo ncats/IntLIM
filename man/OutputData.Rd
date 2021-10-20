@@ -17,10 +17,3 @@ the filename of the CSV file with results named with cohort
 \description{
 Output data into individual CSV files.  All data will be zipped into one file with all data.
 }
-\examples{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-inputData <- ReadData(csvfile,metabid='id',geneid='id')
-inputDatafilt <- FilterData(inputData,geneperc=0.5)
-OutputData(inputData=inputDatafilt,filename="~/FilteredData.zip")
-}

@@ -4,22 +4,12 @@
 \alias{getCommon}
 \title{Function that returns a list of all data for samples in common between metabolite and gene datasets}
 \usage{
-getCommon(
-  inputData,
-  stype = NULL,
-  covar = NULL,
-  class.covar = NULL,
-  continuous = FALSE
-)
+getCommon(inputData, stype = NULL, continuous = FALSE)
 }
 \arguments{
 \item{inputData}{MultiDataSet object (output of ReadData())}
 
 \item{stype}{category to color-code by (can be more than two categories)}
-
-\item{covar}{vector of additional variables to be incorporated into model}
-
-\item{class.covar}{class of additional variables}
 
 \item{continuous}{boolean value indicating whether outcome is continuous}
 }

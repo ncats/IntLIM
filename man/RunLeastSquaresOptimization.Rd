@@ -4,12 +4,34 @@
 \alias{RunLeastSquaresOptimization}
 \title{Run least squares optimization to optimize the weights}
 \usage{
-RunLeastSquaresOptimization(modelInput, convolution)
+RunLeastSquaresOptimization(
+  modelInput,
+  convolutions,
+  maskPercentile = 1,
+  nrmseCutoff = NULL,
+  corrCutoff = NULL,
+  ridgeLambda = 0
+)
 }
 \arguments{
 \item{modelInput}{An object of the ModelInput class.}
 
-\item{convolution}{Whether or not to convolve the input.}
+\item{convolutions}{Number of convolutions.}
+
+\item{maskPercentile}{The sum of error deltas will be computed over all
+predictors. The lowest maskPercentile of predictors will be used to ensure
+that reliable predictors are selected. By default, this value is set to 1,
+which means that all predictors will be used.}
+
+\item{nrmseCutoff}{This parameter allows you to use only predictors that
+have NRMSE below a given cutoff. If NULL, a cutoff is not used. Default is NULL.}
+
+\item{corrCutoff}{This parameter allows you to use only predictors that
+have correlation above a given cutoff. If NULL, a cutoff is not used. Default is NULL.}
+
+\item{ridgeLambda}{The lambda value to be used in ridge regression. The
+higher the value of lambda, the more the sum of weights is minimized.
+This encourages smaller weights. Default is 0.}
 }
 \description{
 Run least squares optimization to optimize the weights

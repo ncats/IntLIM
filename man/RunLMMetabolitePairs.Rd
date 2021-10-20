@@ -14,7 +14,9 @@ RunLMMetabolitePairs(
 )
 }
 \arguments{
-\item{incommon}{MultiDataSet object (output of ReadData()) with gene}
+\item{incommon}{Named list (output of 
+FilterData()) with gene expression, metabolite abundances, 
+and associated meta-data}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).
 Only 2 categories are currently supported.}

@@ -14,11 +14,13 @@ RunPairwisePrediction(
   inputData,
   stype = NULL,
   covar = NULL,
-  class.covar = NULL
+  independent.var.type = "gene",
+  outcome = "metabolite"
 )
 }
 \arguments{
-\item{inputResults}{A list of IntLimResults objects. Each object must include
+\item{inputResults}{The data frame of filtered results from 
+an IntLimResults object. Each object must include
 model and processing results (output of ProcessResults()). All results must
 include learned covariate weights (i.e. must be run with save.covar.pvals = TRUE)}
 
@@ -31,8 +33,11 @@ or numeric outcome.}
 \item{covar}{The clinical covariates to include in the model. These should be the same
 covariates that were included when running the IntLIM linear models.}
 
-\item{class.covar}{A vector of covariate types ("numeric" or "categorical") provided in
-the same order as the "covar" parameter.}
+\item{independent.var.type}{'metabolite' or 'gene' must be set as independent variable
+(default is 'metabolite')}
+
+\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable
+(default is 'metabolite')}
 }
 \description{
 Given each significant pairwise model and the input data, predict the phenotype

@@ -15,13 +15,13 @@ getStatsAllLMMetabolitePairs(
 )
 }
 \arguments{
-\item{metab}{metabolite dataset in incommon MultiDataSet object (incommon$metab)}
+\item{metab}{metabolite dataset (incommon$metab)}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).}
 
 \item{covar}{vector of additional vectors to consider}
 
-\item{covarMatrix}{covariate matrix in incommon MultiDataSet object (incommon$covar_matrix)}
+\item{covarMatrix}{covariate matrix (incommon$covar_matrix)}
 
 \item{continuous}{indicate whether data is discrete (FALSE) or continuous (TRUE)}
 

@@ -3,29 +3,68 @@
 #' Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
 #'
 #' @param csvfile The path to the CSV file that contains the full dataset.
+#' @param stype phenotype or outcome of interest.
 #' @param inputDataFolds list of MultiDataSet objects (output of CreateCrossValFolds()) with gene expression, 
 #' metabolite abundances, and associated meta-data
 #' @param geneperc percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 
 #' < 'geneperc' percentile) (default: 0)
 #' @param metabperc percentile cutoff (0-1) for filtering metabolites (default: no filtering of metabolites) (default:0)
 #' @param metabmiss missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)
+#' @param class.covar class ("numeric" or "character") for each covariate. The following format
+#' is required: list(covar1="numeric", covar2="character")
+#' @param imputedMetabCutoff Similar to the metabperc parameter, but for imputed values.
+#' Checks for minimum imputation above a given percentile, and removes the metabolite if
+#' the condition is met. Default is NULL (no filtering),
+#' @param imputedSampleCutoff Checks how many metabolites have been imputed for a given
+#' sample, and if above the threshold, the sample is removed. Default is NULL (no filtering).
+#' @param cvCutoffGenes Checks for coefficient of variation below a given threshold. Genes
+#' that exceed the cutoff are removed.
+#' @param cvCutoffMetabs Checks for coefficient of variation below a given threshold. Metabolites
+#' that exceed the cutoff are removed.
+#' @param log2scaleGenes Whether or not to log-scale the genes. Default is FALSE.
+#' @param log2scaleMetabs Whether or not to log-scale the metabolites. Default is FALSE.
+#' @param zScaleGenes Whether or not to z-scale each gene (subtract mean and divide
+#' by standard deviation). This brings all genes onto the same scale. Default is FALSE.
+#' @param zScaleMetabs Whether or not to z-scale each metabolite (subtract mean and divide
+#' by standard deviation). This brings all metabolites onto the same scale. Default is FALSE.
+#' @param stype.type Either "factor" or "numeric". The outcome type.
 #' @return filtData list of MultiDataSet objects with input data after filtering
 #' @export
-FilterDataFolds <- function(csvfile, inputDataFolds,geneperc=0,metabperc=0, metabmiss=0) {
+FilterDataFolds <- function(csvfile, stype,inputDataFolds,geneperc=0,metabperc=0, 
+                            metabmiss=0,class.covar = NULL,
+                            imputedMetabCutoff = NULL,
+                            imputedSampleCutoff = NULL,
+                            cvCutoffGenes = NULL,
+                            cvCutoffMetabs = NULL,
+                            log2scaleGenes = FALSE,
+                            log2scaleMetabs = FALSE,
+                            zScaleGenes = FALSE,
+                            zScaleMetabs = FALSE,
+                            stype.type) {
 	# First, read the original data set.
 	inputData <- ReadData(csvfile,metabid='id',geneid='id')
-	filtdata <- FilterData(inputData,geneperc=geneperc, metabperc=metabperc, metabmiss = metabmiss)
+	filtdata <- FilterData(inputData,stype=stype, geneperc=geneperc, 
+	                       metabperc=metabperc, metabmiss = metabmiss,
+	                       class.covar = class.covar,
+	                       imputedMetabCutoff = imputedMetabCutoff,
+	                       imputedSampleCutoff = imputedSampleCutoff,
+	                       cvCutoffGenes = cvCutoffGenes,
+	                       cvCutoffMetabs = cvCutoffMetabs,
+	                       log2scaleGenes = log2scaleGenes,
+	                       log2scaleMetabs = log2scaleMetabs,
+	                       zScaleGenes = zScaleGenes,
+	                       zScaleMetabs = zScaleMetabs,
+	                       stype.type)
 	
 	# Filter the original data set.
 	genekeepers = NULL
 	metabkeepers = NULL
-	mytypes <- names(Biobase::assayData(filtdata))
-	if(any(mytypes=="expression")){
-	  genes <- Biobase::assayDataElement(filtdata[["expression"]], 'exprs')
+	if("gene" %in% names(filtdata)){
+	  genes <- filtdata$gene
 	  genekeepers <- rownames(genes)
 	}
-	if(any(mytypes=="metabolite")){
-	  metabolites <- Biobase::assayDataElement(filtdata[["metabolite"]], 'metabData')
+	if("metab" %in% names(filtdata)){
+	  metabolites <- filtdata$metab
 	  metabkeepers <- rownames(metabolites)
 	}
 
@@ -35,29 +74,40 @@ FilterDataFolds <- function(csvfile, inputDataFolds,geneperc=0,metabperc=0, meta
 
 		# Filter training and testing data.
 		inputDataFolds[[i]]$training <- FilterFromKeepers(inputData = inputDataFolds[[i]]$training,
+		                                                  stype = stype,
 		                                                  metabkeepers = metabkeepers,
-		                                                  genekeepers = genekeepers)
+		                                                  genekeepers = genekeepers,
+		                                                  stype.type = stype.type, 
+		                                                  class.covar = class.covar)
 		inputDataFolds[[i]]$testing <- FilterFromKeepers(inputData = inputDataFolds[[i]]$testing,
+		                                                 stype = stype,
 		                                                  metabkeepers = metabkeepers,
-		                                                  genekeepers = genekeepers)
+		                                                  genekeepers = genekeepers,
+		                                                 stype.type = stype.type,
+		                                                 class.covar = class.covar)
 	}
 	return(inputDataFolds)
 }
 
 #' Filter a data set given the metabolites and genes to keep.
 #'
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression, 
+#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
 #' metabolite abundances, and associated meta-data
+#' @param stype phenotype or outcome of interest.
 #' @param metabkeepers Metabolites to keep.
 #' @param genekeepers Genes to keep.
+#' @param stype.type Either "factor" or "numeric". The outcome type.
+#' @param class.covar class ("numeric" or "character") for each covariate. The following format
+#' is required: list(covar1="numeric", covar2="character")
 #' @return filtData MultiDataSet object with input data after filtering
-FilterFromKeepers <- function(inputData,genekeepers, metabkeepers) {
+FilterFromKeepers <- function(inputData,stype,genekeepers, metabkeepers, stype.type,
+                              class.covar = NULL) {
   # Extract metabolite and gene data to keep.
   mytypes <- names(Biobase::assayData(inputData))
-  
+
   # Create new data set.
   filteredData <- MultiDataSet::createMultiDataSet()
-  
+
   # Filter genes.
   if(any(mytypes=="expression")){
     # Filter the assay data.
@@ -65,17 +115,17 @@ FilterFromKeepers <- function(inputData,genekeepers, metabkeepers) {
     samps <- colnames(mygenes)
     mygenes <- as.matrix(mygenes[genekeepers,])
     colnames(mygenes) <- samps
-    
+
     # Create a new expression set from the filtered assay data.
     gene.set <- Biobase::ExpressionSet(assayData=mygenes)
     fgenes <- Biobase::fData(inputData[["expression"]])[genekeepers,]
     Biobase::fData(gene.set) <- fgenes
     Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
-    
+
     # Add gene expression to the filtered data set.
     filteredData <- MultiDataSet::add_genexp(filteredData, gene.set)
   }
-  
+
   # Filter metabolites.
   if(any(mytypes=="metabolite")){
     # Filter the assay data.
@@ -84,15 +134,45 @@ FilterFromKeepers <- function(inputData,genekeepers, metabkeepers) {
     mymetab <- as.matrix(mymetab[metabkeepers,])
     colnames(mymetab) <- samps
     rownames(mymetab) <- metabkeepers
-    
-    # Create a new 
+
+    # Create a new
     fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[metabkeepers,]
     metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
-                              phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
+                              phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])),
                               featureData =  fmetab)
     filteredData <- add_metabolite(filteredData, metab.set)
   }
-  return(filteredData)
+
+  # Get common analytes.
+  mytypes <- names(Biobase::assayData(filteredData))
+  incommon <- filteredData
+  if(any(mytypes == "expression") && any(mytypes == "metabolite")){
+    incommon <- getCommon(inputData=filteredData,stype=stype)
+  }else if(any(mytypes == "metabolite")){
+    incommon <- formatSingleOmicInput(filteredData, stype,type = "metabolite")
+  }else if(any(mytypes == "expression")){
+    incommon <- formatSingleOmicInput(filteredData, stype,type = "expression")
+  }
+  
+  # Coerce stype.
+  if(stype.type == "factor"){
+    incommon$p = as.factor(incommon$p)
+  }else if(stype.type == "numeric"){
+    incommon$p = as.numeric(as.character(incommon$p))
+  }
+  
+  # Coerce covariate classes.
+  for(covar in names(class.covar)){
+    if(class.covar[covar] == "numeric"){
+      incommon$covar_matrix[,covar] <- as.numeric(as.character(incommon$covar_matrix[,covar]))
+    }else if(class.covar[covar] == "factor"){
+      incommon$covar_matrix[,covar] <- as.factor(as.character(incommon$covar_matrix[,covar]))
+    }else{
+      stop(paste(class.covar[covar], "is not a valid class for covariate", covar))
+    }
+  }
+
+  return(incommon)
 }
 
 #' Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).
@@ -101,19 +181,49 @@ FilterFromKeepers <- function(inputData,genekeepers, metabkeepers) {
 #'
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression, 
 #' metabolite abundances, and associated meta-data
+#' @param stype phenotype or outcome of interest.
 #' @param geneperc percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 
 #' < 'geneperc' percentile) (default: 0)
 #' @param metabperc percentile cutoff (0-1) for filtering metabolites (default: no filtering of metabolites) (default:0)
 #' @param metabmiss missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)
+#' @param class.covar class ("numeric" or "character") for each covariate. The following format
+#' is required: list(covar1="numeric", covar2="character")
+#' @param imputedMetabCutoff Similar to the metabperc parameter, but for imputed values.
+#' Checks for minimum imputation above a given percentile, and removes the metabolite if
+#' the condition is met. Default is NULL (no filtering),
+#' @param imputedSampleCutoff Checks how many metabolites have been imputed for a given
+#' sample, and if above the threshold, the sample is removed. Default is NULL (no filtering).
+#' @param cvCutoffGenes Checks for coefficient of variation below a given threshold. Genes
+#' that exceed the cutoff are removed.
+#' @param cvCutoffMetabs Checks for coefficient of variation below a given threshold. Metabolites
+#' that exceed the cutoff are removed.
+#' @param log2scaleGenes Whether or not to log-scale the genes. Default is FALSE.
+#' @param log2scaleMetabs Whether or not to log-scale the metabolites. Default is FALSE.
+#' @param zScaleGenes Whether or not to z-scale each gene (subtract mean and divide
+#' by standard deviation). This brings all genes onto the same scale. Default is FALSE.
+#' @param zScaleMetabs Whether or not to z-scale each metabolite (subtract mean and divide
+#' by standard deviation). This brings all metabolites onto the same scale. Default is FALSE.
+#' @param stype.type Either "factor" or "numeric". The outcome type.
 #' @return filtData MultiDataSet object with input data after filtering
 #'
 #' @examples
 #' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
 #' csvfile <- file.path(dir, "NCItestinput.csv")
 #' inputData <- ReadData(csvfile,metabid='id',geneid='id')
-#' inputDatafilt <- FilterData(inputData,geneperc=0.5)
+#' inputDatafilt <- FilterData(inputData = inputData,stype = "PBO_vs_Leukemia", 
+#' geneperc=0.5, stype.type = "factor")
 #' @export
-FilterData <- function(inputData,geneperc=0,metabperc=0, metabmiss=0) {
+FilterData <- function(inputData,stype,geneperc=0,metabperc=0, metabmiss=0,
+                       class.covar = NULL,
+                       imputedMetabCutoff = NULL,
+                       imputedSampleCutoff = NULL,
+                       cvCutoffGenes = NULL,
+                       cvCutoffMetabs = NULL,
+                       log2scaleGenes = NULL,
+                       log2scaleMetabs = NULL,
+                       zScaleGenes = FALSE,
+                       zScaleMetabs = FALSE,
+                       stype.type) {
 
   # Check that input is a MultiDataSet
   if (class(inputData) != "MultiDataSet") {
@@ -263,6 +373,36 @@ FilterData <- function(inputData,geneperc=0,metabperc=0, metabmiss=0) {
       filtdata <- add_metabolite(multi, metab.set)
     }
   }
-	return(filtdata)
+  
+  # Get common analytes.
+  mytypes <- names(Biobase::assayData(filtdata))
+  incommon <- filtdata
+  if(any(mytypes == "expression") && any(mytypes == "metabolite")){
+    incommon <- getCommon(inputData=filtdata,stype=stype)
+  }else if(any(mytypes == "metabolite")){
+    incommon <- formatSingleOmicInput(filtdata, stype,type = "metabolite")
+  }else if(any(mytypes == "expression")){
+    incommon <- formatSingleOmicInput(filtdata, stype,type = "expression")
+  }
+  
+  # Coerce stype.
+  if(stype.type == "factor"){
+    incommon$p = as.factor(incommon$p)
+  }else if(stype.type == "numeric"){
+    incommon$p = as.numeric(as.character(incommon$p))
+  }
+  
+  # Coerce covariate classes.
+  for(covar in names(class.covar)){
+    if(class.covar[covar] == "numeric"){
+      incommon$covar_matrix[,covar] <- as.numeric(as.character(incommon$covar_matrix[,covar]))
+    }else if(class.covar[covar] == "factor"){
+      incommon$covar_matrix[,covar] <- as.factor(as.character(incommon$covar_matrix[,covar]))
+    }else{
+      stop(paste(class.covar[covar], "is not a valid class for covariate", covar))
+    }
+  }
+  
+	return(incommon)
 }
 

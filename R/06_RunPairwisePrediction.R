@@ -4,7 +4,8 @@
 #' Therefore, to predict phenotype given the betas learned by IntLIM, we use the
 #' following model:
 #' p ~ (m - (beta0 + beta1(g) + beta4...n(covariates)) / (beta2 + beta3(g))
-#' @param inputResults A list of IntLimResults objects. Each object must include
+#' @param inputResults The data frame of filtered results from 
+#'  an IntLimResults object. Each object must include
 #'  model and processing results (output of ProcessResults()). All results must
 #'  include learned covariate weights (i.e. must be run with save.covar.pvals = TRUE)
 #' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
@@ -13,70 +14,63 @@
 #' or numeric outcome.
 #' @param covar The clinical covariates to include in the model. These should be the same
 #' covariates that were included when running the IntLIM linear models.
-#' @param class.covar A vector of covariate types ("numeric" or "categorical") provided in
-#' the same order as the "covar" parameter.
+#' @param independent.var.type 'metabolite' or 'gene' must be set as independent variable
+#' (default is 'metabolite')
+#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
+#' (default is 'metabolite')
 #' @export
-RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NULL, 
-                                  class.covar=NULL){
-  
-  # Filter input data.
-  mytypes <- names(Biobase::assayData(inputData))
-  if(any(mytypes == "expression") && any(mytypes == "metabolite")){
-    incommon <- getCommon(inputData,stype,covar,class.covar=class.covar)
-  }else{
-    type <- "metabolite"
-    if(any(mytypes == "expression")){
-      type <- "expression"
-    }
-    incommon <- formatSingleOmicInput(inputData,stype,covar,class.covar=class.covar,type)
-  }
+RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NULL,
+                                  independent.var.type="gene", outcome="metabolite"){
 
   # Extract data needed for model.
-  covariates <- incommon$covar_matrix
+  covariates <- inputData$covar_matrix
   independent.vars <- NULL
   dependent.vars <- NULL
-  ind_name_in_model <- "g"
-  if(inputResults@independent.var.type == "metabolite"){
-    independent.vars <- as.data.frame(incommon$metab)
-    ind_name_in_model <- "m"
+  if(independent.var.type == "metabolite"){
+    independent.vars <- as.data.frame(inputData$metab)
   }else{
-    independent.vars <- as.data.frame(incommon$gene)
+    independent.vars <- as.data.frame(inputData$gene)
   }
-  if(inputResults@outcome == "metabolite"){
-    dependent.vars <- as.data.frame(incommon$metab)
+  if(outcome == "metabolite"){
+    dependent.vars <- as.data.frame(inputData$metab)
   }else{
-    dependent.vars <- as.data.frame(incommon$gene)
+    dependent.vars <- as.data.frame(inputData$gene)
   }
-
+  
   # Extract coefficients.
-  which_start <- which(colnames(inputResults@filt.results) == "rsquared")[1]
+  which_start <- which(colnames(inputResults) == "rsquared")[1]
   if(is.na(which_start)){
-    which_start <- which(colnames(inputResults@filt.results) == "FDRadjPval")[1]
+    which_start <- which(colnames(inputResults) == "FDRadjPval")[1]
   }
   which_start <- which_start + 1    
-  coefficients <- inputResults@filt.results[,c(1:2, 
-                                               which_start:(dim(inputResults@filt.results)[2]))]
+  coefficients <- inputResults[,c(1:2, which_start:(dim(inputResults)[2]))]
+  coefficients$Analyte1 <- as.character(coefficients$Analyte1)
+  coefficients$Analyte2 <- as.character(coefficients$Analyte2)
   which_interact <- which(grepl(":", colnames(coefficients)) == TRUE)
   
   # Construct matrix of coefficients.
-  intercept <- matrix(coefficients[,"(Intercept)"], nrow=length(coefficients[,"(Intercept)"]), 
+  intercept <- matrix(coefficients[,"(Intercept)"], 
+                      nrow=length(coefficients[,"(Intercept)"]), 
                       ncol=dim(independent.vars)[2])
-  ind_var <- matrix(coefficients[,ind_name_in_model], nrow=length(coefficients[,ind_name_in_model]), 
+  ind_var <- matrix(coefficients$a, 
+                    nrow=length(coefficients$a), 
                     ncol=dim(independent.vars)[2])
-  interact_var <- matrix(coefficients[,which_interact], nrow=length(coefficients[,which_interact]), 
+  interact_var <- matrix(coefficients[,which_interact], 
+                         nrow=length(coefficients[,which_interact]), 
                          ncol=dim(independent.vars)[2])
   phen_var <- matrix(coefficients$type, nrow=length(coefficients$type), 
                      ncol=dim(independent.vars)[2])
   
   # Compute the numerator of the prediction for each subject 
   # (sans covariate terms)
-  ind_term <- independent.vars[coefficients[,1],] * ind_var
-  dep_term <- dependent.vars[coefficients[,2],]
+  ind_term <- independent.vars[coefficients$Analyte1,] * ind_var
+  dep_term <- dependent.vars[coefficients$Analyte2,]
   pred_phenotype <- dep_term - (intercept + ind_term)
 
   # If there are covariates, include the covariate terms in the prediction
   # by subtracting them.
-  if(!is.null(covariates)) {
+  covariates <- inputData$covar_matrix
+  if(!is.null(covar)) {
     all_cov_terms<- lapply(covar, function(cov_name){
       coef_cov_name <- colnames(coefficients)[grepl(cov_name, colnames(coefficients))]
       cov_cov_name <- colnames(covariates)[grepl(cov_name, colnames(covariates))]
@@ -121,12 +115,12 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
   }
 
   # Calculate the denominator and divide.
-  div_term <- independent.vars[coefficients[,1],] * interact_var
+  div_term <- independent.vars[coefficients$Analyte1,] * interact_var
   div_term <- div_term + phen_var
   pred_phenotype <- pred_phenotype / div_term 
 
   # For discrete phenotypes only, round the value.
-  if(!is.numeric(inputData@phenoData$metabolite$main@data[,stype])){
+  if(!is.numeric(inputData$p)){
     pred_phenotype[multi.which(pred_phenotype >= 1)] <- 1
     pred_phenotype[multi.which(pred_phenotype <= 0)] <- 0
     pred_phenotype <- round(pred_phenotype,digits=0)
@@ -134,10 +128,56 @@ RunPairwisePrediction <- function(inputResults, inputData, stype=NULL, covar=NUL
   pred_phenotype = as.data.frame(pred_phenotype)
   
   # Add analyte information for each prediction.
-  pred_phenotype$to <- as.matrix(coefficients[,2])
-  pred_phenotype$from <- as.matrix(coefficients[,1])
+  pred_phenotype$to <- coefficients$Analyte2
+  pred_phenotype$from <- coefficients$Analyte1
 
   return(pred_phenotype)
+}
+
+#' Given each significant pairwise model and the input data, predict the phenotype
+#' for each sample. Recall that IntLIM models take the following form:
+#' m ~ beta0 + beta1(g) + beta2(phenotype) + beta3(g:phenotype) + beta4...n(covariates)
+#' Therefore, to predict phenotype given the betas learned by IntLIM, we use the
+#' following model:
+#' p ~ (m - (beta0 + beta1(g) + beta4...n(covariates)) / (beta2 + beta3(g))
+#' @param inputResults A list of IntLimResults objects. Each object must include
+#'  model and processing results (output of ProcessResultsAllFolds()). All results must
+#'  include learned covariate weights (i.e. must be run with save.covar.pvals = TRUE)
+#' @param inputData MultiDataSet object (output of CreateCrossValFolds()) with gene expression,
+#' metabolite abundances, and associated meta-data
+#' @param stype The phenotype (outcome) to predict. This can be either a categorical
+#' or numeric outcome.
+#' @param covar The clinical covariates to include in the model. These should be the same
+#' covariates that were included when running the IntLIM linear models.
+#' @param testing Boolean indicating whether this is testing data. FALSE by default.
+#' @param independentVarType The independent variable type ("gene" or "metabolite")
+#' @param outcome The outcome type ("gene" or "metabolite")
+#' @export
+RunPairwisePredictionAllFolds <- function(inputResults, inputData, stype=NULL, covar=NULL, 
+                                  testing = FALSE, independentVarType, outcome){
+  # Get all predictions.
+  all_preds <- lapply(1:length(inputResults[[1]]), function(i){
+    predval <- lapply(1:length(inputResults), function(j){
+      input <- inputData[[i]]$training
+      if(testing == TRUE){
+        input <- inputData[[i]]$testing
+      }
+      return(RunPairwisePrediction(inputResults = inputResults[[j]][[i]], 
+                                 inputData = input,
+                                 stype=stype, covar=covar,
+                                 independent.var.type = independentVarType[[j]][[i]],
+                                 outcome = outcome[[j]][[i]]))
+    })
+    return(do.call(rbind, predval))
+  })
+  
+  # Assign names.
+  names(all_preds) <- unlist(lapply(1:length(inputResults), function(i){
+    return(paste("Fold", i, sep = "_"))
+  }))
+  
+  # Return
+  return(all_preds)
 }
 
 #' Multiply a covariate with its learned coefficients. This is straightforward for
@@ -168,21 +208,15 @@ multiplyCovariate <- function(coefficients, covariates, coef_cov_name, cov_cov_n
 
 #' Given a graph and a phenotype prediction for each significant pair, generate a 
 #' new graph with the phenotype predictions included as the edge weights.
-#' @param predictions_list A list of matrices of predictions. For each matrix,
-#' each signficant pair of analytes results in a prediction for each subject. The
-#' list may consist of: gene-gene model predictions, metabolite-metabolite model
-#' predictions, metabolite-gene model predictions, and/or gene-metabolite model
-#' predictions.
+#' @param predictions A matrix of predictions. Each signficant pair of analytes 
+#' results in a prediction for each subject.
 #' @param coRegulationGraph An igraph object. This graph is the co-regulation graph
 #' generated using IntLIM analysis of analyte pairs.
 #' @export
-ProjectPredictionsOntoGraph <- function(predictions_list, coRegulationGraph){
+ProjectPredictionsOntoGraph <- function(predictions, coRegulationGraph){
   
   # Convert graph into data frame.
   edges <- igraph::as_data_frame(coRegulationGraph, what = "edges")
-  
-  # Concatenate all predictions into a single frame.
-  predictions <- do.call(rbind, predictions_list)
   
   # Define continuous color based on prediction.
   pal <- grDevices::colorRampPalette(c("limegreen", "purple"))
@@ -211,4 +245,22 @@ ProjectPredictionsOntoGraph <- function(predictions_list, coRegulationGraph){
   })
   names(new_graphs)<-colnames(predictions)[1:(length(colnames(predictions))-2)]
   return(new_graphs)
+}
+
+#' This is a wrapper for ProjectPredictionsOntoGraph for all folds of data.
+#' @param predictions_list A list of lists of matrices of predictions. For each matrix,
+#' each signficant pair of analytes results in a prediction for each subject. The
+#' list may consist of: gene-gene model predictions, metabolite-metabolite model
+#' predictions, metabolite-gene model predictions, and/or gene-metabolite model
+#' predictions.
+#' @param coRegulationGraphs A list of igraph objects. This graph is the co-regulation graph
+#' generated using IntLIM analysis of analyte pairs.
+#' @export
+ProjectPredictionsOntoGraphAllFolds <- function(predictions_list, coRegulationGraphs){
+
+  prediction_graphs <- lapply(1:length(coRegulationGraphs), function(i){
+    ProjectPredictionsOntoGraph(predictions = predictions_list[[i]], 
+                                coRegulationGraph = coRegulationGraphs[[i]])
+  })
+  return(prediction_graphs)
 }

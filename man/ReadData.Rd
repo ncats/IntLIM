@@ -54,5 +54,5 @@ that all sample ids in the metabData and geneData are also in the sampleMetaData
 \examples{
 dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
 csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
+mydata <- ReadData(inputFile = csvfile,metabid='id',geneid='id')
 }

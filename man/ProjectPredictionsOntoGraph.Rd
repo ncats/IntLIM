@@ -5,14 +5,11 @@
 \title{Given a graph and a phenotype prediction for each significant pair, generate a 
 new graph with the phenotype predictions included as the edge weights.}
 \usage{
-ProjectPredictionsOntoGraph(predictions_list, coRegulationGraph)
+ProjectPredictionsOntoGraph(predictions, coRegulationGraph)
 }
 \arguments{
-\item{predictions_list}{A list of matrices of predictions. For each matrix,
-each signficant pair of analytes results in a prediction for each subject. The
-list may consist of: gene-gene model predictions, metabolite-metabolite model
-predictions, metabolite-gene model predictions, and/or gene-metabolite model
-predictions.}
+\item{predictions}{A matrix of predictions. Each signficant pair of analytes 
+results in a prediction for each subject.}
 
 \item{coRegulationGraph}{An igraph object. This graph is the co-regulation graph
 generated using IntLIM analysis of analyte pairs.}

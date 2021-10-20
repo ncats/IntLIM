@@ -6,20 +6,27 @@
 #' is an igraph object.
 #' @param inputResults A list of IntLimResults objects. Each object must include
 #'  model and processing results (output of ProcessResults()).
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
-#' metabolite abundances, and associated meta-data
+#' @param independentVarType The independent variable type ("gene" or "metabolite")
+#' @param outcome The outcome type ("gene" or "metabolite")
 #' @param vertexSize Width of each vertex in pixels
 #' @export
-BuildCoRegulationGraph <- function(inputResults, inputData, vertexSize=15){
+BuildCoRegulationGraph <- function(inputResults, independentVarType,
+                                   outcome, vertexSize=15){
+  
   # Set vertex colors.
   color <- "gray"
   framecolor <- "gray"
   
   # Build each data frame.
-  all_graph_df = lapply(inputResults, function(result){
-    return(BuildGraphDataFrame(result, inputData))
+  all_graph_df <- lapply(1:length(inputResults), function(i){
+    return(BuildGraphDataFrame(inputResults[[i]], independentVarType[[i]],
+                               outcome[[i]]))
   })
+  is_null = unlist(lapply(all_graph_df, function(g){
+    return(is.null(g))
+  }))
 
+  all_graph_df <- all_graph_df[which(is_null == FALSE)]
   all_edge_df = lapply(all_graph_df, function(df){
     return(df$edges)
   })
@@ -44,43 +51,47 @@ BuildCoRegulationGraph <- function(inputResults, inputData, vertexSize=15){
 #' Construct a data frame that includes all information needed to build an igraph
 #' object. This includes the names of the two co-regulated analytes, whether the
 #' analytes have a positive or negative co-regulation, and the shape of the analytes.
-#' @param inputResults A list of IntLimResults objects. Each object must include
+#' @param inputResults A list of data frames. Each object must include
 #'  model and processing results (output of ProcessResults()).
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
-#' metabolite abundances, and associated meta-data
-BuildGraphDataFrame <- function(inputResults, inputData){
+#' @param independentVarType The independent variable type ("gene" or "metabolite")
+#' @param outcome The outcome type ("gene" or "metabolite")
+BuildGraphDataFrame <- function(inputResults, independentVarType, outcome){
 
-  # Add the analytes to the data frame.
-  edge_df = data.frame(from = inputResults@filt.results[,1], 
-                        to = inputResults@filt.results[,2])
-
-  # Add the weights and corresponding colors.
-  edge_df$weight = 1
-  edge_df$weight[which(inputResults@filt.results$interaction_coeff < 0)] = -1
-  edge_df$color = "blue"
-  edge_df$color[which(inputResults@filt.results$interaction_coeff < 0)] = "red"
-
-  # Build the vertex graph, including the shape of each vertex.
-  node_df = data.frame(node = unique(inputResults@filt.results[,1]), 
-                          shape = "square")
-  if(inputResults@independent.var.type == "metabolite"){
-    node_df$shape = "circle"
-  }
-  second_col_only <- setdiff(inputResults@filt.results[,2], 
-                      inputResults@filt.results[,1])
-  if(length(second_col_only) > 0){
-    node_df_c2 = data.frame(node = unique(setdiff(inputResults@filt.results[,2], 
-                                                  inputResults@filt.results[,1])), 
+  graph_data_frame <- NULL
+  if(dim(inputResults)[1] > 0){
+    # Add the analytes to the data frame.
+    edge_df = data.frame(from = inputResults[,1], 
+                          to = inputResults[,2])
+  
+    # Add the weights and corresponding colors.
+    edge_df$weight = 1
+    edge_df$weight[which(inputResults$interaction_coeff < 0)] = -1
+    edge_df$color = "blue"
+    edge_df$color[which(inputResults$interaction_coeff < 0)] = "red"
+  
+    # Build the vertex graph, including the shape of each vertex.
+    node_df = data.frame(node = unique(inputResults[,1]), 
                             shape = "square")
-    if(inputResults@outcome == "metabolite"){
-      node_df_c2$shape = "circle"
+    if(independentVarType == "metabolite"){
+      node_df$shape = "circle"
     }
-    node_df = rbind(node_df, node_df_c2)
+    second_col_only <- setdiff(inputResults[,2], 
+                        inputResults[,1])
+    if(length(second_col_only) > 0){
+      node_df_c2 = data.frame(node = unique(setdiff(inputResults[,2], 
+                                                    inputResults[,1])), 
+                              shape = "square")
+      if(outcome == "metabolite"){
+        node_df_c2$shape = "circle"
+      }
+      node_df = rbind(node_df, node_df_c2)
+    }
+    node_df$size = 5
+    graph_data_frame <- list(edges = edge_df, nodes = node_df)
   }
-  node_df$size = 5
 
   # Return the data frame.
-  return(list(edges = edge_df, nodes = node_df))
+  return(graph_data_frame)
 }
 
 #' Return each analyte in the graph ranked by hub score. The analytes at the top
@@ -128,4 +139,36 @@ ComputeCentrality <- function(coRegulationGraph, hubMetric){
   rownames(centrality) = centrality$Analyte
   centrality$Analyte = NULL
   return(centrality)
+}
+
+#' Construct a co-regulation graph for each fold.
+#' @param inputResults A list of data frames. Each data frame consists of the
+#' filt.results slot from an IntLIMResults object.
+#' @param independentVarType The independent variable type ("gene" or "metabolite")
+#' @param outcome The outcome type ("gene" or "metabolite")
+#' @param vertexSize Width of each vertex in pixels
+#' @export
+BuildCoRegulationGraphAllFolds <- function(inputResults, vertexSize=15,
+                                           independentVarType, outcome){
+  # Get all predictions.
+  graphs <- lapply(1:length(inputResults[[1]]), function(i){
+    input <- lapply(1:length(inputResults), function(j){
+      return(inputResults[[j]][[i]])
+    })
+    indvar <- lapply(1:length(inputResults), function(j){
+      return(independentVarType[[j]][[i]])
+    })
+    out <- lapply(1:length(inputResults), function(j){
+      return(outcome[[j]][[i]])
+    })
+    return(BuildCoRegulationGraph(inputResults = input, 
+                                  independentVarType = indvar,
+                                  outcome = out))
+  })
+  
+  # Assign names.
+  names(graphs) <- unlist(lapply(1:length(inputResults), function(i){
+    return(paste("Fold", i, sep = "_"))
+  }))
+  return(graphs)
 }

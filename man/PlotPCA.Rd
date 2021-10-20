@@ -4,7 +4,7 @@
 \alias{PlotPCA}
 \title{PCA plots of data for QC}
 \usage{
-PlotPCA(inputData, viewer = T, stype = NULL, common = T, palette = "Set1")
+PlotPCA(inputData, viewer = T, stype = NULL, palette = "Set1")
 }
 \arguments{
 \item{inputData}{IntLimObject output of ReadData()}
@@ -14,8 +14,6 @@ in Shiny/Knittr (F)}
 
 \item{stype}{category to color-code by (can be more than two categories)}
 
-\item{common}{whether or not samples that are in common between the metabolite and gene expression datasets should be plotted (T/F); default is TRUE}
-
 \item{palette}{choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors}
 }
@@ -24,10 +22,4 @@ a highcharter object
 }
 \description{
 PCA plots of data for QC
-}
-\examples{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-PlotPCA(mydata,stype = "PBO_vs_Leukemia")
 }

@@ -12,7 +12,6 @@ formatInput(
   predictionGraphs,
   coregulationGraph,
   inputData,
-  stype,
   stype.class,
   edgeTypeList
 )
@@ -25,8 +24,6 @@ predictions for each edge.}
 
 \item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
 metabolite abundances, and associated meta-data}
-
-\item{stype}{The outcome}
 
 \item{stype.class}{The class of the outcome ("numeric" or "categorical")}
 

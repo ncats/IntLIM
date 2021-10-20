@@ -10,7 +10,6 @@
 #' @param predictionGraphs A list of igraph objects, each of which includes
 #' predictions for each edge.
 #' @param coregulationGraph An igraph object containing the coregulation graph.
-#' @param stype The outcome
 #' @param stype.class The class of the outcome ("numeric" or "categorical")
 #' @param edgeTypeList List containing one or more of the following to include
 #' in the line graph:
@@ -19,7 +18,7 @@
 #' - "analyte.chain"
 #' @export
 formatInput <- function(predictionGraphs, coregulationGraph,
-                                inputData, stype, stype.class, edgeTypeList){
+                                inputData, stype.class, edgeTypeList){
   
   # Extract edge-wise predictions.
   predictions_by_node <- lapply(names(predictionGraphs), function(sampName){
@@ -51,29 +50,35 @@ formatInput <- function(predictionGraphs, coregulationGraph,
   # Extract the diagonal (in degree) and raise to the negative half power.
   diags1 <- colSums(A_tilde)
   diags_neg_half <- 1 / sqrt(diags1)
-  D_tilde_neg_half1 <- matrix(0, nrow = nrow(A_tilde), ncol = ncol(A_tilde))
-  diag(D_tilde_neg_half1) <- diags_neg_half
+  D_tilde_neg_half1 <- t(matrix(rep(diags_neg_half,length(diags_neg_half)),
+                              nrow = length(diags_neg_half)))
+  A_hat1 <- D_tilde_neg_half1 * A_tilde
+  rm(D_tilde_neg_half1)
   
   # Extract the diagonal (out degree) and raise to the negative half power.
   diags2 <- rowSums(A_tilde)
+  rm(A_tilde)
   diags_neg_half <- 1 / sqrt(diags2)
-  D_tilde_neg_half2 <- matrix(0, nrow = nrow(A_tilde), ncol = ncol(A_tilde))
-  diag(D_tilde_neg_half2) <- diags_neg_half
-  
-  # Obtain the final matrix.
-  A_hat <- D_tilde_neg_half1 %*% A_tilde %*% D_tilde_neg_half2
+  D_tilde_neg_half2 <- t(matrix(rep(diags_neg_half,length(diags_neg_half)),
+                              nrow = length(diags_neg_half)))
+
+  # Obtain the final matrix. Note that we modify the matrix multiplication
+  # problem to obtain an elementwise multiplication problem
+  # because it speeds up computation.
+  A_hat <- A_hat1 * D_tilde_neg_half2
   
   # Obtain the predictions.
-  input_data <- inputData@phenoData$expression$main@data
-  Y <- input_data
-  if(dim(input_data)[1] == 1){
-    Y <- unlist(input_data[stype])
-  }else{
-    Y <- input_data[names(predictions_by_node),stype]
+  Y <- inputData$p
+  if(stype.class == "factor"){
+    Y <- as.numeric(Y)-1
   }
-  if(stype.class == "categorical"){
-    Y <- as.numeric(as.factor(Y))
-  }
+  # if(length(dim(input_data)) > 0){
+  #   if(length(dim(input_data)) == 0 || dim(input_data)[1] == 1){
+  #     Y <- unlist(input_data[stype])
+  #   }else{
+  #     Y <- input_data[names(predictions_by_node),stype]
+  #   }
+  # }
   names(Y) <- names(predictions_by_node)
   
   # Create a ModelInput object and return it.
@@ -82,6 +87,40 @@ formatInput <- function(predictionGraphs, coregulationGraph,
                        coregulation.graph=igraph::get.adjacency(coregulationGraph, sparse = FALSE), 
                        line.graph=as.matrix(A))
   return(newModelInput)
+}
+
+#' 
+#' A wrapper for the formatInput class.
+#' @param inputData List of MultiDataSet objects (output of CreateCrossValFolds()) 
+#' with gene expression,
+#' metabolite abundances, and associated meta-data
+#' @param predictionGraphs A list of igraph objects, each of which includes
+#' predictions for each edge.
+#' @param coregulationGraph An igraph object containing the coregulation graph.
+#' @param stype.class The class of the outcome ("numeric" or "categorical")
+#' @param edgeTypeList List containing one or more of the following to include
+#' in the line graph:
+#' - "shared.outcome.analyte"
+#' - "shared.independent.analyte"
+#' - "analyte.chain"
+#' @param testing A boolean indicating whether the testing data is to be used
+#' (as opposed to the training data). Default is FALSE.
+#' @export
+formatInputAllFolds <- function(predictionGraphs, coregulationGraph,
+                                inputData, stype.class, edgeTypeList,
+                                testing = FALSE){
+  # Apply to all folds.
+  return(lapply(1:length(predictionGraphs), function(i){
+    # Select whether input data is training or testing.
+    input <- inputData[[i]]$training
+    if(testing == TRUE){
+      input <- inputData[[i]]$testing
+    }
+    return(formatInput(predictionGraphs=predictionGraphs[[i]], 
+                       coregulationGraph=coregulationGraph[[i]], 
+                       inputData = input, stype.class = stype.class, 
+                       edgeTypeList = edgeTypeList))
+  }))
 }
 
 #' #' Create the graph pooling filter, given the adjacency matrix of the input graph.
@@ -187,7 +226,10 @@ CreateLineGraph <- function(predictionsByEdge, graphWithPredictions, edgeTypeLis
   }
 
   # Step 6: Concatenate.
-  shared_df <- do.call(rbind, list_to_add)
+  shared_df <- list_to_add[[1]]
+  if(length(list_to_add) > 1){
+    shared_df <- do.call(rbind, list_to_add)
+  }
   
   # Step 7: Convert to graph.
   line_graph <- igraph::graph_from_data_frame(shared_df)
@@ -210,9 +252,11 @@ FindEdgesSharingNodes <- function(predictionsByEdge, graphWithPredictions, nodeT
   graph_df <- igraph::as_data_frame(graphWithPredictions)
   
   # Find shared nodes.
-  to_shared <- lapply(unique(graph_df[,nodeType1]), function(node){
+  nodes <- unique(graph_df[,nodeType1])
+  to_shared <- lapply(1:length(nodes), function(i){
     
     # Find all line graph nodes starting with or ending with the analyte in question.
+    node <- nodes[i]
     combs <- NULL
     set_with_1 <- predictionsByEdge$Node[which(graph_df[,nodeType1] == node)]
     set_with_2 <- predictionsByEdge$Node[which(graph_df[,nodeType2] == node)]
@@ -291,35 +335,132 @@ InitializeGraphLearningModel <- function(modelInputs, poolingFilter, iterations,
 
 #' Run least squares optimization to optimize the weights
 #' @param modelInput An object of the ModelInput class.
-#' @param convolution Whether or not to convolve the input.
+#' @param convolutions Number of convolutions.
+#' @param maskPercentile The sum of error deltas will be computed over all
+#' predictors. The lowest maskPercentile of predictors will be used to ensure
+#' that reliable predictors are selected. By default, this value is set to 1,
+#' which means that all predictors will be used.
+#' @param nrmseCutoff This parameter allows you to use only predictors that
+#' have NRMSE below a given cutoff. If NULL, a cutoff is not used. Default is NULL.
+#' @param corrCutoff This parameter allows you to use only predictors that
+#' have correlation above a given cutoff. If NULL, a cutoff is not used. Default is NULL.
+#' @param ridgeLambda The lambda value to be used in ridge regression. The
+#' higher the value of lambda, the more the sum of weights is minimized.
+#' This encourages smaller weights. Default is 0.
 #' @export
-RunLeastSquaresOptimization <- function(modelInput, convolution){
+RunLeastSquaresOptimization <- function(modelInput, convolutions,
+                                        maskPercentile = 1,
+                                        nrmseCutoff = NULL,
+                                        corrCutoff = NULL,
+                                        ridgeLambda = 0){
   # Compute the value of Y.
   A.hat <- modelInput@A.hat
   X <- modelInput@node.wise.prediction
   Y.formula <- X
-  if(convolution == TRUE){
+  
+  # Convolve the input.
+  if(convolutions > 0){
+    
+    # Modify the convolutional matrix if more than
+    # one convolution is desired.
+    if(convolutions > 1){
+      for(c in 2:convolutions){
+        A.hat.old <- A.hat
+        A.hat <- A.hat.old %*% A.hat.old
+      }
+    }
+    
+    # Do convolution.
     Y.formula.list <- lapply(1:dim(X)[2], function(i){
       return(A.hat %*% X[,i])
     })
     Y.formula <- do.call(cbind, Y.formula.list)
   }
+  
+  # Transpose the Y values.
   Y.formula <- t(Y.formula)
   
-  # Compute singular value decomposition.
-  #sv <- svd(Y.formula / dim(A.hat)[2])
+  # Filter by NRMSE if applicable.
+  which_less_nrmse <- seq(1:dim(Y.formula)[2])
+  if(!is.null(nrmseCutoff)){
+    
+    nrmse <- unlist(lapply(1:dim(Y.formula)[2], function(i){
+      return(ComputeNRMSE(modelInput@true.phenotypes, 
+                          Y.formula[,i]))
+    }))
+    which_less <- which(nrmse <= nrmseCutoff)
+    which_less_nrmse <- which_less
+    Y.formula <- Y.formula[,which_less]
+  }
   
-  # Solve Least Squares. (A^TA)^-1 * A^Tb
-  #D <- diag(x = 1 / sv$d, nrow = length(sv$d), ncol = length(sv$d))
-  #Theta <- t(sv$v %*% D %*% t(sv$u)) %*% modelInput@true.phenotypes
-  Theta <- MASS::ginv(t(Y.formula) %*% Y.formula) %*% t(Y.formula) %*% modelInput@true.phenotypes
-  tryCatch({
-    Theta <- solve(t(Y.formula) %*% Y.formula) %*% t(Y.formula) %*% modelInput@true.phenotypes
-  }, error = function(cond){
-    print("Using pseudoinverse")
-  })
+  # Filter by correlation if applicable.
+  which_less_corr <- which_less_nrmse
+  if(!is.null(corrCutoff)){
+    correlation <- unlist(lapply(1:dim(Y.formula)[2], function(i){
+      return(stats::cor(modelInput@true.phenotypes, Y.formula[,i], method = "spearman"))
+    }))
+    which_more <- which(correlation >= corrCutoff)
+    which_less_corr <- which_less_nrmse[which_more]
+    Y.formula <- Y.formula[,which_more]
+  }
+  
+  # Solve Least Squares. Theta = (A^TA)^-1 * A^Tb
+  # Because computing the inverse is very slow for large matrices, we follow
+  # the advice of John Cook ("Don't Invert That Matrix") and solve it as:
+  # (A^TA)Theta = A^Tb. See https://www.r-bloggers.com/2015/07/dont-invert-that-matrix-why-and-how/
+  #Theta <- solve(t(Y.formula) %*% Y.formula, t(Y.formula) %*% modelInput@true.phenotypes)
+  
+  # Use SVD to solve.
+  decomp <- svd(Y.formula)
+  Theta_nonzero <- rep(0, length(decomp$d))
+  if(length(decomp$d) > 1){
+    S_inv <- solve(diag(decomp$d^2) + ridgeLambda * diag(rep(1, length(decomp$d))))
+    Theta_nonzero <- decomp$v %*% S_inv %*% diag(decomp$d) %*% t(decomp$u) %*% 
+      as.matrix(modelInput@true.phenotypes)
+  }else{
+    S_inv <- decomp$v * 1 / ((decomp$d^2) + ridgeLambda)
+    Theta_nonzero <- decomp$v * S_inv * decomp$d * t(decomp$u) %*%
+      as.matrix(modelInput@true.phenotypes)
+  }
+  
+  # Build final theta, including zeros for predictors not within the cutoff.
+  Theta <- rep(0, dim(modelInput@node.wise.prediction)[1])
+  Theta[which_less_corr] <- Theta_nonzero
+  names(Theta) <- rownames(modelInput@node.wise.prediction)
   
   return(Theta)
+}
+
+#' Wrapper for RunLeastSquaresOptimization.
+#' @param modelInput A list of objects of the ModelInput class.
+#' @param convolutions Number of convolutions to perform.
+#' @param maskPercentile The sum of error deltas will be computed over all
+#' predictors. The lowest maskPercentile of predictors will be used to ensure
+#' that reliable predictors are selected. By default, this value is set to 1,
+#' which means that all predictors will be used.
+#' @param ridgeLambda The lambda value to be used in ridge regression. The
+#' higher the value of lambda, the more the sum of weights is minimized.
+#' This encourages smaller weights. Default is 0.
+#' @param nrmseCutoff This parameter allows you to use only predictors that
+#' have NRMSE below a given cutoff. If NULL, a cutoff is not used. Default is NULL.
+#' @param corrCutoff This parameter allows you to use only predictors that
+#' have correlation above a given cutoff. If NULL, a cutoff is not used. Default is NULL.
+#' @export
+RunLeastSquaresOptimizationAllFolds <- function(modelInput, convolutions,
+                                                maskPercentile = 1,
+                                                nrmseCutoff = NULL,
+                                                corrCutoff = NULL,
+                                                ridgeLambda = 0){
+  result <- lapply(1:length(modelInput), function(i){
+    return(RunLeastSquaresOptimization(modelInput=modelInput[[i]],
+                                       convolutions=convolutions,
+                                       maskPercentile = maskPercentile,
+                                       nrmseCutoff = nrmseCutoff,
+                                       corrCutoff = corrCutoff,
+                                       ridgeLambda = ridgeLambda))
+  })
+  names(result) <- paste("Fold", 1:length(modelInput), sep = "_")
+  return(result)
 }
 
 #' Train the graph learning model, using the specifications in the ModelResults.
@@ -518,6 +659,66 @@ DoSingleTrainingIteration <- function(modelResults, iteration, pooling, convolut
   return(modelResults)
 }
 
+#' Run a prediction on new data using the graph learning model, and compute
+#' the absolute error delta values.
+#' @param weights The list of all learned weights.
+#' @param convolutions Number of convolutions to perform. This should be the
+#' same number of convolutions used in learning the weights.
+#' @param modelInput A list of objects of the ModelInput class.
+#' @param minimum The minimum prediction value to allow. Default is NULL.
+#' @param maximum The maximum prediction value to allow. Default is NULL.
+#' @export
+GetErrorDeltas <- function(weights, modelInput, convolutions, minimum = NULL, 
+                           maximum = NULL){
+  # Convolve the input.
+  Y.formula <- modelInput@node.wise.prediction
+  if(convolutions > 0){
+    
+    # Modify the convolutional matrix if more than
+    # one convolution is desired.
+    if(convolutions > 1){
+      for(c in 2:convolutions){
+        modelInput@A.hat <- modelInput@A.hat %*% modelInput@A.hat
+      }
+    }
+    
+    # Do convolution.
+    Y.formula <- modelInput@A.hat %*% Y.formula
+  }
+  deltas <- unlist(lapply(1:length(modelInput@true.phenotypes),function(j){
+    solution <- sum(Y.formula[,j] * weights)
+    # Adjust to fit minimum and maximum.
+    if(!is.null(minimum)){
+      solution[which(solution < minimum)] <- minimum
+    }
+    if(!is.null(maximum)){
+      solution[which(solution > maximum)] <- maximum
+    }  
+    phenotype <- modelInput@true.phenotypes[j]
+    return(unlist(unname(abs(solution - phenotype))))
+  }))
+  names(deltas) <- names(modelInput@true.phenotypes)
+  return(deltas)
+}
+
+#' Run a prediction on new data using the graph learning model, and compute
+#' the absolute error delta values.
+#' @param weights The list of all learned weights.
+#' @param convolutions Number of convolutions to perform. This should be the
+#' same number of convolutions used in learning the weights.
+#' @param modelInput A list of objects of the ModelInput class.
+#' @param minimum The minimum prediction value to allow. Default is NULL.
+#' @param maximum The maximum prediction value to allow. Default is NULL.
+#' @export
+GetErrorDeltasAllFolds <- function(weights, modelInput, convolutions, minimum = NULL, 
+                                   maximum = NULL){
+  return(lapply(1:length(modelInput), function(i){
+    # Get error deltas.
+    return(GetErrorDeltas(weights=weights[[i]], modelInput=modelInput[[i]], 
+                          convolutions=convolutions, minimum=minimum,
+                          maximum=maximum))
+  }))
+}
 #' Run a prediction on new data using the graph learning model.
 #' @param modelResults An object of the ModelResults class.
 #' @param pooling Whether or not to pool the weights.
@@ -619,4 +820,99 @@ ComputeNRMSE <- function(true.Y, pred.Y){
     NRMSE <- RMSD / (max(true.Y) - min(true.Y))
   }
   return(NRMSE)
+}
+
+#' Run a prediction on new data using the graph learning model, and compute
+#' the NRMSE values.
+#' @param weights The list of all learned weights.
+#' @param convolutions Number of convolutions to perform. This should be the
+#' same number of convolutions used in learning the weights.
+#' @param modelInput A list of objects of the ModelInput class.
+#' @param minimum The minimum prediction value to allow. Default is NULL.
+#' @param maximum The maximum prediction value to allow. Default is NULL.
+#' @export
+GetNRMSE <- function(weights, modelInput, convolutions, minimum = NULL, 
+                           maximum = NULL){
+  # Convolve the input.
+  Y.formula <- modelInput@node.wise.prediction
+  if(convolutions > 0){
+    
+    # Modify the convolutional matrix if more than
+    # one convolution is desired.
+    if(convolutions > 1){
+      for(c in 2:convolutions){
+        modelInput@A.hat <- modelInput@A.hat %*% modelInput@A.hat
+      }
+    }
+    
+    # Do convolution.
+    Y.formula <- modelInput@A.hat %*% Y.formula
+  }
+  solutions <- unlist(lapply(1:length(modelInput@true.phenotypes),function(j){
+    solution <- sum(Y.formula[,j] * weights)
+    return(unlist(solution))
+  }))
+  
+  NRMSE <- ComputeNRMSE(modelInput@true.phenotypes, solutions)
+  return(NRMSE)
+}
+
+#' Run a prediction on new data using the graph learning model, and compute
+#' the correlations.
+#' @param weights The list of all learned weights.
+#' @param convolutions Number of convolutions to perform. This should be the
+#' same number of convolutions used in learning the weights.
+#' @param modelInput A list of objects of the ModelInput class.
+#' @param minimum The minimum prediction value to allow. Default is NULL.
+#' @param maximum The maximum prediction value to allow. Default is NULL.
+#' @export
+GetCorrelation <- function(weights, modelInput, convolutions, minimum = NULL, 
+                     maximum = NULL){
+  # Convolve the input.
+  Y.formula <- modelInput@node.wise.prediction
+  if(convolutions > 0){
+    
+    # Modify the convolutional matrix if more than
+    # one convolution is desired.
+    if(convolutions > 1){
+      for(c in 2:convolutions){
+        modelInput@A.hat <- modelInput@A.hat %*% modelInput@A.hat
+      }
+    }
+    
+    # Do convolution.
+    Y.formula <- modelInput@A.hat %*% Y.formula
+  }
+  solutions <- unlist(lapply(1:length(modelInput@true.phenotypes),function(j){
+    solution <- sum(Y.formula[,j] * weights)
+    # Adjust to fit minimum and maximum.
+    if(!is.null(minimum)){
+      solution[which(solution < minimum)] <- minimum
+    }
+    if(!is.null(maximum)){
+      solution[which(solution > maximum)] <- maximum
+    }  
+    return(unlist(solution))
+  }))
+  
+  corr <- stats::cor(modelInput@true.phenotypes, solutions, method = "spearman")
+  return(corr)
+}
+
+#' Wrapper for GetNRMSE.
+#' @param weights The list of all learned weights.
+#' @param convolutions Number of convolutions to perform. This should be the
+#' same number of convolutions used in learning the weights.
+#' @param modelInput A list of objects of the ModelInput class.
+#' @param minimum The minimum prediction value to allow. Default is NULL.
+#' @param maximum The maximum prediction value to allow. Default is NULL.
+#' @export
+GetNRMSEAllFolds <- function(weights, modelInput, convolutions, minimum = NULL, 
+                                   maximum = NULL){
+  return(lapply(1:length(modelInput), function(i){
+    # Get error deltas.
+    return(GetNRMSE(weights=weights[[i]], modelInput=modelInput[[i]], 
+                          convolutions=convolutions, minimum=minimum,
+                          maximum=maximum))
+  }))
 }
