@@ -34,7 +34,7 @@ ProcessResults <- function(inputResults,
   mydat.interac <- inputResults@interaction.coefficients
   mydat.rsq <- inputResults@model.rsquared 
   mydat.covar.coeff <- inputResults@covariate.coefficients
-  
+
   # Set input and output type.
   col1name <- ""
   col2name <- ""
@@ -63,10 +63,10 @@ ProcessResults <- function(inputResults,
     col2name <- "Gene2"
   }
 	p <- inputData$p
-	
+
 	# Call continuous function if applicable.
 	if(length(unique(p)) !=2 & is.null(diffcorr) & is.null(corrtype)) {
-	  inputResults <- ProcessResultsContinuous(inputResults,
+	  filtResults <- ProcessResultsContinuous(inputResults,
   	                           interactionCoeffPercentile,
   	                           pvalcutoff, rsquaredCutoff)
 	} else if (length(unique(p)) !=2){
@@ -211,43 +211,44 @@ ProcessResults <- function(inputResults,
     	  inputResults@filt.results <- cbind(inputResults@filt.results, mydat.covar.coeff)
     	}
     	colnames(inputResults@filt.results)[6:9]<-c("interaction_coeff", "Rsq", "Pval","FDRadjPval")
+    	filtResults <- inputResults@filt.results
 	}
 
 	# Add hierarchical clustering results, if appropriate
 	if (treecuts > 0){
-	  hc.rows<- stats::hclust(stats::dist(inputResults@filt.results[,c(3,4)]))
+	  hc.rows<- stats::hclust(stats::dist(filtResults[,c(3,4)]))
 	  cluster <- stats::cutree(hc.rows, k = treecuts)
-	  inputResults@filt.results <- cbind(inputResults@filt.results, cluster)
+	  filtResults <- cbind(filtResults, cluster)
 	}
 	
 	# Change from "g" and "m" to the more generic "a".
-	colnames(inputResults@filt.results)[1:2] <- c("Analyte1", "Analyte2")
-	if("g" %in% colnames(inputResults@filt.results)){
-	  which_g <- which(colnames(inputResults@filt.results) == "g")
-	  which_int <- grepl("g:", colnames(inputResults@filt.results), fixed = TRUE)
-	  colnames(inputResults@filt.results)[which_g] <- "a"
-	  colnames(inputResults@filt.results)[which_int] <- "a:type"
+	colnames(filtResults)[1:2] <- c("Analyte1", "Analyte2")
+	if("g" %in% colnames(filtResults)){
+	  which_g <- which(colnames(filtResults) == "g")
+	  which_int <- grepl("g:", colnames(filtResults), fixed = TRUE)
+	  colnames(filtResults)[which_g] <- "a"
+	  colnames(filtResults)[which_int] <- "a:type"
 	}
-	if("m" %in% colnames(inputResults@filt.results)){
-	  which_g <- which(colnames(inputResults@filt.results) == "m")
-	  which_int <- grepl("m:", colnames(inputResults@filt.results), fixed = TRUE)
-	  colnames(inputResults@filt.results)[which_g] <- "a"
-	  colnames(inputResults@filt.results)[which_int] <- "a:type"
+	if("m" %in% colnames(filtResults)){
+	  which_g <- which(colnames(filtResults) == "m")
+	  which_int <- grepl("m:", colnames(filtResults), fixed = TRUE)
+	  colnames(filtResults)[which_g] <- "a"
+	  colnames(filtResults)[which_int] <- "a:type"
 	}
-	
+
 	# If outcome isn't "type", change it.
-	which_type <- which(lapply(colnames(inputResults@filt.results), function(name){
+	which_type <- which(lapply(colnames(filtResults), function(name){
 	  retval <- FALSE
 	  if(substr(name, 1, 4) == "type"){
 	    retval <- TRUE
 	  }
 	  return(retval)
 	}) == TRUE)
-	colnames(inputResults@filt.results)[which_type] <- "type"
+	colnames(filtResults)[which_type] <- "type"
 
 	# Print and return the results.
-  print(paste(nrow(inputResults@filt.results), 'pairs found given cutoffs'))
-  return(inputResults@filt.results)
+  print(paste(nrow(filtResults), 'pairs found given cutoffs'))
+  return(filtResults)
 }
 
 #' Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
@@ -272,7 +273,7 @@ ProcessResultsContinuous<- function(inputResults,
   gene_metabolite_format_pval = reshape2::melt(inputResults@interaction.pvalues)
   gene_metabolite_format_adjp = reshape2::melt(inputResults@interaction.adj.pvalues)
   gene_metabolite_format_rsquared = reshape2::melt(inputResults@model.rsquared)
-  
+
   # Set rownames for melted frames.
   if (inputResults@outcome != inputResults@independent.var.type){
     rownames(gene_metabolite_format_coeff) <- paste(as.character(gene_metabolite_format_coeff[,1])
@@ -303,28 +304,13 @@ ProcessResultsContinuous<- function(inputResults,
   }
   tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, 
                    gene_metabolite_format_adjp$value, gene_metabolite_format_rsquared$value)
-  
-  # Set column names.
-  if((inputResults@outcome == "metabolite" && inputResults@independent.var.type == "gene")
-     || (inputResults@outcome == "gene" && inputResults@independent.var.type == "metabolite")){
-    colnames(tofilter) = c("gene", "metab", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
-  }
-  else if(inputResults@outcome == "metabolite" && inputResults@independent.var.type == "metabolite"){
-    colnames(tofilter) = c("metab1", "metab2", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
-  }
-  else if(inputResults@outcome == "gene" && inputResults@independent.var.type == "gene"){
-    colnames(tofilter) = c("gene1", "gene2", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
-  }
-  else{
-    stop("Error! outcome and independent.var.type must each be one of the following: gene, metabolite.")
-  }
+  colnames(tofilter) = c("Analyte1", "Analyte2", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
 
   #get top and bottom cutoffs (need highest positive and highest negative coeffs)
   first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
                                                     interactionCoeffPercentile)[1]
   second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
                                                      interactionCoeffPercentile)[2]
-
   #sort
   tofilter_sortedbycoeff <- tofilter[order(tofilter$interaction_coeff),]
 
@@ -342,25 +328,22 @@ ProcessResultsContinuous<- function(inputResults,
   
   #remove NA's.
   filtered_no_na = filtered_by_rsquared[which(!is.na(filtered_by_rsquared$Pval)),]
-  inputResults@filt.results = filtered_no_na
-  
+
   # Add the covariate coefficients, if appropriate.
   mydat.covar.coeff <- inputResults@covariate.coefficients
-  if(length(mydat.covar.coeff) > 0){
-    original_names = setdiff(rownames(filtered_no_na), 
-                             rownames(mydat.covar.coeff)[which(!is.na(mydat.covar.coeff[,"(Intercept)"]))])
-    flipped_names = unlist(lapply(original_names, function(name){
-      analytes = strsplit(name, "__")[[1]]
-      new_name = paste(analytes[2], analytes[1], sep = "__")
-    }))
-    mydat.covar.coeff[original_names,] = mydat.covar.coeff[flipped_names,]
-    mydat.covar.coeff <- mydat.covar.coeff[which(!is.na(mydat.covar.coeff[,1])),]
-    mydat.covar.coeff <- mydat.covar.coeff[rownames(filtered_no_na),]
-    inputResults@filt.results <- cbind(filtered_no_na, mydat.covar.coeff)
-  }
+  original_names = setdiff(rownames(filtered_no_na), 
+                           rownames(mydat.covar.coeff)[which(!is.na(mydat.covar.coeff[,"(Intercept)"]))])
+  flipped_names = unlist(lapply(original_names, function(name){
+    analytes = strsplit(name, "__")[[1]]
+    new_name = paste(analytes[2], analytes[1], sep = "__")
+  }))
+  mydat.covar.coeff[original_names,] = mydat.covar.coeff[flipped_names,]
+  mydat.covar.coeff <- mydat.covar.coeff[which(!is.na(mydat.covar.coeff[,1])),]
+  mydat.covar.coeff <- mydat.covar.coeff[rownames(filtered_no_na),]
+  filt.results <- cbind(filtered_no_na, mydat.covar.coeff)
 
   #place in objec to return
-  return(inputResults)
+  return(filt.results)
 
 }
 
