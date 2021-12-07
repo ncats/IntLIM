@@ -11,7 +11,6 @@
 #' (default is 'metabolite')
 #' @param covar Additional variables from the phenotypic data that be integrated into linear model
 #' @param continuous boolean to indicate whether the data is continuous or discrete
-#' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time. The default is FALSE.
 #' @param independent.var.type 'metabolite' or 'gene' must be set as independent variable
@@ -22,7 +21,7 @@
 #' @return IntLimModel object with model results
 #' @export
 RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
-                      continuous = FALSE, metabolite.pairs=FALSE,
+                      continuous = FALSE, 
                       save.covar.pvals=FALSE, independent.var.type="gene", remove.duplicates = FALSE){
 
     if(!continuous & length(unique(stats::na.omit(inputData$p))) != 2) {

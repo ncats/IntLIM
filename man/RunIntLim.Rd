@@ -10,7 +10,6 @@ RunIntLim(
   outcome = "metabolite",
   covar = NULL,
   continuous = FALSE,
-  metabolite.pairs = FALSE,
   save.covar.pvals = FALSE,
   independent.var.type = "gene",
   remove.duplicates = FALSE
@@ -30,8 +29,6 @@ in the interaction term). Only 2 categories are currently supported.}
 \item{covar}{Additional variables from the phenotypic data that be integrated into linear model}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
-
-\item{metabolite.pairs}{boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time. The default is FALSE.}
