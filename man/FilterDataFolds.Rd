@@ -12,14 +12,6 @@ FilterDataFolds(
   metabperc = 0,
   metabmiss = 0,
   class.covar = NULL,
-  imputedMetabCutoff = NULL,
-  imputedSampleCutoff = NULL,
-  cvCutoffGenes = NULL,
-  cvCutoffMetabs = NULL,
-  log2scaleGenes = FALSE,
-  log2scaleMetabs = FALSE,
-  zScaleGenes = FALSE,
-  zScaleMetabs = FALSE,
   stype.type
 )
 }
@@ -40,29 +32,6 @@ metabolite abundances, and associated meta-data}
 
 \item{class.covar}{class ("numeric" or "character") for each covariate. The following format
 is required: list(covar1="numeric", covar2="character")}
-
-\item{imputedMetabCutoff}{Similar to the metabperc parameter, but for imputed values.
-Checks for minimum imputation above a given percentile, and removes the metabolite if
-the condition is met. Default is NULL (no filtering),}
-
-\item{imputedSampleCutoff}{Checks how many metabolites have been imputed for a given
-sample, and if above the threshold, the sample is removed. Default is NULL (no filtering).}
-
-\item{cvCutoffGenes}{Checks for coefficient of variation below a given threshold. Genes
-that exceed the cutoff are removed.}
-
-\item{cvCutoffMetabs}{Checks for coefficient of variation below a given threshold. Metabolites
-that exceed the cutoff are removed.}
-
-\item{log2scaleGenes}{Whether or not to log-scale the genes. Default is FALSE.}
-
-\item{log2scaleMetabs}{Whether or not to log-scale the metabolites. Default is FALSE.}
-
-\item{zScaleGenes}{Whether or not to z-scale each gene (subtract mean and divide
-by standard deviation). This brings all genes onto the same scale. Default is FALSE.}
-
-\item{zScaleMetabs}{Whether or not to z-scale each metabolite (subtract mean and divide
-by standard deviation). This brings all metabolites onto the same scale. Default is FALSE.}
 
 \item{stype.type}{Either "factor" or "numeric". The outcome type.}
 }

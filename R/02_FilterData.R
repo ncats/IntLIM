@@ -12,48 +12,17 @@
 #' @param metabmiss missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)
 #' @param class.covar class ("numeric" or "character") for each covariate. The following format
 #' is required: list(covar1="numeric", covar2="character")
-#' @param imputedMetabCutoff Similar to the metabperc parameter, but for imputed values.
-#' Checks for minimum imputation above a given percentile, and removes the metabolite if
-#' the condition is met. Default is NULL (no filtering),
-#' @param imputedSampleCutoff Checks how many metabolites have been imputed for a given
-#' sample, and if above the threshold, the sample is removed. Default is NULL (no filtering).
-#' @param cvCutoffGenes Checks for coefficient of variation below a given threshold. Genes
-#' that exceed the cutoff are removed.
-#' @param cvCutoffMetabs Checks for coefficient of variation below a given threshold. Metabolites
-#' that exceed the cutoff are removed.
-#' @param log2scaleGenes Whether or not to log-scale the genes. Default is FALSE.
-#' @param log2scaleMetabs Whether or not to log-scale the metabolites. Default is FALSE.
-#' @param zScaleGenes Whether or not to z-scale each gene (subtract mean and divide
-#' by standard deviation). This brings all genes onto the same scale. Default is FALSE.
-#' @param zScaleMetabs Whether or not to z-scale each metabolite (subtract mean and divide
-#' by standard deviation). This brings all metabolites onto the same scale. Default is FALSE.
 #' @param stype.type Either "factor" or "numeric". The outcome type.
 #' @return filtData list of MultiDataSet objects with input data after filtering
 #' @export
 FilterDataFolds <- function(csvfile, stype,inputDataFolds,geneperc=0,metabperc=0, 
                             metabmiss=0,class.covar = NULL,
-                            imputedMetabCutoff = NULL,
-                            imputedSampleCutoff = NULL,
-                            cvCutoffGenes = NULL,
-                            cvCutoffMetabs = NULL,
-                            log2scaleGenes = FALSE,
-                            log2scaleMetabs = FALSE,
-                            zScaleGenes = FALSE,
-                            zScaleMetabs = FALSE,
                             stype.type) {
 	# First, read the original data set.
 	inputData <- ReadData(csvfile,metabid='id',geneid='id')
 	filtdata <- FilterData(inputData,stype=stype, geneperc=geneperc, 
 	                       metabperc=metabperc, metabmiss = metabmiss,
 	                       class.covar = class.covar,
-	                       imputedMetabCutoff = imputedMetabCutoff,
-	                       imputedSampleCutoff = imputedSampleCutoff,
-	                       cvCutoffGenes = cvCutoffGenes,
-	                       cvCutoffMetabs = cvCutoffMetabs,
-	                       log2scaleGenes = log2scaleGenes,
-	                       log2scaleMetabs = log2scaleMetabs,
-	                       zScaleGenes = zScaleGenes,
-	                       zScaleMetabs = zScaleMetabs,
 	                       stype.type)
 	
 	# Filter the original data set.
@@ -188,21 +157,6 @@ FilterFromKeepers <- function(inputData,stype,genekeepers, metabkeepers, stype.t
 #' @param metabmiss missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)
 #' @param class.covar class ("numeric" or "character") for each covariate. The following format
 #' is required: list(covar1="numeric", covar2="character")
-#' @param imputedMetabCutoff Similar to the metabperc parameter, but for imputed values.
-#' Checks for minimum imputation above a given percentile, and removes the metabolite if
-#' the condition is met. Default is NULL (no filtering),
-#' @param imputedSampleCutoff Checks how many metabolites have been imputed for a given
-#' sample, and if above the threshold, the sample is removed. Default is NULL (no filtering).
-#' @param cvCutoffGenes Checks for coefficient of variation below a given threshold. Genes
-#' that exceed the cutoff are removed.
-#' @param cvCutoffMetabs Checks for coefficient of variation below a given threshold. Metabolites
-#' that exceed the cutoff are removed.
-#' @param log2scaleGenes Whether or not to log-scale the genes. Default is FALSE.
-#' @param log2scaleMetabs Whether or not to log-scale the metabolites. Default is FALSE.
-#' @param zScaleGenes Whether or not to z-scale each gene (subtract mean and divide
-#' by standard deviation). This brings all genes onto the same scale. Default is FALSE.
-#' @param zScaleMetabs Whether or not to z-scale each metabolite (subtract mean and divide
-#' by standard deviation). This brings all metabolites onto the same scale. Default is FALSE.
 #' @param stype.type Either "factor" or "numeric". The outcome type.
 #' @return filtData MultiDataSet object with input data after filtering
 #'
@@ -214,15 +168,8 @@ FilterFromKeepers <- function(inputData,stype,genekeepers, metabkeepers, stype.t
 #' geneperc=0.5, stype.type = "factor")
 #' @export
 FilterData <- function(inputData,stype,geneperc=0,metabperc=0, metabmiss=0,
+# We assume that the data is appropriately normalized...in the ReadData documentation
                        class.covar = NULL,
-                       imputedMetabCutoff = NULL,
-                       imputedSampleCutoff = NULL,
-                       cvCutoffGenes = NULL,
-                       cvCutoffMetabs = NULL,
-                       log2scaleGenes = NULL,
-                       log2scaleMetabs = NULL,
-                       zScaleGenes = FALSE,
-                       zScaleMetabs = FALSE,
                        stype.type) {
 
   # Check that input is a MultiDataSet
