@@ -284,9 +284,6 @@ RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL,
   mymessage=""
   if(!continuous){
     uniqtypes <- unique(type)
-    if(length(uniqtypes)!=2) {
-      stop("The number of unique categores is not 2.")
-    }
     
     genesd1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) 
       stats::sd(x,na.rm=T)))
@@ -353,9 +350,6 @@ RunLMMetabolitePairs <- function(incommon, type=NULL, covar=NULL,
   
   if(!continuous){
     uniqtypes <- unique(type)
-    if(length(uniqtypes)!=2) {
-      stop("The number of unique categores is not 2.")
-    }
     
     metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) 
       stats::sd(x,na.rm=T)))
@@ -410,9 +404,6 @@ RunLMGenePairs <- function(incommon, type=NULL, covar=NULL, continuous=FALSE,
   
   if(!continuous){
     uniqtypes <- unique(type)
-    if(length(uniqtypes)!=2) {
-      stop("The number of unique categores is not 2.")
-    }
     
     gened1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
     gened2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
@@ -1145,55 +1136,4 @@ multi.which <- function(A){
     })
     I
   }) + 1 )
-}
-
-#' If IntLIM is run on multiple types of pairs (e.g.
-#' gene-gene and gene-metabolite) and on multiple folds,
-#' the results will be arranged first by fold, then by type.
-#' This function rearranges the results so that all model
-#' types are concatenated under one fold.
-#' 
-#' @name ConsolidateMultipleModelTypes
-#' @param results A list of lists of IntLIMResult data frames.
-#' @return A named list of IntLIMResult data frames.
-ConsolidateMultipleModelTypes <- function(results){
-  
-  # Loop through each set of results across all folds.
-  newResults <- lapply(1:length(results[[1]]), function(i){
-    list_of_results <- lapply(1:length(results), function(j){
-      
-      # Extract the filtered results.
-      filtered <- results[[j]][[i]]
-      return(filtered)
-    })
-    return(do.call(rbind, list_of_results))
-  })
-  
-  # Assign names.
-  names(newResults) <- paste("Fold", 1:length(results[[1]]), sep = "_")
-  return(newResults)
-}
-
-#' If IntLIM is run on multiple types of pairs (e.g.
-#' gene-gene and gene-metabolite) and on multiple folds,
-#' the results will be arranged first by fold, then by type.
-#' This function rearranges the results so that all model
-#' types are listed under one fold.
-#' 
-#' @name ConsolidateMultipleModelTypesList
-#' @param results A list of lists of IntLIMResults.
-#' @return A named list of IntLIMResults.
-ConsolidateMultipleModelTypesList <- function(results){
-  
-  # Loop through each set of results across all folds.
-  newResults <- lapply(1:length(results[[1]]), function(i){
-    list_of_results <- lapply(1:length(results), function(j){
-      return(results[[j]][[i]])
-    })
-    return(do.call(list, list_of_results))
-  })
-  
-  # Assign names.
-  names(newResults) <- paste("Fold", 1:length(results[[1]]), sep = "_")
-  return(newResults)
-}
+ }

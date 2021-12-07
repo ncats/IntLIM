@@ -275,12 +275,20 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,palette = "Set1") {
 #'
 #' @param IntLimResults output of RunIntLim()
 #' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
+#' @param adjusted Whether or not to plot adjusted p-values. If TRUE (default),
+#' adjusted p-values are plotted. If FALSE, unadjusted p-values are plotted.
 #' @importFrom graphics boxplot par
 #' @export
-DistPvalues<- function(IntLimResults,breaks=100) {
+DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 
+  if(adjusted == FALSE){
     hist(IntLimResults@interaction.pvalues,breaks=breaks,
-	main="Histogram of Interaction P-values")
+         main="Histogram of Interaction P-values")
+  }else{
+    hist(IntLimResults@interaction.adj.pvalues,breaks=breaks,
+         main="Histogram of Adjusted Interaction P-values")
+  }
+
 }
 
 #' Visualize the distribution of unadjusted p-values for all covariates
@@ -312,7 +320,74 @@ DistRSquared<- function(IntLimResults,breaks=100) {
        main="Histogram of Interaction R-Squared Values")
 }
 
-
+#' Returns the clusters found using CorrHeatmap.
+#'
+#' @param inputResults Data frame (output of ProcessResults())
+#' @param inputData Named list (output of 
+#' FilterData()) with gene expression, metabolite abundances, 
+#' and associated meta-data
+#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)
+#' @param treecuts number of clusters (of gene-metabolite pairs) to cut the tree into for color-coding
+#' @return a highcharter object
+#' @export
+GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
+  type <- cor <- c()
+  clusters <- NULL
+  
+  if(nrow(inputResults)==0) {
+    stop("Make sure you run ProcessResults before making the heatmap")
+  }
+  p <- inputData$p
+  if(length(unique(p)) !=2){
+    stop("GetCorrClusters requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
+  }
+  else{
+    allres <- inputResults
+    if(nrow(allres)>top_pairs) {
+      allp <- inputResults[,"FDRadjPval"]
+      allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
+    }
+    
+    toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
+                         allres[,3:4])
+    suppressMessages(
+      meltedtoplot <- tidyr::gather(
+        toplot,
+        type,cor,colnames(toplot)[2],colnames(toplot)[3]))
+    
+    #all possible values of X (type) and Y (name)
+    theXAxis <- as.character(meltedtoplot[, "type"])
+    theYAxis <- as.character(meltedtoplot[, "name"])
+    
+    #unique values of X and Y
+    theUniqueY <- as.character(unique(theYAxis))
+    theUniqueX <- as.character(unique(theXAxis))
+    
+    # Substitute words with position on the meatrix
+    for (i in 1:length(theUniqueY)){
+      num <- which(theYAxis == theUniqueY[i])
+      theYAxis[num] <- i
+    }
+    for (i in 1:length(theUniqueX)) {
+      num <- which(theXAxis == theUniqueX[i])
+      theXAxis[num] <- i
+    }
+    # New package heatmaply here
+    type <- unique(meltedtoplot[,'type'])
+    num <- nrow(meltedtoplot[meltedtoplot[,'type'] == type[1],])
+    heat_data <- matrix(data = 0, nrow =num,ncol = 2)
+    row.names(heat_data) <- meltedtoplot[1:num,1]
+    colnames(heat_data) <- gsub("_cor","",c(type[1],type[2]))
+    heat_data[,1] <- meltedtoplot[1:num,3]
+    
+    heat_data[,2] <- meltedtoplot[-1:-num,3]
+    
+    # hclust is used under the hood of heatmaply.
+    dend <- stats::hclust(stats::dist(heat_data, method = "euclidean"))
+    clusters <- stats::cutree(dend, k = treecuts)
+  }
+  return(clusters)
+}
 #' Plot correlation heatmap
 #'
 #' @import magrittr
@@ -1201,493 +1276,5 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
          breaks = breaks, xlab = 'Analyte pairs based on independent variable analyte')
   }else{
       stop("Only two valid types:  outcome or independent.  Invalid type entered")
-  }
-}
-
-#' For each sample, save a plot of phenotype predictions from each edge in the
-#' IntLIM graph. The edge weight is the phenotype prediction
-#' using the pair of analytes connected to the edge. Weights correspond to color
-#' in the graph. A color bar is shown for reference, and the true phenotype is
-#' listed at the top of the plot.
-#' @param graphWithPredictions An igraph object. This graph is the co-regulation graph
-#' generated using IntLIM analysis of analyte pairs. Weights correspond to phenotype
-#' predictions.
-#' @param inputData Named list (output of FilterData()) with gene expression,
-#' metabolite abundances, and associated meta-data
-#' @param stype The phenotype of interest. This should correspond to a column in the
-#' input data.
-#' @param dirName The name of the directory where the output images will be saved.
-#' @param continuous A boolean indicating whether the phenotype is continuous (TRUE)
-#' or discrete (FALSE).
-#' @export
-SaveGraphPredictionPlots <- function(graphWithPredictions, inputData, stype, dirName,
-                                     continuous = TRUE){
-  # Create folder.
-  dir.create(dirName)
-  
-  # Save each graph.
-  for(name in names(graphWithPredictions)){
-    
-    # Connect to the file.
-    grDevices::png(paste0(paste(dirName, make.names(name), sep = "\\"), ".png"))
-    
-    # Extract graph for the subject of interest.
-    g <- graphWithPredictions[[name]]
-    
-    # Set up the layout and margins.
-    graphics::layout(t(1:2),widths=c(5.5,1.5))
-    par(mar=c(0,0,2,3))
-    
-    # Plot the graph.
-    plot(g, layout = igraph::layout.fruchterman.reingold, vertex.label = NA)
-    
-    # Add the true phenotype and subject ID.
-    inputDat <- inputData@phenoData$expression$main@data
-    true_phen <- inputDat[which(rownames(inputDat) == name), stype]
-    graphics::text(x = -1, y = 1.2, paste0(name, " (true phenotype is ", true_phen, ")"), pos = 4)
-    
-    # Add information about conversion to factors for discrete data.
-    if(continuous == FALSE){
-      inputDataPhen <- as.factor(inputDat[,stype])
-      graphics::text(x = -1, y = 1.1, paste(levels(inputDataPhen)[1], " <= 0"), pos = 4)
-      graphics::text(x = -1, y = 1.0, paste(levels(inputDataPhen)[2], " >= 1"), pos = 4)
-    }
-    
-    # Add the color bar.
-    color <- igraph::edge_attr(g, name = "color")[order(igraph::edge_attr(g, name = "weight"))]
-    labs <- igraph::edge_attr(g, name = "weight")[order(igraph::edge_attr(g, name = "weight"))]
-    lab_quants <- seq(min(labs), max(labs), by = (max(labs)-min(labs))/5)
-    graphics::image(y=1:100,z=t(1:100), col=color, axes=FALSE, main="Prediction", cex.main=.8)
-    graphics::axis(4,cex.axis=0.8, at = seq(0, 100, by = 20), labels = format(as.list(lab_quants), 
-                                                                    digits=0, 
-                                                                    scientific=FALSE), 
-         las = 1)
-    
-    # Close the file connection.
-    grDevices::dev.off()
-  }
-}
-
-#' Plot the graph with edges colored by weight in the final outcome.
-#' @param graph The co-regulation graph.
-#' @param results A modelResults object.
-#' @export
-PlotGraphWeights <- function(graph, results){
-  
-  # Set up the layout and margins.
-  graphics::layout(t(1:2),widths=c(5.5,1.5))
-  par(mar=c(0,0,2,3))
-  
-  # Match the weights to graph edges.
-  g <- igraph::as_data_frame(graph)
-  g$to <- make.names(g$to)
-  g$from <- make.names(g$from)
-  weights <- results@current.weights
-  if(results@weights.after.pooling == TRUE){
-    S <- results@pooling.filter@filter
-    weights <- t(matrix(rep(weights, dim(S)[1]), ncol = dim(S)[1]))
-    sum_S <- colSums(S)
-    S.weighted <- S * weights / sum_S
-    S.flat <- rowSums(S.weighted)
-    weights <- S.flat
-  }
-  names(weights) <- rownames(results@model.input@node.wise.prediction)
-  weights_by_edge_name <- lapply(1:dim(g)[1], function(edge){
-    forwards <- paste(g$from[edge], g$to[edge], sep = "__")
-    backwards <- paste(g$to[edge], g$from[edge], sep = "__")
-    which_weight <- union(which(names(weights) == forwards), 
-                          which(names(weights) == backwards))
-    the_weight <- NA
-    if(length(which_weight) > 0){
-      the_weight <- weights[which_weight]
-    }
-    return(the_weight)
-  })
-  
-  # Add the weights to the data frame.
-  g$weight <- unlist(weights_by_edge_name)
-  g <- g[which(!is.na(g$weight)),]
-  
-  # Map weights to colors.
-  pal <- grDevices::colorRampPalette(c("blue", "red"))(100)
-  range_weight <- range(g$weight)
-  color_scale <- pal[findInterval(g$weight, seq(range_weight[1], range_weight[2], 
-                                            length.out = length(pal)+1), all.inside = TRUE)]
-  g$color <- color_scale
-
-  # Plot the graph.
-  new_graph <- igraph::graph_from_data_frame(g, directed = FALSE)
-  plot(new_graph, layout = igraph::layout.fruchterman.reingold, vertex.label = NA,
-       vertex.size = 3)
-  
-  # Add the color bar.
-  color <- igraph::edge_attr(new_graph, name = "color")[order(igraph::edge_attr(new_graph, 
-                                                                                name = "weight"))]
-  labs <- igraph::edge_attr(new_graph, name = "weight")[order(igraph::edge_attr(new_graph, 
-                                                                                name = "weight"))]
-  lab_quants <- seq(min(labs), max(labs), by = (max(labs)-min(labs))/5)
-  graphics::image(y=1:100,z=t(1:100), col=color, axes=FALSE, main="Weight", cex.main=.8)
-  graphics::axis(4,cex.axis=0.8, at = seq(0, 100, by = 20), labels = format(as.list(lab_quants), 
-                                                                            digits=0, 
-                                                                            scientific=FALSE), 
-                 las = 1)
-}
-
-#' Plot the graph as a heatmap with edges colored by interaction coefficient.
-#' @param inputResults The IntLIM results (from RunIntLim())
-#' @param inputData The input data (from ReadData())
-#' @export
-PlotGraphWeightsHeatmap <- function(inputResults, inputData){
-  # Add the analytes to the data frame.
-  edge_df = data.frame(Analyte.1 = inputResults[,1], 
-                       Analyte.2 = inputResults[,2])
-  
-  # Add the weights and corresponding colors.
-  edge_df$Interaction.Coeff = inputResults$interaction_coeff
-  
-  # Truncate analyte names.
-  edge_df$Analyte.1 <- unlist(lapply(edge_df$Analyte.1, function(a){
-    return(substr(a, 1, 25))
-  }))
-  edge_df$Analyte.2 <- unlist(lapply(edge_df$Analyte.2, function(a){
-    return(substr(a, 1, 25))
-  }))
-  
-  # Set variables to NULL to appease R CMD check (these lines
-  # serve no purpose other than that).
-  Analyte.1 <- NULL
-  Analyte.2 <- NULL
-  Interaction.Coeff <- NULL
-  
-  # Plot
-  plt <- ggplot2::ggplot(edge_df, ggplot2::aes(x=Analyte.1, 
-                                               y=Analyte.2, 
-                                               fill=Interaction.Coeff)) +
-    ggplot2::scale_fill_gradient(low = "red", high = "blue") + ggplot2::geom_tile() + 
-    ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
-                   panel.grid.minor = ggplot2::element_blank(),
-                   panel.background = ggplot2::element_blank(),
-                   axis.line = ggplot2::element_line(colour = "black"),
-                   axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
-  print(plt)
-}
-
-#' A wrapper for PlotGraphWeights that applies the function across all folds.
-#' @param inputResults The IntLIM results (from RunIntLimAllFolds())
-#' @param inputData The input data (from CreateCrossValFolds())
-#' @export
-PlotGraphWeightsHeatmapAllFolds <- function(inputResults, inputData){
-  return(lapply(1:length(inputResults), function(i){
-    PlotGraphWeightsHeatmap(inputResults = inputResults[[i]], inputData = inputData[[i]])
-  }))
-}
-
-#' Plot the graph with positive associations colored blue and negative associations
-#' colored red.
-#' @param graph The co-regulation graph.
-#' @param saveInFile Location where the file should be saved. If NULL, then the output
-#' is plotted without being saved. Default is NULL.
-#' @param vertices List of vectors of vertices to plot. This is used if one
-#' wishes to focus on a subset of vertices. If NULL, then all vertices are plotted.
-#' Default is NULL.
-#' @param truncateTo Vertex names are truncated to the first "truncateTo" characters.
-#' Default is 4. If NULL, names are not truncated.
-#' @param title Title of plot
-#' @export
-PlotCoRegulationGraph <- function(graph, title, saveInFile = NULL, vertices = NULL,
-                                  truncateTo = 4){
-  
-  # Extract subgraph.
-  if(!is.null(vertices) && !is.null(vertices)){
-    vert_id <- lapply(vertices, function(v){
-      return(match(v, igraph::V(graph)$name))
-    })
-    graph <- igraph::subgraph(graph, v = vert_id)
-  }
-  
-  # Truncate names.
-  graph_labels <- igraph::V(graph)$name
-  if(!is.null(truncateTo)){
-    graph_labels <- unlist(lapply(igraph::V(graph)$name, function(v){
-      return(paste0(substr(v, 1, truncateTo), "."))
-    }))
-  }
-  
-  # Save or plot.
-  if(is.null(saveInFile)){
-    plot(graph, main = title, layout = igraph::layout.random, 
-         vertex.label = graph_labels)
-  }else{
-    grDevices::png(saveInFile,res = 1200)
-    plot(graph, main = title, layout = igraph::layout.random, 
-         vertex.label = graph_labels)
-    grDevices::dev.off()
-    print(paste("Saved plot to", saveInFile))
-  }
-}
-
-#' Wrapper for PlotCoRegulationGraph.
-#' @param graph The co-regulation graph.
-#' @param saveInDir Directory where file should be saved. If NULL, then the output
-#' is plotted without being saved. Default is NULL
-#' @param vertices List of vectors of vertices to plot. This is used if one
-#' wishes to focus on a subset of vertices. If NULL, then all vertices are plotted.
-#' Default is NULL
-#' @param truncateTo Vertex names are truncated to the first "truncateTo" characters.
-#' Default is 4. If NULL, names are not truncated.
-#' @export
-PlotCoRegulationGraphAllFolds <- function(graph, saveInDir = NULL, vertices = NULL,
-                                  truncateTo = 4){
-  for(i in 1:length(graph)){
-    g <- graph[[i]]
-    if(!is.null(saveInDir)){
-      fileName <- paste(saveInDir, paste0("coreg_graph", i, ".png"))
-    }
-    PlotCoRegulationGraph(graph=g, saveInFile=saveInDir, vertices=vertices,
-                          truncateTo=truncateTo, title=paste("Fold", i))
-  }
-}
-
-#' Plot the graph for each sample with edges colored according to prediction.
-#' Include a color scale for the predictions.
-#' @param graph The graph with predictions projected onto it.
-#' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
-#' and associated meta-data
-#' @param saveInDir Directory where files should be saved. If NULL, then the output
-#' is plotted without being saved. Default is NULL.
-#' @param vertices List of vectors of vertices to plot. This is used if one
-#' wishes to focus on a subset of vertices. If NULL, then all vertices are plotted.
-#' Default is NULL.
-#' @param truncateTo Vertex names are truncated to the first "truncateTo" characters.
-#' Default is 4. If NULL, names are not truncated.
-#' @param titleStart The beginning of the title. Default is NULL.
-#' @export
-PlotGraphPredictions <- function(graph, inputData, saveInDir = NULL, 
-                                 vertices = NULL, truncateTo = 4, titleStart = NULL){
-  for(j in 1:length(graph)){
-     g <- graph[[j]]
-    
-    # Extract subgraph.
-    if(!is.null(vertices) && !is.null(vertices)){
-      vert_id <- lapply(vertices, function(v){
-        return(match(v, igraph::V(g)$name))
-      })
-      g <- igraph::subgraph(g, v = vert_id)
-    }
-    
-    # Set up variables for plotting.
-    bin_count <- 100
-    start <- ""
-    if(!is.null(titleStart)){
-      start <- paste(titleStart, names(graph)[j], sep = ", ")
-    }
-    title <- paste(start, paste("True Outcome =",
-                         inputData$p[[j]]),
-                   sep = "\n")
-    edges <- igraph::E(g)
-    wt <- edges$weight
-    intervals <- seq(range(wt)[1], range(wt)[2], by = (range(wt)[2] - range(wt)[1]) / (bin_count - 1))
-    subject_color_scale <- findInterval(wt, intervals)
-    pal <- grDevices::colorRampPalette(c("limegreen", "purple"))
-    colors <- pal(bin_count + 1)[subject_color_scale]
-    minPred <- min(wt)
-    maxPred <- max(wt)
-    minColor <- unique(edges$color[which(wt == minPred)])
-    maxColor <- unique(edges$color[which(wt == maxPred)])
-    updatedPal <- grDevices::colorRampPalette(c(minColor, maxColor))(bin_count)
-    ticks <- seq(minPred, maxPred, len=11)
-    scale <- (bin_count + 1)/(maxPred-minPred)
-    colorBarTitle <- "Prediction"
-
-    # Plot.
-    graph_labels <- unlist(lapply(igraph::V(g)$name, function(v){
-      return(paste0(substr(v, 1, truncateTo), "."))
-    }))
-    par(mfrow=c(1,2))
-    plot(g, layout = igraph::layout.random, main = title,
-         vertex.label = graph_labels)
-    plot(c(0,10), c(minPred,maxPred), type='n', bty='n', xaxt='n', xlab='', yaxt='n', ylab='')
-    title(colorBarTitle, adj = 0, cex.main = 0.75)
-    graphics::axis(2, ticks, las=1)
-    for (l in 1:(length(updatedPal)-1)) {
-      y <- (l-1)/scale + minPred
-      graphics::rect(0,y,1,y+1/scale, col=updatedPal[l], border=NA)
-    }
-  }
-}
-
-#' Wrapper for PlotGraphPredictions.
-#' @param graphs The graph with predictions projected onto it.
-#' @param inputDataFolds List of named lists (output of 
-#' CreateCrossValidationFolds()) with gene expression, metabolite abundances, 
-#' and associated meta-data
-#' @param saveInDir Directory where file should be saved. If NULL, then the output
-#' is plotted without being saved. Default is NULL.
-#' @param vertices List of vectors of vertices to plot. This is used if one
-#' wishes to focus on a subset of vertices. If NULL, then all vertices are plotted.
-#' Default is NULL.
-#' @param truncateTo Vertex names are truncated to the first "truncateTo" characters.
-#' Default is 4. If NULL, names are not truncated.
-#' @export
-PlotGraphPredictionsAllFolds <- function(graphs, inputDataFolds,
-                                         saveInDir = NULL, vertices = NULL,
-                                         truncateTo = 4){
-  for(i in 1:length(graphs)){
-    # Create temporary directory.
-    saveInDir_tmp <- saveInDir
-    if(!is.null(saveInDir)){
-      saveInDir_tmp <- paste(saveInDir, paste0("fold",i), sep = "//")
-    }
-    PlotGraphPredictions(graph=graphs[[i]], inputDataFolds[[i]]$training,
-                         saveInDir=saveInDir_tmp,
-                         vertices=vertices, truncateTo=truncateTo,
-                         titleStart = paste0("fold",i))
-  }
-}
-
-#' Plot the line graph for each sample with nodes colored according to prediction.
-#' Include a color scale for the predictions.
-#' @param modelInput A list of ModelInput objects.
-#' @param saveInDir Directory where file should be saved. If NULL, then the output
-#' is plotted without being saved. Default is NULL.
-#' @param stype Outcome / phenotype
-#' @param analytes List of vectors of analytes to plot. This is used if one
-#' wishes to focus on a subset of analytes If NULL, then all vertices are plotted.
-#' Default is NULL.
-#' @param truncateTo Analyte names are truncated to the first "truncateTo" characters.
-#' Default is 4. If NULL, names are not truncated.
-#' @param titleStart The beginning of the title. Default is NULL.
-#' @param weights The weight assigned to each node. This is encoded using opacity.
-#' If NULL, all nodes are opaque. Default is NULL.
-#' @param analytes analytes of interest. Default is NULL
-#' @export
-PlotLineGraph <- function(modelInput, stype, saveInDir = NULL,
-                                  truncateTo = 2, titleStart = NULL, weights = NULL,
-                          analytes = NULL){
-  bin_count <- 100
-  # Extract graph and predictions.
-  line.graph <- modelInput@line.graph
-  node.wise.prediction <- modelInput@node.wise.prediction
-  Y <- modelInput@true.phenotypes
-  if(length(unique(Y)) == 2 && min(Y) == 1){
-    Y <- Y - 1
-  }
-  for(j in 1:dim(node.wise.prediction)[2]){
-    # Set up node colors.
-    wt <- node.wise.prediction[,j]
-    # Make sure the spacing is even. We need to do this using seq.
-    intervals <- seq(range(wt)[1], range(wt)[2],
-                     by = (range(wt)[2] - range(wt)[1]) / (bin_count - 1))
-    subject_color_scale <- findInterval(wt, intervals)
-
-    # Build node and edge graphs.
-    edge_df <- reshape2::melt(line.graph)
-    edge_df <- edge_df[which(edge_df[,3] != 0),]
-    edge_df$arrow.size <- 0.25
-    pal <- grDevices::colorRampPalette(c("limegreen", "purple"))
-    color <-pal(bin_count + 1)[subject_color_scale]
-    
-    # Adjust color opacity.
-    if(!is.null(weights)){
-      opacity <- abs(weights) / max(abs(weights))
-      color <- unlist(lapply(1:length(color), function(c){
-        return(grDevices::adjustcolor(color[c], alpha.f = opacity[c]))
-      }))
-    }
-    
-    # Prevent a single value from mapping to multiple colors (not sure why this happens).
-    for(val in unique(node.wise.prediction[,j])){
-      which_val <- which(node.wise.prediction[,j] == val)
-      colors_for_val <- color[which_val]
-      color[which_val] <- colors_for_val[1]
-    }
-    node_df <- data.frame(names(node.wise.prediction[,j]), node.wise.prediction[,j],
-                          subject_color_scale, color)
-    rownames(node_df) <- names(node.wise.prediction[,j])
-    colnames(node_df) <- c("name", "prediction", "scale", "color")
-    node_df$frame.color <- color
-    final_graph <- igraph::graph_from_data_frame(edge_df, vertices = node_df)
-
-    # Filter graph if required.
-    if(!is.null(analytes)){
-      
-      vertices_with_analytes <- unlist(lapply(analytes, function(a){
-        return(igraph::V(final_graph)$name[grepl(a, igraph::V(final_graph)$name,
-                                                 fixed = TRUE)])
-      }))
-      final_graph <- igraph::induced_subgraph(final_graph, vertices_with_analytes)
-    }
-
-    # Set up variables for plotting.
-    title <- paste(colnames(node.wise.prediction)[j],
-                   paste("True Outcome =", Y[j]), sep = "\n")
-    if(!is.null(titleStart)){
-      title <- paste(paste(titleStart, colnames(node.wise.prediction)[j], sep = ", "),
-                     paste("True Outcome =", Y[j]), sep = "\n")
-    }
-    minPred <- min(unname(wt))
-    maxPred <- max(unname(wt))
-    minColor <- unique(node_df$color[which(wt == minPred)])
-    maxColor <- unique(node_df$color[which(wt == maxPred)])
-    updatedPal <- grDevices::colorRampPalette(c(minColor, maxColor), bias = 1, interpolate = "linear")(bin_count)
-    ticks <- seq(minPred, maxPred, len=11)
-    scale <- (length(updatedPal)-1)/(maxPred-minPred)
-    colorBarTitle <- "Prediction"
-
-    # Plot.
-    graph_labels <- unlist(lapply(igraph::V(final_graph)$name, function(v){
-      pieces <- strsplit(v, "__")[[1]]
-      sub_from <- substr(pieces[1], 1, truncateTo)
-      sub_to <- substr(pieces[2], 1, truncateTo)
-      return(paste(sub_from, sub_to, sep = "_"))
-    }))
-
-    par(mfrow=c(1,2))
-    plot(final_graph, main = title, vertex.label = graph_labels)
-    plot(c(0,10), c(minPred,maxPred), type='n', bty='n', xaxt='n', xlab='', yaxt='n', ylab='')
-    title(colorBarTitle, adj = 0, cex.main = 0.75)
-    graphics::axis(2, ticks, las=1)
-    for (l in 1:(length(updatedPal)-1)) {
-      y <- (l-1)/scale + minPred
-      graphics::rect(0,y,1,y+1/scale, col=updatedPal[l], border=NA)
-    }
-  }
-}
-
-#' Wrapper for PlotLineGraph.
-#' @param modelInputs A list of ModelInput objects.
-#' @param saveInDir Directory where file should be saved. If NULL, then the output
-#' is plotted without being saved. Default is NULL.
-#' @param stype Outcome / phenotype
-#' @param analytes List of vectors of analytes to plot. This is used if one
-#' wishes to focus on a subset of analytes If NULL, then all vertices are plotted.
-#' Default is NULL.
-#' @param truncateTo Analyte names are truncated to the first "truncateTo" characters.
-#' Default is 2. If NULL, names are not truncated.
-#' @param weights The list of weights assigned to each node. This is encoded using opacity.
-#' If NULL, all nodes are opaque. Default is NULL.
-#' @export
-PlotLineGraphAllFolds <- function(modelInputs, stype, saveInDir = NULL, analytes = NULL,
-                                         truncateTo = 2, weights=NULL){
-  # Plot the line graphs.
-  for(i in 1:length(modelInputs)){
-    
-    # Set up output directory.
-    saveInDir_tmp <- saveInDir
-    if(!is.null(saveInDir)){
-      saveInDir_tmp <- paste(saveInDir, paste0("fold",i), sep = "//")
-    }
-    
-    # Set up weights.
-    wt <- weights
-    if(!is.null(wt)){
-      wt <- weights[[i]]
-    }
-    
-    # Plot.
-    PlotLineGraph(modelInput=modelInputs[[i]], stype=stype, saveInDir=saveInDir_tmp,
-                  analytes=analytes[[i]], truncateTo=truncateTo, 
-                  titleStart = paste0("Fold",i), weights=wt)
   }
 }

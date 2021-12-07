@@ -1,7 +1,7 @@
 
 ---
 title: "IntLIM:  Integration through Linear Modeling"
-author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone, Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé, Tara Eicher"
+author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone, Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé, Tara Eicher, Kyle Spencer"
 date: "3/29/2018"
 output: rmarkdown::html_document
 vignette: >
@@ -17,7 +17,13 @@ dir.create(result_dir)
 
 ##Introduction
 
-Interpretation of metabolomics data is very challenging.  Yet it can be eased through integration of metabolomics with other ‘omics’ data. The IntLIM package, which includes a user-friendly RShiny web app, aims to integrate metabolomics data with transcriptomic data.  Unlike other approaches, IntLIM is focused on understanding how specific gene-metabolite associations are affected by phenotypic features.  To this end, we develop a linear modeling approach that describes how gene-metabolite associations are affected by phenotype.  More information can be found on <a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2085-6" target="_blank"> our publication "IntLIM: integration using linear models of metabolomics and gene expression data"</a>The workflow involves the following steps: 1) input gene expression/metabolomics data files, 2) filter data sets by gene and metabolite abundances and imputed values, 3) run the linear model to extract FDR-adjusted interaction p-values, 4) filter results by p-values and Spearman correlation differences, and 5) plot/visualize specific gene-metabolite associations. 
+Interpretation of multi-omics data is very challenging.  The IntLIM package aims to integrate multiple types of omics data.  Unlike other approaches, IntLIM is focused on understanding how specific multi-omic associations are affected by phenotypic features.  To this end, we develop a linear modeling approach that describes how multi-omic associations are affected by phenotype.  More information can be found on <a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2085-6" target="_blank"> our publication "IntLIM: integration using linear models of metabolomics and gene expression data"</a>The workflow involves the following steps: 
+1) Input multi-omic data files.
+2) Filter data sets by analyte abundance and imputed values.
+3) Run the linear model to extract pairwise interaction significance.
+4) Filter results by p-values and/or Spearman correlation differences,
+interaction coefficient percentiles, and r-squared values.
+5) plot/visualize specific gene-metabolite associations. 
 
 ##Installation
 
@@ -54,17 +60,17 @@ IntLIM can be loaded using the library function
 library(IntLIM)
 ```
 
-##Inputting Gene Expression and Metabolite Abundances
+##Inputting Analyte Level Data
 
-The first step is importing in the gene expression and metabolite data.  To this end we have provided a sample data file for users wishing to use IntLIM.  
+The first step is importing in the multi-omic data.  To this end we have provided a sample data file for users wishing to use IntLIM.  
 
-IntLIM requires a specific format for gene expression and metabolite data.  For IntLIM, we require the metabolite data, gene expression data, metabolite meta data, gene meta data, and sample meta data.  We also need a CSV meta-file that lists the location of the other files.  These need to be in the same folder.  The formats are described below.  In addition, we provide a sample set of files.  
+IntLIM requires a specific format for multi-omic data.  For IntLIM, we require the data corresponding to two analyte types, optional metadata for each of these modalities, and sample meta data.  We also need a CSV meta-file that lists the location of the other files.  These need to be in the same folder.  The formats are described below.  In addition, we provide a sample set of files.  
 
 **Please be sure that all files noted in the CSV file, including the CSV file, are in the same folder. Do not include path names in the filenames.**
 
 Users need to input a CSV file with two required columns: 'type' and 'filenames'.
 
-The CSV file is expecected to have the following 2 columns and 6 rows:
+The CSV file is expected to have the following 2 columns and 6 rows:
 
 1. type,filenames
 2. metabData,myfilename
@@ -73,7 +79,11 @@ The CSV file is expecected to have the following 2 columns and 6 rows:
 5. geneMetaData,myfilename (optional)
 6. sampleMetaData,myfilename"
 
-The transcriptomic and metabolomic data and meta-data is stored in a series of comma-separated-values (.CSV) files.  The 5 files consist of normalized/log2-transformed metabolite abundance data, metabolite feature meta data, log2-transformed gene expression data, gene expression feature data, and sample meta data.  A meta-file lists the location of the other 5 fives.  This file is input into IntLIM.  These files should ideally be in the same folder.  Of note, input data files should be in a specific format: 
+The data and meta-data is stored in a series of comma-separated-values (.CSV) files.  The 5 files consist of data for two analyte types, metadata for two analyte types, and sample meta data.  A meta-file lists the location of the other 5 files.  This meta-file is input into IntLIM.  
+
+**Please be sure to normalize your data appropriately before inputting it into IntLIM.**
+
+Input data files should be in a specific format: 
 
 File type      | Description   
 -------------- | -----------------------------------------
@@ -83,9 +93,9 @@ metabMetaData  | rows are metabolites, features are columns
 geneMetaData   | rows are genes, features are columns
 sampleMetaData | rows are samples, features are columns 
 
-For the metabData and geneData files, the first row contains the feature ids and the first column contains the sample ids.  
+For the metabData and geneData files, the first row contains the feature IDs and the first column contains the sample IDs.  
 
-For the sampleMetaData, the first column of the sampleMetaData file is assumed to be the sample id, and those sample ids should match the first row of metabData and geneData (e.g. it is required that all sample ids in the metabData and geneData are also in the sampleMetaDatafile).
+For the sampleMetaData, the first column of the sampleMetaData file is assumed to be the sample ID, and those sample IDs should match the first row of metabData and geneData (e.g. it is required that all sample IDs in the metabData and geneData are also in the sampleMetaDatafile).
 
 Additionally, the metabMetaData, geneMetaData, and SampleMetaData need to contain an 'id' column that contains the name of the features (metabolite or gene) or sample (sample id, name, etc).
 
@@ -97,7 +107,7 @@ csvfile <- file.path(dir, "NCItestinput.csv")
 csvfile
 ```
 
-Through the __ReadData()__ function, users input the above .csv files containing normalized and log2-transformed gene expression data, normalized and log2-transformed metabolite abundance data, (optional) gene expression meta data, (optional) metabolite meta data, and sample meta data.  The gene expression data, meta data, and sample meta-data are input into an ExpressionSet object.  The metabolite abundance data, meta data, and sample data is input into a new MetaboliteSet object, a new eSet object designed to contain metabolomics data (Hernandez-Ferrer, et al., 2017).  Both objects are integrated into a MultiDataSet object- a multi-‘omics object allowing integration of eSet objects from different ‘omics data sets.  metabid and geneid describe the column name in the metabolite meta adata and the gene expression data to select as the identifer for that particular feature.  
+Through the __ReadData()__ function, users input the above .csv files containing normalized and log2-transformed gene expression data, normalized and log2-transformed metabolite abundance data, (optional) gene expression meta data, (optional) metabolite meta data, and sample meta data.  The gene expression data, meta data, and sample meta-data are input into an ExpressionSet object.  The metabolite abundance data, meta data, and sample data is input into a new MetaboliteSet object, a new eSet object designed to contain metabolomics data (Hernandez-Ferrer, et al., 2017).  Both objects are integrated into a MultiDataSet object- a multi-‘omics object allowing integration of eSet objects from different ‘omics data sets.  metabid and geneid describe the column name in the metabolite meta adata and the gene expression data to select as the identifer for that particular feature.
 
 ```{r}
 inputData <- IntLIM::ReadData(inputFile = csvfile,metabid='id',geneid='id')
@@ -111,11 +121,19 @@ IntLIM::ShowStats(IntLimObject = inputData)
 
 ##Filtering and Observing Data
 
-Optionally, the __FilterData()__ function allows the user to filter out the features (genes or metabolites) based on their mean values. Users should input a percentile cutoff and any feature with a mean value below that cutoff will be removed.  Furthermore we can filter out metabolites by percentage of missing or imputed values.  For the analysis, we filter out the genes with the lowest 10% of gene expression and metabolites with more than 80% imputed values.  This is done as below. We henceforth have 1303 genes and 212 metabolites for 20 cell line samples.  
+Optionally, the __FilterData()__ function allows the user to filter out the features (genes or metabolites) based on their mean values. Users should input a percentile cutoff and any feature with a mean value below that cutoff will be removed.  Furthermore we can filter out metabolites by percentage of missing or imputed values.  For the analysis, we filter out the genes with the lowest 10% of gene expression and metabolites with more than 80% imputed values.  This is done as below. We henceforth have 1303 genes and 212 metabolites for 20 cell line samples.  The "stype" variable
+is the phenotype or outcome of interest. This function checks that the "stype" values are the same
+for all input data and retains the phenotype data for later use. The optional "class.covar"
+variable coerces covariates to the given classes.
 
 ```{r}
-inputDatafilt <- IntLIM::FilterData(inputData,geneperc = 0.10, metabmiss = 0.80)
-IntLIM::ShowStats(inputDatafilt)
+classCovarMapping <- list(PBO_vs_Leukemia = "factor", panelnbr = "factor",
+                          cellnbr = "numeric")
+inputDatafilt <- IntLIM::FilterData(inputData,stype = "PBO_vs_Leukemia",
+                                    stype.type = "factor",
+                                    geneperc = 0.10, metabperc = 0.10,
+                                    metabmiss = 0.80,
+                                    class.covar = classCovarMapping)
 ```
 
 The __PlotDistribution()__ function allows users to produce a boxplot of the distribution of gene expression and metabolite abundance data.  This is done as below.   
@@ -138,34 +156,21 @@ The following variations of this function are available:
 - Setting `remove.duplicates` to TRUE filters gene-gene and metabolite-metabolite association models to include only the model with the highest p-value. e.g. if m1 ~ m2 has a higher p-value than m2 ~ m1, then the m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1) are removed.
 
 ```{r}
-# Gene-metabolite
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
-
-# Metabolite-gene
-myres.mg <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), save.covar.pvals = TRUE, outcome = "gene", independent.var.type = "metabolite")
-
-# Metabolite-metabolite
-myres.mm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), outcome = "metabolite", independent.var.type = "metabolite")
-
-# Gene-gene
-myres.gg <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", save.covar.pvals = TRUE, covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"), outcome = "gene", independent.var.type = "gene")
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr"), save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
 ```
 
-The __DistPValues()__ function allows the user to observe a histogram of the p-values prior to adjustment 
+The __DistPValues()__ function allows the user to observe a histogram of the p-values.
+By default, FDR-adjusted p-values are shown. However, users can also choose to plot
+nominal p-values.
 
 ```{r}
 IntLIM::DistPvalues(IntLimResults = myres.gm)
-IntLIM::DistPvalues(IntLimResults = myres.mm)
-IntLIM::DistPvalues(IntLimResults = myres.mg)
-IntLIM::DistPvalues(IntLimResults = myres.gg)
+IntLIM::DistPvalues(IntLimResults = myres.gm, adjusted = FALSE)
 ```
 
 The __DistRSquared()__ function allows the user to observe a histogram of the r-squared values.
 ```{r}
 IntLIM::DistRSquared(IntLimResults = myres.gm)
-IntLIM::DistRSquared(IntLimResults = myres.mm)
-IntLIM::DistRSquared(IntLimResults = myres.mg)
-IntLIM::DistRSquared(IntLimResults = myres.gg)
 ```
 
 The __PValueBoxPlots()__ function allows the user to observe the p-value distributions of all covariates in the linear models prior to adjustment.
@@ -176,54 +181,19 @@ IntLIM::PValueBoxPlots(IntLimResults = myres.gm)
 
 The __InteractionCoefficientGraph()__ function allows the user to observe the interaction coefficients of all models, sorted in ascending order.
 ```{r}
-# Gene-metabolite
 IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, interactionCoeffPercentile = 0.9)
-
-# Metabolite-metabolite
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mm, independent.var.type = "metabolite",
-                                    outcome = "metabolite", interactionCoeffPercentile = 0.9)
-
-# Metabolite-gene
-IntLIM::InteractionCoefficientGraph(inputResults = myres.mg, independent.var.type = "metabolite",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
-
-# Gene-gene
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gg, independent.var.type = "gene",
-                                    outcome = "gene", interactionCoeffPercentile = 0.9)
 ```
 The __MarginalEffectsGraph()__ function allows the user to observe the marginal effects of phenotype for a given gene and metabolite.
 The __MarginalEffectsGraphDataframe()__ function creates the input for __MarginalEffectsGraph()__, given the IntLIM results, the input data, and the gene and metabolite of interest.
-The __MarginalEffectsGraphDataframeMetabolitePairs()__ function is analogous to __MarginalEffectsGraphDataframe()__ for metabolite pairs.
 ```{r}
-# Gene-metabolite
 IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
-
-# Metabolite-metabolite
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeMetabolitePairs(inputResults = myres.mm, inputData = inputDatafilt, metaboliteOfInterest1 = "alanine", metaboliteOfInterest2 = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - alanine and (p-Hydroxyphenyl)lactic acid")
-
-# Metabolite-gene
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.mg, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
-
-# Gene-gene
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframeGenePairs(inputResults = myres.gg, inputData = inputDatafilt, geneOfInterest1 = "DLG4", geneOfInterest2 = "ZRSR2"), title = "Marginal Effects - DLG4 and ZRSR2")
 ```
 
 The __pvalCorrVolcano()__ function allows users to observe a volcano plot comparing the Spearman correlation difference between groups to the –log10(FDR-adjusted p-value).
-The __pvalCorrVolcanoMetabolitePairs()__ function is analogous to the __pvalCorrVolcano__() function, but for metabolite pairs.
 Note that these functions are not applicable to continuous outcome data.
 
 ```{r}
-# Gene-metabolite
 IntLIM::pvalCorrVolcano(inputResults = myres.gm, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-
-# Metabolite-metabolite
-IntLIM::pvalCorrVolcanoMetabolitePairs(inputResults = myres.mm, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-
-# Metabolite-gene
-IntLIM::pvalCorrVolcano(inputResults = myres.mg, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
-
-# Gene-gene
-IntLIM::pvalCorrVolcanoGenePairs(inputResults = myres.gg, inputData = inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
 ```
 
 Process the results and filter pairs of genes-metabolites based on adjusted p-values and differences in correlation coefficients between groups 1 and 2.  Then plot heatmap of significant gene-metabolite pairs
@@ -231,59 +201,35 @@ Process the results and filter pairs of genes-metabolites based on adjusted p-va
 ##Filter Results
 
 The __ProcessResults()__ function allows the user to filter the results by FDR p-values (default set at 0.05) and by the absolute value difference of the gene-metabolite Spearman correlation (default set at 0.50) between the two groups.  The output is a list of gene-metabolite pairs and gene-metabolite Spearman correlations for each of the two groups
-The __ProcessResultsMetabolitePairs()__ function is analogous to __ProcessResults()__ for metabolite pairs.
 Note that the __diffcorr__ and __corrtype__ arguments must be set to __NULL__ for continuous phenotypes.
 
 ```{r}
 # Gene-metabolite
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-
-# Metabolite-metabolite
-myres.mm.sig <- IntLIM::ProcessResults(inputResults = myres.mm, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-
-# Metabolite-gene
-myres.mg.sig <- IntLIM::ProcessResults(inputResults = myres.mg, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
-
-# Gene-gene
-myres.gg.sig <- IntLIM::ProcessResults(inputResults = myres.gg, inputData = inputDatafilt, pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2)
 ```
 
 The __CorrHeatmap()__ produces a clustered heatmap of the gene-metabolite Spearman correlations for each of these groups.  
 Note: This function is only applicable to discrete phenotypes.
 
 ```{r}
-IntLIM::CorrHeatmap(myres.gm.sig, inputDatafilt)
-IntLIM::CorrHeatmap(myres.mm.sig, inputDatafilt)
-IntLIM::CorrHeatmap(myres.mg.sig, inputDatafilt)
-IntLIM::CorrHeatmap(myres.gg.sig, inputDatafilt)
+IntLIM::CorrHeatmap(inputResults = myres.gm.sig, inputData = inputDatafilt)
 ```
 
-The __HistogramGMPairs()__ function plots the count of gene-metabolite pairs by either
-gene or metabolite.
-The __HistogramMMPairs()__ function is the analogous function for metabolite pairs.
+The __HistogramPairs()__ function plots the count of gene-metabolite pairs by either
+outcome or independent variable analyte.
 ```{r}
-IntLIM::HistogramGMPairs(myres.gm.sig, type = "gene")
-IntLIM::HistogramGMPairs(myres.gm.sig, type = "metabolite")
-IntLIM::HistogramMMPairs(myres.mm.sig, type = "outcome")
-IntLIM::HistogramMMPairs(myres.mm.sig, type = "independent")
-IntLIM::HistogramGMPairs(myres.mg.sig, type = "gene")
-IntLIM::HistogramGMPairs(myres.mg.sig, type = "metabolite")
-IntLIM::HistogramGGPairs(myres.gg.sig, type = "outcome")
-IntLIM::HistogramGGPairs(myres.gg.sig, type = "independent")
+IntLIM::HistogramPairs(myres.gm.sig, type = "outcome")
+IntLIM::HistogramPairs(myres.gm.sig, type = "independent")
 ```
 
 ##Visualize and Export Results
 
 A __PlotGMPair()__ function  allows the user to plot a chosen gene-metabolite association for selected groups. An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid.
-The __PlotMMPair()__ function is analogous to the __PlotGMPair()__ function for metabolite pairs. An example is shown below for alanine vs. (p-Hydroxyphenyl)lactic acid.
 
 Plot a pair of interest:
 
 ```{r}
 IntLIM::PlotGMPair(inputDatafilt,stype="PBO_vs_Leukemia","DLG4","(p-Hydroxyphenyl)lactic acid")
-IntLIM::PlotMMPair(inputDatafilt,stype="PBO_vs_Leukemia","alanine","(p-Hydroxyphenyl)lactic acid")
-IntLIM::PlotMGPair(inputDatafilt,stype="PBO_vs_Leukemia","(p-Hydroxyphenyl)lactic acid","DLG4")
-IntLIM::PlotGGPair(inputDatafilt,stype="PBO_vs_Leukemia","ZRSR2","DLG4")
 ```
 
 Of note, plots are generated using Highcharter (http://jkunst.com/highcharter/) and Plotly (Sievert, et al.) (https://plot.ly), which enables interactive visualization, allowing users to promptly assess the effect of changing parameters on analysis results and accelerating discovery of phenotype-specific gene-metabolite pairs.  This will greatly allow the workflow to be accessible to non-computational biologists.   
@@ -295,32 +241,6 @@ Lastly, various writing functions are implemented.  The __OutputData()__ and __O
 ```{r eval = FALSE}
 IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
 IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.mm.sig,filename=paste(result_dir, "MyResults.mm.csv", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.mg.sig,filename=paste(result_dir, "MyResults.mg.csv", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.gg.sig,filename=paste(result_dir, "MyResults.gg.csv", sep = "\\"))
-```
-
-# Create Co-Regulation Graph
-In a co-regulation graph, nodes are analytes (genes and metabolites) and edges indicate
-a significant phenotype-dependent association between the analytes.
-```{r}
-coreg_graph = BuildCoRegulationGraph(list(myres.gm.sig, myres.mm.sig, myres.mg.sig, myres.gg.sig))
-
-# Betweenness
-centrality_graph = IntLIM::ComputeCentrality(coreg_graph, c("betweenness", "kleinberg", "closeness",
-                                                                      "eccentricity"))
-write.csv(centrality_graph, file=paste(result_dir, "Graph.Centrality.csv", sep = "\\"))
-```
-# Run Pairwise Prediction.
-```{r}
-# Get predictions.
-predictions_gm <- IntLIM::RunPairwisePrediction(myres.gm.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
-predictions_mm <- IntLIM::RunPairwisePrediction(myres.mm.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
-predictions_mg <- IntLIM::RunPairwisePrediction(myres.mg.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
-predictions_gg <- IntLIM::RunPairwisePrediction(myres.gg.sig, inputDatafilt, stype="PBO_vs_Leukemia", covar = c("cellnbr", "panelnbr"), class.covar = c("numeric", "numeric"))
-
-# Project predictions onto graph.
-prediction_graphs <- IntLIM::ProjectPredictionsOntoGraph(list(predictions_gm, predictions_mm, predictions_mg, predictions_gg), coreg_graph)
 ```
 
 ##References
