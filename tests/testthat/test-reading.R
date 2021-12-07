@@ -650,8 +650,8 @@ test_that("All fields are present", {
   file.remove(ref_file)
 })
 
-# When there are more fields than samples, building data folds should terminate early.
-test_that("Inputting too many fields causes early termination.", {
+# When there are more folds than samples, building data folds should terminate early.
+test_that("Inputting too many folds causes early termination.", {
   # Data types expected
   expected <- c("metabData","geneData","metabMetaData","geneMetaData",
                 "sampleMetaData")

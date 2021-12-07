@@ -238,9 +238,19 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL,
   }
 
   # Permute samples and divide into folds.
-  sets_of <- ceiling(length(samps) / folds)
+  sets_of <- floor(length(samps) / folds)
   perm_samps <- sample(samps, length(samps), replace = FALSE)
-  fold_samps <- split(perm_samps, ceiling(seq_along(perm_samps)/sets_of))
+  group_assignment <- ceiling(seq_along(perm_samps)/sets_of)
+  # If uneven, assign remaining.
+  if(length(unique(group_assignment)) > folds){
+    which_extra <- which(group_assignment > folds)
+    new_grp <- 1
+    for(i in which_extra){
+      group_assignment[i] <- new_grp
+      new_grp <- new_grp + 1
+    }
+  }
+  fold_samps <- split(perm_samps, group_assignment)
 
   # For each fold, extract the samples from the data set.
   trainTestObjects <- lapply(fold_samps, function(fold){
