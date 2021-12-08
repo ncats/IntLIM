@@ -38,9 +38,16 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
     ptm <- proc.time()
 
     myres <- NULL
+    removeDupWarning <- "remove.duplicates only applies if the independent variable
+                    and outcome are of the same analyte type. Duplicates will
+                    not be removed."
     if(independent.var.type == "gene" && outcome == "metabolite"){
+        if(remove.duplicates == TRUE){
+            warning(removeDupWarning)
+        }
         if("gene" %in% names(inputData) && "metab" %in% names(inputData)) {
             myres <- RunLM(inputData,outcome=outcome,
+                           independentVariable = independent.var.type,
                     type=inputData$p,covar=covar, continuous = continuous, 
                     save.covar.pvals=save.covar.pvals)
         }
@@ -48,28 +55,35 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
             stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == "metabolite" && outcome == "gene"){
+        if(remove.duplicates == TRUE){
+            warning(removeDupWarning)
+        }
         if("gene" %in% names(inputData) && "metab" %in% names(inputData)) {
-            myres <- RunLM(inputData,outcome=outcome,type=inputData$p,covar=covar, 
-                           continuous = continuous, save.covar.pvals=save.covar.pvals)
+            myres <- RunLM(inputData,outcome=outcome,
+                           independentVariable = independent.var.type,
+                           type=inputData$p,covar=covar, continuous = continuous, 
+                           save.covar.pvals=save.covar.pvals)
         }
         else{
             stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
         if("metab" %in% names(inputData)) {
-            myres <- RunLMMetabolitePairs(inputData,type=inputData$p,covar=covar, 
-                                          continuous = continuous, 
-                                          save.covar.pvals=save.covar.pvals, 
-                                          keep.highest.pval = remove.duplicates)
+            myres <- RunLM(inputData,outcome=outcome,
+                           independentVariable = independent.var.type,
+                           type=inputData$p,covar=covar, continuous = continuous, 
+                           save.covar.pvals=save.covar.pvals, 
+                           keep.highest.pval = remove.duplicates)
         }
         else{
             stop("The metabolite data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == "gene" && outcome == "gene"){
         if("gene" %in% names(inputData)) {
-            myres <- RunLMGenePairs(inputData,type=inputData$p,covar=covar, 
-                                    continuous = continuous, 
-                                    save.covar.pvals = save.covar.pvals, 
+            myres <- myres <- RunLM(inputData,outcome=outcome,
+                                    independentVariable = independent.var.type,
+                                    type=inputData$p,covar=covar, continuous = continuous, 
+                                    save.covar.pvals=save.covar.pvals, 
                                     keep.highest.pval = remove.duplicates)
         }
         else{

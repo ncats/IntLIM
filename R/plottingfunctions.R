@@ -558,110 +558,15 @@ CorrHeatmap <- function(inputResults,inputData,viewer=T,top_pairs=1200,treecuts=
 #' @param stype category to color-code by
 ##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 ##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param geneName string of select geneName
 #' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
 #' in Shiny/Knittr (F)
-#' @param metabName string of select metabName
+#' @param outcomeAnalyteOfInterest outcome analyte in pair
+#' @param independentAnalyteOfInterest independent analyte in pair
+#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
+#' @param independentVariable 'metabolite' or 'gene' must be set as outcome/independent variable
 #' @export
-PlotGMPair<- function(inputData,stype,geneName,metabName,palette = "Set1",
-	viewer=T) {
-
-  if(is.null(stype)) {
-	  stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
-	}
-  if (length(palette) == 2) {
-    cols <- c(palette)
-  } else if (length(palette) == 1) {
-    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-  } else {
-    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
-  }
-
-  gene<-inputData$gene
-  if(length(which(rownames(gene)==geneName))>0) {
-    sGene<-gene[geneName,]
-  } else {
-    stop(paste0("The gene ",geneName," was not found in your data"))
-  }
-
-  metab<-inputData$metab
-  if(length(which(rownames(metab)==metabName))>0) {
-  	sMetab<-as.numeric(metab[metabName,])
-  } else {
-    stop(paste0("The metabolite ",metabName," was not found in your data"))
-  }
-
-  if(length(unique(inputData$p))!=2) {
-    stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
-  }
-
-  mycols <- as.character(inputData$p)
-  mycols[which(inputData$p==unique(inputData$p)[1])] <- cols[1]
-  mycols[which(inputData$p==unique(inputData$p)[2])] <- cols[2]
-
-  data<-data.frame(x=sGene,y=sMetab,z=colnames(gene),label=inputData$p,color=mycols)
-  
-  # Get points to draw the lines for each phenotype by hand
-
-  uniqtypes=as.character(unique(inputData$p))
-
-  # Starting with phenotype 1, get min and max x values constrained to the values of y
-  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
-  # when slopes are really steep (abline does this automatically but not highcharter)
-  mytypes <- inputData$p
-  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
-  	y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
-min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
-  	max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
-
-  	m1<-stats::glm(y ~ x)
-  	line1<-data.frame(x=c(max,min),
-y=c(stats::predict(m1,data.frame(x=c(max,min)))))
-return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
-  }
-
-  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
-  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
-
-  ds <- highcharter::list_parse(data)
-
-      hc <- highcharter::highchart(width = 350, height = 350 ) %>%
-              highcharter::hc_title(text=paste(geneName,' vs. ', metabName, sep = '')) %>%
-              highcharter::hc_xAxis(title=list(text=geneName)) %>%
-              highcharter::hc_yAxis(title=list(text=metabName)) %>%
-              hc_chart(zoomType = "xy") %>%
-              highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
-                      tooltip = list(headerFormat="",
-                        pointFormat=paste("{point.label}","{point.z}")),
-                      showInLegend=FALSE)
-
-  hc <- hc %>%
-      highcharter::hc_add_series(name = uniqtypes[1],
-	data=line1,type='line',#name=sprintf("regression line %s",type1),
-	color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
-      highcharter::hc_add_series(name = uniqtypes[2],
-	data=line2,type='line',#name=sprintf("regression line %s",type2),
-	color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
-
-  hc
-}
-
-#' scatter plot of metabolite-gene pairs (based on user selection)
-#'
-#' @import magrittr
-#'
-#' @param inputData IntLimObject output of ReadData() or FilterData()
-#' @param stype category to color-code by
-##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param geneName string of select geneName
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
-#' @param metabName string of select metabName
-#' @return a highcharter object
-#' @export
-PlotMGPair<- function(inputData,stype,metabName,geneName,palette = "Set1",
-                      viewer=T) {
+PlotPair<- function(inputData,stype,outcome,independentVariable, independentAnalyteOfInterest, 
+                    outcomeAnalyteOfInterest, palette = "Set1",	viewer=T) {
   
   if(is.null(stype)) {
     stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
@@ -674,30 +579,46 @@ PlotMGPair<- function(inputData,stype,metabName,geneName,palette = "Set1",
     stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
   }
   
-  gene<-inputData$gene
-  if(length(which(rownames(gene)==geneName))>0) {
-    sGene<-gene[geneName,]
-  } else {
-    stop(paste0("The gene ",geneName," was not found in your data"))
+  # Extract the outcome and independent data.
+  outcomeData <- NULL
+  independentData <- NULL
+  sOutcome <- NULL
+  sIndependent <- NULL
+  if(outcome == "gene"){
+    outcomeData <- inputData$gene
+  }else if(outcome == "metabolite"){
+    outcomeData <- inputData$metab
+  }
+  if(independentVariable == "gene"){
+    independentData <- inputData$gene
+  }else if(independentVariable == "metabolite"){
+    independentData <- inputData$metab
   }
   
-  metab<-inputData$metab
-  if(length(which(rownames(metab)==metabName))>0) {
-    sMetab<-as.numeric(metab[metabName,])
+  # Check that analytes of interest are found in data.
+  if(length(which(rownames(outcomeData)==outcomeAnalyteOfInterest))>0) {
+    sOutcome<-as.numeric(outcomeData[outcomeAnalyteOfInterest,])
   } else {
-    stop(paste0("The metabolite ",metabName," was not found in your data"))
+    stop(paste0("The analyte ",outcomeAnalyteOfInterest," was not found in your data"))
+  }
+  if(length(which(rownames(independentData)==independentAnalyteOfInterest))>0) {
+    sIndependent<-as.numeric(independentData[independentAnalyteOfInterest,])
+  } else {
+    stop(paste0("The analyte ",independentAnalyteOfInterest," was not found in your data"))
   }
   
+  # Check that data only contains two categories.
   if(length(unique(inputData$p))!=2) {
     stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
   }
   
+  # Set up data.
   mycols <- as.character(inputData$p)
   mycols[which(inputData$p==unique(inputData$p)[1])] <- cols[1]
   mycols[which(inputData$p==unique(inputData$p)[2])] <- cols[2]
   
-  data<-data.frame(x=sMetab,y=sGene,z=colnames(gene),label=inputData$p,color=mycols)
-  
+  data<-data.frame(x=sIndependent,y=sOutcome,z=colnames(independentData),label=inputData$p,color=mycols)
+
   # Get points to draw the lines for each phenotype by hand
   
   uniqtypes=as.character(unique(inputData$p))
@@ -723,213 +644,14 @@ PlotMGPair<- function(inputData,stype,metabName,geneName,palette = "Set1",
   ds <- highcharter::list_parse(data)
   
   hc <- highcharter::highchart(width = 350, height = 350 ) %>%
-    highcharter::hc_title(text=paste(metabName,' vs. ', geneName, sep = '')) %>%
-    highcharter::hc_xAxis(title=list(text=metabName)) %>%
-    highcharter::hc_yAxis(title=list(text=geneName)) %>%
+    highcharter::hc_title(text=paste(independentAnalyteOfInterest,' vs. ', outcomeAnalyteOfInterest, sep = '')) %>%
+    highcharter::hc_xAxis(title=list(text=independentAnalyteOfInterest)) %>%
+    highcharter::hc_yAxis(title=list(text=outcomeAnalyteOfInterest)) %>%
     hc_chart(zoomType = "xy") %>%
     highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
                                tooltip = list(headerFormat="",
                                               pointFormat=paste("{point.label}","{point.z}")),
                                showInLegend=FALSE)
-  
-  hc <- hc %>%
-    highcharter::hc_add_series(name = uniqtypes[1],
-                               data=line1,type='line',#name=sprintf("regression line %s",type1),
-                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
-    highcharter::hc_add_series(name = uniqtypes[2],
-                               data=line2,type='line',#name=sprintf("regression line %s",type2),
-                               color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
-  
-  hc
-}
-
-#' scatter plot of metabolite-metabolite pairs (based on user selection)
-#'
-#' @import magrittr
-#' @import highcharter
-#'
-#' @param inputData IntLimObject output of ReadData() or FilterData()
-#' @param stype category to color-code by
-##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param metab1Name string of select metab1Name
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
-#' @param metab2Name string of select metab2Name
-#' @return a highcharter object
-#' @export
-PlotMMPair<- function(inputData,stype,metab1Name,metab2Name,palette = "Set1",
-                      viewer=T) {
-  
-  if(is.null(stype)) {
-    stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
-  }
-  if (length(palette) == 2) {
-    cols <- c(palette)
-  } else if (length(palette) == 1) {
-    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-  } else {
-    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
-  }
-
-  metab<-inputData$metab
-  if(length(which(rownames(metab)==metab1Name))>0) {
-    sMetab1<-as.numeric(metab[metab1Name,])
-  } else {
-    stop(paste0("The metabolite ",metab1Name," was not found in your data"))
-  }
-  
-  metab<-inputData$metab
-  if(length(which(rownames(metab)==metab2Name))>0) {
-    sMetab2<-as.numeric(metab[metab2Name,])
-  } else {
-    stop(paste0("The metabolite ",metab2Name," was not found in your data"))
-  }
-  
-  if(length(unique(inputData$p))!=2) {
-    stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
-  }
-  
-  mycols <- as.character(inputData$p)
-  mycols[which(inputData$p==unique(inputData$p)[1])] <- cols[1]
-  mycols[which(inputData$p==unique(inputData$p)[2])] <- cols[2]
-  
-  data<-data.frame(x=sMetab1,y=sMetab2,z=colnames(metab),label=inputData$p,color=mycols)
-
-  # Get points to draw the lines for each phenotype by hand
-  
-  uniqtypes=as.character(unique(inputData$p))
-  
-  # Starting with phenotype 1, get min and max x values constrained to the values of y
-  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
-  # when slopes are really steep (abline does this automatically but not highcharter)
-  mytypes <- inputData$p
-  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
-    y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
-    min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
-    max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
-    
-    m1<-stats::glm(y ~ x)
-    line1<-data.frame(x=c(max,min),
-                      y=c(stats::predict(m1,data.frame(x=c(max,min)))))
-    return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
-  }
-  
-  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
-  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
-  
-  ds <- highcharter::list_parse(data)
-
-  #cols=c("blue","pink")
-  
-  hc <- highcharter::highchart(width = 350, height = 350 ) %>%
-    highcharter::hc_title(text=paste(metab1Name,' vs. ', metab2Name, sep = '')) %>%
-    highcharter::hc_xAxis(title=list(text=metab1Name)) %>%
-    highcharter::hc_yAxis(title=list(text=metab2Name)) %>%
-    hc_chart(zoomType = "xy") %>%
-    highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
-                               tooltip = list(headerFormat="",
-                                              pointFormat=paste("{point.label}","{point.z}")),
-                               showInLegend=FALSE)
-  
-  
-  hc <- hc %>%
-    highcharter::hc_add_series(name = uniqtypes[1],
-                               data=line1,type='line',#name=sprintf("regression line %s",type1),
-                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
-    highcharter::hc_add_series(name = uniqtypes[2],
-                               data=line2,type='line',#name=sprintf("regression line %s",type2),
-                               color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
-  
-  hc
-}
-
-#' scatter plot of metabolite-metabolite pairs (based on user selection)
-#'
-#' @import magrittr
-#'
-#' @param inputData IntLimObject output of ReadData() or FilterData()
-#' @param stype category to color-code by
-##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-##' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param gene1Name string of select gene1Name
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
-#' @param gene2Name string of select gene2Name
-#' @return a highcharter object
-#' @export
-PlotGGPair<- function(inputData,stype=NULL,gene1Name,gene2Name,palette = "Set1",
-                      viewer=T) {
-  
-  if(is.null(stype)) {
-    stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
-  }
-  if (length(palette) == 2) {
-    cols <- c(palette)
-  } else if (length(palette) == 1) {
-    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-  } else {
-    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
-  }
-  
-  gene<-inputData$gene
-  if(length(which(rownames(gene)==gene1Name))>0) {
-    sGene1<-as.numeric(gene[gene1Name,])
-  } else {
-    stop(paste0("The gene ",gene1Name," was not found in your data"))
-  }
-  
-  gene<-inputData$gene
-  if(length(which(rownames(gene)==gene2Name))>0) {
-    sGene2<-as.numeric(gene[gene2Name,])
-  } else {
-    stop(paste0("The gene ",gene2Name," was not found in your data"))
-  }
-  
-  if(length(unique(inputData$p))!=2) {
-    stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
-  }
-  
-  mycols <- as.character(inputData$p)
-  mycols[which(inputData$p==unique(inputData$p)[1])] <- cols[1]
-  mycols[which(inputData$p==unique(inputData$p)[2])] <- cols[2]
-  
-  data<-data.frame(x=sGene1,y=sGene2,z=colnames(gene),label=inputData$p,color=mycols)
-  
-  # Get points to draw the lines for each phenotype by hand
-  
-  uniqtypes=as.character(unique(inputData$p))
-  
-  # Starting with phenotype 1, get min and max x values constrained to the values of y
-  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
-  # when slopes are really steep (abline does this automatically but not highcharter)
-  mytypes <- inputData$p
-  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
-    y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
-    min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
-    max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
-    
-    m1<-stats::glm(y ~ x)
-    line1<-data.frame(x=c(max,min),
-                      y=c(stats::predict(m1,data.frame(x=c(max,min)))))
-    return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
-  }
-  
-  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
-  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
-  
-  ds <- highcharter::list_parse(data)
-  
-  hc <- highcharter::highchart(width = 350, height = 350 ) %>%
-    highcharter::hc_title(text=paste(gene1Name,' vs. ', gene2Name, sep = '')) %>%
-    highcharter::hc_xAxis(title=list(text=gene1Name)) %>%
-    highcharter::hc_yAxis(title=list(text=gene2Name)) %>%
-    hc_chart(zoomType = "xy") %>%
-    highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
-                               tooltip = list(headerFormat="",
-                                              pointFormat=paste("{point.label}","{point.z}")),
-                               showInLegend=FALSE)
-  
   
   hc <- hc %>%
     highcharter::hc_add_series(name = uniqtypes[1],
@@ -1075,137 +797,48 @@ InteractionCoefficientGraph<-function(inputResults,
 #' @param inputData Named list (output of 
 #' FilterData()) with gene expression, metabolite abundances, 
 #' and associated meta-data
-#' @param metaboliteOfInterest metabolite in gene-metabolite pair
-#' @param geneOfInterest gene in gene-metabolite pair
+#' @param outcomeAnalyteOfInterest outcome analyte in pair
+#' @param independentAnalyteOfInterest independent analyte in pair
 #' @param continuous whether or not the outcome is continuous (TRUE or FALSE)
+#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
+#' @param independentVariable 'metabolite' or 'gene' must be set as outcome/independent variable
 #' @return dataframe for further analysis
 #' @export
-MarginalEffectsGraphDataframe<-function(inputResults, inputData, geneOfInterest, 
-                                        metaboliteOfInterest, continuous){
+MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnalyteOfInterest, 
+                                        outcomeAnalyteOfInterest, continuous, outcome,
+                                        independentVariable){
   if(class(inputResults) != "IntLimResults") {
     stop("input data is not a IntLim class")
   }
-
+  
   #get covariates
   covariates = as.character(inputResults@covar$covariate)
   covariates_class = as.character(inputResults@covar$class.var)
-
+  
   #get dataframes
   pheno <- inputData$p
-  gene <- inputData$gene
-  metab <- inputData$metab
-
+  outcomeAnalytes <- NULL
+  independentAnalytes <- NULL
+  if(outcome == "gene"){
+    outcomeAnalytes <- inputData$gene
+  }else if(outcome == "metabolite"){
+    outcomeAnalytes <- inputData$metab
+  }
+  if(independentVariable == "gene"){
+    independentAnalytes <- inputData$gene
+  }else if(independentVariable == "metabolite"){
+    independentAnalytes <- inputData$metab
+  }
+  
   #get one gene an metabolite
-  gene_data = gene[geneOfInterest,]
-  metab_data = metab[metaboliteOfInterest,]
-
+  outcomeData = as.numeric(outcomeAnalytes[outcomeAnalyteOfInterest,])
+  independentData = as.numeric(independentAnalytes[independentAnalyteOfInterest,])
+  
   #Add gene, phenotype and metabolite data for glm
-  forglm  = data.frame(row.names = 1:length(gene_data))
-  forglm$g = gene_data
+  forglm  = data.frame(row.names = 1:length(outcomeData))
+  forglm$g = outcomeData
   forglm$type = pheno
-  forglm$Y = as.numeric(metab_data)
-
-
-  if (!is.null(covariates)) {
-
-    #Add all covariates to dataframe for glm()
-    i=3
-    for(each in covariates){
-      names = colnames(forglm)
-      i = i+1
-      forglm[,i] = inputData$covar_matrix[,each]
-      colnames(forglm) = c(names, each)
-    }
-  }
-  return(forglm)
-}
-
-#' Creates a dataframe of the marginal effect of phenotype
-#'
-#' @import margins
-#'
-#' @param inputResults IntLIMResults with model results (output of RunIntLim())
-#' @param inputData Data frame object (output of FilterData()) with gene expression,
-#' @param metaboliteOfInterest1 outcome metabolite in metabolite pair
-#' @param metaboliteOfInterest2 independent metabolite in metabolite pair
-#' @return dataframe for further analysis
-#' @export
-MarginalEffectsGraphDataframeMetabolitePairs<-function(inputResults, inputData, 
-                                                       metaboliteOfInterest1, 
-                                                       metaboliteOfInterest2){
-  if(class(inputResults) != "IntLimResults") {
-    stop("input data is not a IntLim class")
-  }
-  
-  #get covariates
-  covariates = as.character(inputResults@covar$covariate)
-  covariates_class = as.character(inputResults@covar$class.var)
-  
-  #get dataframes
-  pheno <- inputData$p
-  metab <- inputData$metab
-  
-  #get two metabolites
-  metab1_data = metab[metaboliteOfInterest1,]
-  metab2_data = metab[metaboliteOfInterest2,]
-  
-  #Add phenotype and metabolite data for glm
-  forglm  = data.frame(row.names = 1:length(metab1_data))
-  forglm$g = as.numeric(metab1_data)
-  forglm$type = pheno
-  forglm$Y = as.numeric(metab2_data)
-  
-  
-  if (!is.null(covariates)) {
-    
-    #Add all covariates to dataframe for glm()
-    i=3
-    for(each in covariates){
-      names = colnames(forglm)
-      i = i+1
-      forglm[,i] = inputData$covar_matrix[,each]
-      colnames(forglm) = c(names, each)
-    }
-  }
-  return(forglm)
-}
-
-#' Creates a dataframe of the marginal effect of phenotype
-#'
-#' @import margins
-#'
-#' @param inputResults IntLimResults object with model results (output of RunIntLim())
-#' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
-#' and associated meta-data
-#' @param geneOfInterest1 outcome gene in gene pair
-#' @param geneOfInterest2 independent gene in gene pair
-#' @return dataframe for further analysis
-#' @export
-MarginalEffectsGraphDataframeGenePairs<-function(inputResults, inputData, 
-                                                 geneOfInterest1, 
-                                                 geneOfInterest2){
-  if(class(inputResults) != "IntLimResults") {
-    stop("input data is not a IntLim class")
-  }
-  
-  #get covariates
-  covariates = as.character(inputResults@covar$covariate)
-  covariates_class = as.character(inputResults@covar$class.var)
-  
-  #get dataframes
-  pheno <- inputData$p
-  gene <- inputData$gene
-  
-  #get two metabolites
-  gene1_data = gene[geneOfInterest1,]
-  gene2_data = gene[geneOfInterest2,]
-  
-  #Add phenotype and metabolite data for glm
-  forglm  = data.frame(row.names = 1:length(gene1_data))
-  forglm$g = as.numeric(gene1_data)
-  forglm$type = pheno
-  forglm$Y = as.numeric(gene2_data)
+  forglm$Y = as.numeric(independentData)
   
   
   if (!is.null(covariates)) {

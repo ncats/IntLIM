@@ -6,17 +6,21 @@
 \usage{
 getStatsAllLM(
   outcome,
+  independentVariable,
   gene,
   metab,
   type,
   covar,
   covarMatrix,
   continuous,
-  save.covar.pvals
+  save.covar.pvals,
+  remove.tri = FALSE
 )
 }
 \arguments{
 \item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable}
+
+\item{independentVariable}{'metabolite' or 'gene' must be set as outcome/independent variable}
 
 \item{gene}{gene dataset (incommon$gene)}
 
@@ -33,6 +37,9 @@ Only 2 categories are currently supported.}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time.}
+
+\item{remove.tri}{boolean to indicate whether or not to remove the metabolite-metabolite
+or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \value{
 list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)

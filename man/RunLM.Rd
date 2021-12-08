@@ -7,10 +7,12 @@
 RunLM(
   incommon,
   outcome = "metabolite",
+  independentVariable = "gene",
   type = NULL,
   covar = NULL,
   continuous = FALSE,
-  save.covar.pvals = FALSE
+  save.covar.pvals = FALSE,
+  keep.highest.pval = FALSE
 )
 }
 \arguments{
@@ -20,6 +22,8 @@ and associated meta-data}
 
 \item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable
 (default is 'metabolite')}
+
+\item{independentVariable}{'metabolite' or 'gene' must be set as outcome/independent variable}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).
 Only 2 categories are currently supported.}
@@ -31,6 +35,9 @@ Only 2 categories are currently supported.}
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time.
 (rather than interaction terms).}
+
+\item{keep.highest.pval}{boolean to indicate whether or not to remove the metabolite-metabolite
+or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \description{
 Function that runs linear models and returns interaction p-values.

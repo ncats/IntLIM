@@ -156,7 +156,7 @@ The following variations of this function are available:
 - Setting `remove.duplicates` to TRUE filters gene-gene and metabolite-metabolite association models to include only the model with the highest p-value. e.g. if m1 ~ m2 has a higher p-value than m2 ~ m1, then the m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1) are removed.
 
 ```{r}
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr"), save.covar.pvals = TRUE, outcome = "metabolite", independent.var.type = "gene")
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = "metabolite", independent.var.type = "gene", save.covar.pvals = TRUE)
 ```
 
 The __DistPValues()__ function allows the user to observe a histogram of the p-values.
@@ -186,7 +186,7 @@ IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, interactionCoeffPer
 The __MarginalEffectsGraph()__ function allows the user to observe the marginal effects of phenotype for a given gene and metabolite.
 The __MarginalEffectsGraphDataframe()__ function creates the input for __MarginalEffectsGraph()__, given the IntLIM results, the input data, and the gene and metabolite of interest.
 ```{r}
-IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm, inputData = inputDatafilt, geneOfInterest = "DLG4", metaboliteOfInterest = "(p-Hydroxyphenyl)lactic acid"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
+IntLIM::MarginalEffectsGraph(dataframe = IntLIM::MarginalEffectsGraphDataframe(inputResults = myres.gm, inputData = inputDatafilt, outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid", independentAnalyteOfInterest = "DLG4", outcome = "metabolite", independentVariable = "gene"), title = "Marginal Effects - DLG4 and (p-Hydroxyphenyl)lactic acid")
 ```
 
 The __pvalCorrVolcano()__ function allows users to observe a volcano plot comparing the Spearman correlation difference between groups to the –log10(FDR-adjusted p-value).
@@ -229,7 +229,7 @@ A __PlotGMPair()__ function  allows the user to plot a chosen gene-metabolite as
 Plot a pair of interest:
 
 ```{r}
-IntLIM::PlotGMPair(inputDatafilt,stype="PBO_vs_Leukemia","DLG4","(p-Hydroxyphenyl)lactic acid")
+IntLIM::PlotPair(inputDatafilt,stype="PBO_vs_Leukemia", outcome = "metabolite", independentVariable = "gene", outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid", independentAnalyteOfInterest = "DLG4")
 ```
 
 Of note, plots are generated using Highcharter (http://jkunst.com/highcharter/) and Plotly (Sievert, et al.) (https://plot.ly), which enables interactive visualization, allowing users to promptly assess the effect of changing parameters on analysis results and accelerating discovery of phenotype-specific gene-metabolite pairs.  This will greatly allow the workflow to be accessible to non-computational biologists.   

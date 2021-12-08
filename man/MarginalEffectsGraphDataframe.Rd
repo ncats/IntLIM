@@ -7,9 +7,11 @@
 MarginalEffectsGraphDataframe(
   inputResults,
   inputData,
-  geneOfInterest,
-  metaboliteOfInterest,
-  continuous
+  independentAnalyteOfInterest,
+  outcomeAnalyteOfInterest,
+  continuous,
+  outcome,
+  independentVariable
 )
 }
 \arguments{
@@ -19,11 +21,15 @@ MarginalEffectsGraphDataframe(
 FilterData()) with gene expression, metabolite abundances, 
 and associated meta-data}
 
-\item{geneOfInterest}{gene in gene-metabolite pair}
+\item{independentAnalyteOfInterest}{independent analyte in pair}
 
-\item{metaboliteOfInterest}{metabolite in gene-metabolite pair}
+\item{outcomeAnalyteOfInterest}{outcome analyte in pair}
 
 \item{continuous}{whether or not the outcome is continuous (TRUE or FALSE)}
+
+\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable}
+
+\item{independentVariable}{'metabolite' or 'gene' must be set as outcome/independent variable}
 }
 \value{
 dataframe for further analysis
