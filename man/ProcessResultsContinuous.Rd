@@ -2,7 +2,8 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResultsContinuous}
 \alias{ProcessResultsContinuous}
-\title{Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model}
+\title{Retrieve significant pairs (aka filter out nonsignificant pairs) 
+based on value of analyte:type interaction coefficient from linear model}
 \usage{
 ProcessResultsContinuous(
   inputResults,
@@ -22,5 +23,6 @@ default bottom 10 percent (high negative coefficients) and top 10 percent (high 
 \item{rsquaredCutoff}{cutoff of R-squared value for filtering (default 0, no filtering)}
 }
 \description{
-Retrieve significant gene-metabolite / metabolite-metabolite pairs (aka filter out nonsignificant pairs) based on value of gene:type interaction coefficient from linear model
+Retrieve significant pairs (aka filter out nonsignificant pairs) 
+based on value of analyte:type interaction coefficient from linear model
 }

@@ -2,14 +2,17 @@
 % Please edit documentation in R/01_ReadData.R
 \name{CreateCrossValFolds}
 \alias{CreateCrossValFolds}
-\title{Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).}
+\title{Creates multiple cross-validation folds from the data. Format is a list of
+IntLIMData training and testing pairs. The "training" slot contains all data
+except that in the given fold, and the "testing" contains all data in the fold.}
 \usage{
 CreateCrossValFolds(
   inputFile,
-  metabid = NULL,
-  geneid = NULL,
-  logmetab = FALSE,
-  loggene = FALSE,
+  analyteType1id = NULL,
+  analyteType2id = NULL,
+  logAnalyteType1 = FALSE,
+  logAnalyteType2 = FALSE,
+  class.feat = NULL,
   folds,
   suppressWarnings = FALSE
 )
@@ -17,25 +20,32 @@ CreateCrossValFolds(
 \arguments{
 \item{inputFile}{input file in CSV format (see Despcription)}
 
-\item{metabid}{name of column from metabolite meta data to be used as id
-(required if a metabolite meta dadta file is present, must match metabolite abundances data)}
+\item{analyteType1id}{name of column from Analyte Type 1 meta data to be used as id
+(required if an Analyte Type 1 meta data file is present, 
+must match Analyte Type 1 data)}
 
-\item{geneid}{name of column from gene meta data to be used as id
-(required if a gene meta data file is present, must match gene expression data)}
+\item{analyteType2id}{name of column from Analyte Type 2 meta data to be used as id
+(required if an Analyte Type 2 meta data file is present, 
+must match Analyte Type 2 data)}
 
-\item{logmetab}{whether or not to log metabolite values (T/F)}
+\item{logAnalyteType1}{whether or not to log values for Analyte Type 1(T/F)}
 
-\item{loggene}{whether or not to log gene values (T/F)}
+\item{logAnalyteType2}{whether or not to log values for Analyte Type 2(T/F)}
+
+\item{class.feat}{class ("factor" or "numeric") for each covariate. The following format
+is required: list(covar1="numeric", covar2="factor")}
 
 \item{folds}{number of folds to create}
 
 \item{suppressWarnings}{whether to suppress warnings}
 }
 \value{
-A set of MultiDataSet training and testing sets, of the following format:
-list(list("train" = MultiDataSet, "test" = MultiDataSet), ... list("train" = MultiDataSet,
-"test" = MultiDataSet))
+A set of IntLimData training and testing sets, of the following format:
+list(list("train" = IntLimData, "test" = IntLimData), ... list("train" = IntLimData,
+"test" = IntLimData))
 }
 \description{
-Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
+Creates multiple cross-validation folds from the data. Format is a list of
+IntLIMData training and testing pairs. The "training" slot contains all data
+except that in the given fold, and the "testing" contains all data in the fold.
 }

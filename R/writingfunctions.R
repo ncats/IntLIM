@@ -5,21 +5,20 @@
 #'
 #' @return the filename of the CSV file with results named with cohort
 #' @export
-
 OutputData <- function (inputData=NULL,filename="~/output.zip"){
-  mygenes <- inputData$gene
-  mymetab <- inputData$metab
-	phenoData <- inputData$covar_matrix
-	utils::write.csv(mygenes,path.expand("~/GeneData.csv"),quote=F)
-  utils::write.csv(mymetab,path.expand("~/MetabData.csv"),quote=F)
+  type1 <- inputData@analyteType1
+  type2 <- inputData@analyteType2
+	phenoData <- inputData@sampleMetaData
+	utils::write.csv(type1,path.expand("~/AnalyteType1Data.csv"),quote=F)
+  utils::write.csv(type2,path.expand("~/AnalyteType2Data.csv"),quote=F)
   utils::write.csv(phenoData,path.expand("~/MetaSamples.csv"),quote=F)
 	utils::zip(zipfile=path.expand(filename),
 	           flags="-b ~",
-	           files=c(path.expand("~/GeneData.csv"),
-	                   path.expand("~/MetabData.csv"),
+	           files=c(path.expand("~/AnalyteType1Data.csv"),
+	                   path.expand("~/AnalyteType2Data.csv"),
 	                   path.expand("~/MetaSamples.csv")))
-	file.remove(path.expand("~/GeneData.csv"))
-	file.remove(path.expand("~/MetabData.csv"))
+	file.remove(path.expand("~/AnalyteType1Data.csv"))
+	file.remove(path.expand("~/AnalyteType2Data.csv"))
 	file.remove(path.expand("~/MetaSamples.csv"))
 }
 
@@ -30,7 +29,6 @@ OutputData <- function (inputData=NULL,filename="~/output.zip"){
 #'
 #' @return the filename of the CSV file with results named with cohort
 #' @export
-
 OutputResults <- function (inputResults=NULL,filename="results.csv"){
 	if(is.null(inputResults)) {stop("Input results from ProcessResults()")}
 	utils::write.csv(inputResults,filename,quote=T,row.names=F)

@@ -7,24 +7,24 @@
 RunIntLim(
   inputData,
   stype = NULL,
-  outcome = "metabolite",
+  outcome = 1,
   covar = NULL,
   continuous = FALSE,
   save.covar.pvals = FALSE,
-  independent.var.type = "gene",
+  independent.var.type = 1,
   remove.duplicates = FALSE
 )
 }
 \arguments{
 \item{inputData}{Named list (output of 
-FilterData()) with gene expression, metabolite abundances, 
+FilterData()) with analyte abundances, 
 and associated meta-data}
 
 \item{stype}{column name that represents sample type (by default, it will be used
 in the interaction term). Only 2 categories are currently supported.}
 
-\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable
-(default is 'metabolite')}
+\item{outcome}{'1' or '2' must be set as outcome/independent variable
+(default is '1')}
 
 \item{covar}{Additional variables from the phenotypic data that be integrated into linear model}
 
@@ -33,11 +33,11 @@ in the interaction term). Only 2 categories are currently supported.}
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
 which can be analyzed later but will also lengthen computation time. The default is FALSE.}
 
-\item{independent.var.type}{'metabolite' or 'gene' must be set as independent variable
-(default is 'metabolite')}
+\item{independent.var.type}{'1' or '2' must be set as independent variable
+(default is '1')}
 
-\item{remove.duplicates}{boolean to indicate whether or not to remove the metabolite-metabolite
-or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
+\item{remove.duplicates}{boolean to indicate whether or not to remove the 
+pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \value{
 IntLimModel object with model results

@@ -6,8 +6,8 @@
 \usage{
 RunLM(
   incommon,
-  outcome = "metabolite",
-  independentVariable = "gene",
+  outcome = 1,
+  independentVariable = 2,
   type = NULL,
   covar = NULL,
   continuous = FALSE,
@@ -17,13 +17,13 @@ RunLM(
 }
 \arguments{
 \item{incommon}{Named list (output of 
-FilterData()) with gene expression, metabolite abundances, 
+FilterData()) with analyte levels, 
 and associated meta-data}
 
-\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable
-(default is 'metabolite')}
+\item{outcome}{'1' or '2' must be set as outcome/independent variable
+(default is '1')}
 
-\item{independentVariable}{'metabolite' or 'gene' must be set as outcome/independent variable}
+\item{independentVariable}{'1' or '2' must be set as outcome/independent variable}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).
 Only 2 categories are currently supported.}
@@ -36,8 +36,8 @@ Only 2 categories are currently supported.}
 which can be analyzed later but will also lengthen computation time.
 (rather than interaction terms).}
 
-\item{keep.highest.pval}{boolean to indicate whether or not to remove the metabolite-metabolite
-or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
+\item{keep.highest.pval}{boolean to indicate whether or not to remove the 
+pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 }
 \description{
 Function that runs linear models and returns interaction p-values.

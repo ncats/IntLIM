@@ -2,8 +2,8 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResults}
 \alias{ProcessResults}
-\title{Retrieve significant gene-metabolite pairs, based on adjusted p-values.
-For each gene-metabolite pair that is statistically significant, calculate the
+\title{Retrieve significant pairs, based on adjusted p-values.
+For each pair that is statistically significant, calculate the
 correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
 non-cancer).  Users can then remove pairs with a difference in correlations between
 groups 1 and 2 less than a user-defined threshold.}
@@ -22,8 +22,8 @@ ProcessResults(
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
-metabolite abundances, and associated meta-data}
+\item{inputData}{MultiDataSet object (output of ReadData()) with analyte levels
+and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
@@ -38,15 +38,15 @@ metabolite abundances, and associated meta-data}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
 
-\item{treecuts}{user-selected number of clusters (of gene-metabolite pairs) 
+\item{treecuts}{user-selected number of clusters (of pairs) 
 to cut the tree into}
 }
 \value{
 IntResults object with model results (now includes correlations)
 }
 \description{
-Retrieve significant gene-metabolite pairs, based on adjusted p-values.
-For each gene-metabolite pair that is statistically significant, calculate the
+Retrieve significant pairs, based on adjusted p-values.
+For each pair that is statistically significant, calculate the
 correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
 non-cancer).  Users can then remove pairs with a difference in correlations between
 groups 1 and 2 less than a user-defined threshold.

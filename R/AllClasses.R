@@ -1,19 +1,25 @@
-#' MetaboliteSet class extenstion for MultiDataSet object
+#' IntLimData class
 #'
-#' This class is specific to metabolomics data and will then be stored into the class
-#' \code{MultiDataSet}, which stores multiple dataset types (e.g. metabolite and gene levels
-#' in this case.
-#'
-#' @name MetaboliteSet-class
-#' @rdname MetaboliteSet-class
-#' @exportClass MetaboliteSet
-#' @slot eSet List of eSet elements
-
-if(!require("Biobase")) install.packages("Biobase")
-
-methods::setClass (
-	Class = "MetaboliteSet",
-	contains = "eSet",
+#' @name IntLimData-class
+#' @rdname IntLimData-class
+#' @exportClass IntLimData
+#' @slot analyteType1 A matrix of abundance, expression, or other levels for
+#' a specific type of analyte (e.g. protein abundance, metabolite abundance, or
+#' gene expression)
+#' @slot analyteType2 A second matrix of abundance, expression, or other levels for
+#' a specific type of analyte (e.g. protein abundance, metabolite abundance, or
+#' gene expression)
+#' @slot analyteType1MetaData A data frame of metadata for analyte type 1.
+#' @slot analyteType2MetaData A data frame of metadata for analyte type 2.
+#' @slot sampleMetaData A data frame of covariate values from the patient data.
+methods::setClass(
+  Class="IntLimData",
+  representation(analyteType1="matrix",
+                 analyteType2="matrix",
+                 analyteType1MetaData = "data.frame",
+                 analyteType2MetaData = "data.frame",
+                 sampleMetaData = "data.frame")
+                 
 )
 
 #' IntLimResults class
@@ -29,11 +35,11 @@ methods::setClass (
 #' @slot model.rsquared matrix of r-squared values
 #' @slot corr matrix of correlations in group 1 and 2
 #' @slot filt.results data frame of filtered results
-#' @slot warnings a message of whether genes and metabolites have 0 standard deviation
+#' @slot warnings a message of whether analytes have 0 standard deviation
 #' @slot stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.
-#' @slot outcome outcome is either 'metabolite' or 'gene'
-#' @slot independent.var.type independent variable type (either 'metabolite or 'gene')
+#' @slot outcome outcome is either '1' or '2'
+#' @slot independent.var.type independent variable type (either '1 or '2')
 #' @slot covar describing additional variables and the class they form
 methods::setClass(
 	Class="IntLimResults",
@@ -47,7 +53,7 @@ methods::setClass(
 		filt.results="data.frame",
 		warnings="character",
 		stype="character",
-		outcome="character",
-		independent.var.type="character",
+		outcome="numeric",
+		independent.var.type="numeric",
 		covar="data.frame")
 	)

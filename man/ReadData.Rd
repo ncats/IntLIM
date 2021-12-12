@@ -6,53 +6,57 @@
 \usage{
 ReadData(
   inputFile,
-  metabid = NULL,
-  geneid = NULL,
-  logmetab = FALSE,
-  loggene = FALSE
+  analyteType1id = "id",
+  analyteType2id = "id",
+  logAnalyteType1 = FALSE,
+  logAnalyteType2 = FALSE,
+  class.feat = NULL,
+  suppressWarnings = FALSE
 )
 }
 \arguments{
 \item{inputFile}{input file in CSV format (see Despcription)}
 
-\item{metabid}{name of column from metabolite meta data to be used as id
-(required if a metabolite meta dadta file is present, must match metabolite abundances data)}
+\item{analyteType1id}{name of column from Analyte Type 1 meta data to be used as id
+(required if an Analyte Type 1 meta data file is present, 
+must match Analyte Type 1 data)}
 
-\item{geneid}{name of column from gene meta data to be used as id
-(required if a gene meta data file is present, must match gene expression data)}
+\item{analyteType2id}{name of column from Analyte Type 2 meta data to be used as id
+(required if an Analyte Type 2 meta data file is present, 
+must match Analyte Type 2 data)}
 
-\item{logmetab}{whether or not to log metabolite values (T/F)}
+\item{logAnalyteType1}{whether or not to log values for Analyte Type 1(T/F)}
 
-\item{loggene}{whether or not to log gene values (T/F)}
+\item{logAnalyteType2}{whether or not to log values for Analyte Type 2(T/F)}
+
+\item{class.feat}{class ("factor" or "numeric") for each covariate. The following format
+is required: list(covar1="numeric", covar2="factor")}
+
+\item{suppressWarnings}{whether or not to suppress warnings}
 }
 \value{
-MultiDataSet object with input data
+IntLimData object with input data
 }
 \description{
 The metadata associated with data files to be analyzed in IntLim is supplied
 as a CSV file with two columns and 6 rows: 
    type,filenames
-   metabData,myfilename
-   geneData,myfilename
-   metabMetaData,myfilename (optional)
-   geneMetaData,myfilename (optional)
+   analyteType1,myfilename
+   analyteType2,myfilename
+   analyteType1MetaData,myfilename (optional)
+   analyteType2MetaData,myfilename (optional)
    sampleMetaData,myfilename
 }
 \details{
-Note that all files supplied in the CSV file, and the CSV file itself should be placed in the same folder.  The software assumes will automatically retrieve the file path of
+Note that all files supplied in the CSV file, and the CSV file itself should 
+be placed in the same folder.  The software assumes will automatically retrieve 
+the file path of
 the input files (based on location of CSV files).  
 Note also that the input data files should be in a specific format:
-metabData: rows are metabolites, columns are samples
-geneData: rows are genes, columns are samples
-metabMetaData: rows are metabolites, features are columns
-geneMetaData: rows are genes, features are columns
+analyteType1/2: rows are analytes, columns are samples
+analyteType1/2MetaData: rows are analytes, features are columns
 sampleMetaData: rows are samples, features are columns
 In addition, the first column of the sampleMetaData file is assumed to be the sample id, 
-and those sample ids should match the columns of metabData and geneData (e.g. it is required
-that all sample ids in the metabData and geneData are also in the sampleMetaDatafile).
-}
-\examples{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(inputFile = csvfile,metabid='id',geneid='id')
+and those sample ids should match the columns of analyteType1/2 (e.g. it is required
+that all sample ids in the analyteType1/2 are also in the sampleMetaData).
 }

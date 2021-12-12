@@ -34,9 +34,9 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     whiskerColor = '#000000',
     whiskerLength = '20%',
     whiskerWidth = 3)
-  if("gene" %in% names(inputData)){
-    mygene <- inputData$gene
-    toplot <- suppressMessages(reshape2::melt(mygene))
+  if(length(inputData@analyteType1)>0){
+    type1Data <- inputData@analyteType1
+    toplot <- suppressMessages(reshape2::melt(type1Data))
     df <- dplyr::tibble(value = toplot$value, by = toplot$Var2) %>% dplyr::group_by_at("by") %>%
       dplyr::do(data = grDevices::boxplot.stats(.$value))
     bxps <- purrr::map(df$data, "stats")
@@ -46,32 +46,35 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
       else d <- dplyr::tibble()
       d
     })
-    outs <- data.frame(outs, 'z' = colnames(mygene)[outs$x + 1])
+    outs <- data.frame(outs, 'z' = colnames(type1Data)[outs$x + 1])
     z <- outs$z
-    # To try to get the gene names of outliers, would have to go back and get the gene names from original data frame and put htem in outs$color
+    # To try to get the analyte names of outliers, would have to go back and get 
+    # the analyte names from original data frame and put htem in outs$color
     
     g <- highcharter::highchart(width = 750, height = 750 ) %>%
-      highcharter::hc_title(text = "Gene Expression",
+      highcharter::hc_title(text = "Analyte Type 1 Levels",
                             style = list(color = '#2E1717',
                                          fontWeight = 'bold', fontSize = "20px")) %>%
       highcharter::hc_plotOptions(
         boxplot = boxplotOptions
       ) %>%
-      hc_add_series(data = bxps,name = "Gene Expression", type="boxplot",color=cols[1],showInLegend=FALSE) %>%
-      highcharter::hc_add_series(data=list_parse(outs),name = "Gene Expression",
+      hc_add_series(data = bxps,name = "Analyte Type 1 Levels", type="boxplot",
+                    color=cols[1],showInLegend=FALSE) %>%
+      highcharter::hc_add_series(data=list_parse(outs),name = "Analyte Type 1 Levels",
                                  type="scatter",color=cols[1],showInLegend=FALSE,
-                                 tooltip = list(headerFormat = "", pointFormat = "{point.z} <br/> {point.y}",
+                                 tooltip = list(headerFormat = "",
+                                                pointFormat = "{point.z} <br/> {point.y}",
                                                 showInLegend = FALSE)) %>%
-      highcharter::hc_yAxis(title = list(text = "log(expression)",
+      highcharter::hc_yAxis(title = list(text = "Levels",
                                          style = list(fontSize = "13px")),
                             labels = list(format = "{value}")) %>%
-      highcharter::hc_xAxis(labels="", categories = colnames(mygene)) %>%
+      highcharter::hc_xAxis(labels="", categories = colnames(type1Data)) %>%
       highcharter::hc_tooltip(valueDecimals = 2) %>%
       highcharter::hc_exporting(enabled = TRUE)
   }
-  if("metab" %in% names(inputData)){
-    mymetab <- inputData$metab
-    toplot <- suppressMessages(reshape2::melt(t(mymetab)))
+  if(length(inputData@analyteType2)>0){
+    type2Data <- inputData@analyteType2
+    toplot <- suppressMessages(reshape2::melt(t(type2Data)))
     df <- dplyr::data_frame(value = toplot$value, by = toplot$Var1) %>%
       dplyr::group_by_at("by") %>%
       dplyr::do(data = grDevices::boxplot.stats(.$value))
@@ -82,26 +85,28 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
       else d <- dplyr::data_frame()
       d
     })
-    outs <- data.frame(outs, 'z' = colnames(mymetab)[outs$x + 1])
+    outs <- data.frame(outs, 'z' = colnames(type2Data)[outs$x + 1])
     z <- outs$z
     
     m <- highcharter::highchart(width = 750, height = 750 ) %>%
-      highcharter::hc_title(text = "Metabolite Levels",
+      highcharter::hc_title(text = "Analyte Type 2 Levels",
                             style = list(color = '#2E1717',
                                          fontWeight = 'bold', fontSize = "20px")) %>%
       highcharter::hc_plotOptions(
         boxplot = boxplotOptions
       ) %>%
-      highcharter::hc_add_series(data = bxps,name = "Metabolite Levels",
+      highcharter::hc_add_series(data = bxps,name = "Analyte Type 2 Levels",
                                  type="boxplot",color=cols[2],showInLegend=FALSE) %>%
-      highcharter::hc_add_series(data=list_parse(outs),name = "Metabolite Levels",
-                                 type="scatter",color=cols[2],showInLegend=FALSE,tooltip = list(headerFormat = "", pointFormat = "{point.z} <br/> {point.y}",
-                                                                                                showInLegend = FALSE)) %>%
+      highcharter::hc_add_series(data=list_parse(outs),name = "Analyte Type 2 Levels",
+                                 type="scatter",color=cols[2],showInLegend=FALSE,
+                                 tooltip = list(headerFormat = "", 
+                                                pointFormat = "{point.z} <br/> {point.y}",
+                                                showInLegend = FALSE)) %>%
       
-      highcharter::hc_yAxis(title = list(text = "log(abundances)",
+      highcharter::hc_yAxis(title = list(text = "Levels",
                                          style = list(fontSize = "13px")),
                             labels = list(format = "{value}")) %>%
-      highcharter::hc_xAxis(labels="", categories = colnames(mymetab)) %>%
+      highcharter::hc_xAxis(labels="", categories = colnames(type2Data)) %>%
       highcharter::hc_tooltip(valueDecimals = 2) %>%
       highcharter::hc_exporting(enabled = TRUE)
   }
@@ -134,6 +139,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
   return(p)
 }
 
+
 #' PCA plots of data for QC
 #'
 #' @import magrittr
@@ -147,39 +153,56 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 #' @return a highcharter object
 #' @export
 PlotPCA <- function(inputData,viewer=T,stype=NULL,palette = "Set1") {
-
-  if(is.numeric(inputData$p) == TRUE) {
-		warning("The resulting PCA plot is not color-coded because you did not provide 
+  
+  if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
+    warning("The resulting PCA plot is not color-coded because you did not provide 
 		        a categorical variable in 'stype'")
-		mytype <- NULL
-  } else {
-  	mytype <- as.character(inputData$p)
+    mytype <- NULL
+  } 
+  else {
+    mytype <- as.character(inputData@sampleMetaData[,stype])
     numcateg <- length(unique(mytype))
     if(length(palette) >= 2) {
       cols <- palette
-    } else {
+    } 
+    else {
       if(numcateg == 1) {
-         if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(3, palette)[1]
-         } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
-      } else if (numcateg == 2) {
-          if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-          } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
-      } else if (numcateg > 2) {
-          if(length(palette)==1) {cols <- RColorBrewer::brewer.pal(numcateg, palette)
-          } else {stop("palette should be an RColorBrewer palette or a vector of colors")}
-      } else {stop("There are no values in your 'stype' column")}
-               }
+        if(length(palette)==1) {
+          cols <- RColorBrewer::brewer.pal(3, palette)[1]
+        }
+        else {
+          stop("palette should be an RColorBrewer palette or a vector of colors")
+        }
+      } 
+      else if (numcateg == 2) {
+        if(length(palette)==1) {
+          cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+        } 
+        else {
+          stop("palette should be an RColorBrewer palette or a vector of colors")
+        }
+      } 
+      else if (numcateg > 2) {
+        if(length(palette)==1) {
+          cols <- RColorBrewer::brewer.pal(numcateg, palette)
+        } 
+        else {
+          stop("palette should be an RColorBrewer palette or a vector of colors")
+        }
+      } 
+      else {
+        stop("There are no values in your 'stype' column")
+      }
     }
+  }
   p <- NULL
   pg <- NULL
   pm <- NULL
-
-  if(!("gene" %in% names(inputData) && "metab" %in% names(inputData))){
-    stop("A dataset not containing both expression and metabolite data cannot run
-	         with 'common' set to TRUE. Set 'common' to FALSE.")
-  } else {
-    if(is.numeric(inputData$p) == TRUE) {
-      mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
+  
+  if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
+    if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
+      mpca <- stats::prcomp(t(inputData@analyteType1),center=T,scale=F)
+      gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=rep("blue",nrow(gpca$x)))
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=rep("blue",nrow(mpca$x)))
       gds <- list_parse(gtoplot)
@@ -195,16 +218,16 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,palette = "Set1") {
                                                              pointFormat=paste("{point.label}","{point.z}")),
                                               showInLegend=FALSE)
     } else {
-      mymetab <- inputData$metab
-      mygene <- inputData$gene
-      alltype <- inputData$p
+      type1 <- inputData@analyteType1
+      type2 <- inputData@analyteType2
+      alltype <- inputData@sampleMetaData[,stype]
       uniqtypes <- unique(alltype)
       mycols <- as.character(alltype)
       for (i in 1:numcateg) {
         mycols[which(alltype==uniqtypes[i])] <- cols[i]
       }
-      gpca <- stats::prcomp(t(mygene),center=T,scale=F)
-      mpca <- stats::prcomp(t(mymetab),center=T,scale=F)
+      gpca <- stats::prcomp(t(type1),center=T,scale=F)
+      mpca <- stats::prcomp(t(type2),center=T,scale=F)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
       mds <- list_parse(mtoplot)
@@ -226,36 +249,36 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,palette = "Set1") {
       }
     }
   }
-
+  
   # Set up plots.
-  if("metab" %in% names(inputData)){
+  if(length(inputData@analyteType1)>0){
     mpercvar=round((mpca$sdev)^2 / sum(mpca$sdev^2)*100,2)
-    pm <- pm %>% highcharter::hc_title(text="PCA of metabolites") %>%
+    pm <- pm %>% highcharter::hc_title(text="PCA of analyte type 2") %>%
       highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(mpercvar[1],1),"%"))) %>%
       highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(mpercvar[2],2),"%"))) %>%
       hc_chart(zoomType = "xy")
   }
-  if("gene" %in% names(inputData)){
+  if(length(inputData@analyteType2)>0){
     gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
-    pg <- pg %>% highcharter::hc_title(text="PCA of genes") %>%
+    pg <- pg %>% highcharter::hc_title(text="PCA of analyte type 1") %>%
       highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(gpercvar[1],1),"%"))) %>%
       highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(gpercvar[2],2),"%"))) %>%
       hc_chart(zoomType = "xy")
   }
   p <- NULL
-  if("gene" %in% names(inputData) && "metab" %in% names(inputData)){
+  if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
     if (viewer == TRUE) {
       p <-htmltools::browsable(highcharter::hw_grid(pg, pm, ncol = 2, rowheight = 550))
     } else {
       p <- highcharter::hw_grid(pg, pm)
     }
-  } else if("gene" %in% names(inputData)){
+  } else if(length(inputData@analyteType1)>0){
     if (viewer == TRUE) {
       p <-htmltools::browsable(highcharter::hw_grid(pg, ncol = 1, rowheight = 550))
     } else {
       p <- highcharter::hw_grid(pg)
     }
-  } else if("metab" %in% names(inputData)){
+  } else if(length(inputData@analyteType2)>0){
     if (viewer == TRUE) {
       p <-htmltools::browsable(highcharter::hw_grid(pm, ncol = 1, rowheight = 550))
     } else {
@@ -264,7 +287,7 @@ PlotPCA <- function(inputData,viewer=T,stype=NULL,palette = "Set1") {
   }
   
   return(p)
-
+  
 }
 
 
@@ -324,10 +347,12 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #'
 #' @param inputResults Data frame (output of ProcessResults())
 #' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
+#' FilterData()) with analyte levles
 #' and associated meta-data
-#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)
-#' @param treecuts number of clusters (of gene-metabolite pairs) to cut the tree into for color-coding
+#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be 
+#' plotted (plotting more than 1200 can take some time) (default: 1200)
+#' @param treecuts number of clusters (of pairs) to cut the tree 
+#' into for color-coding
 #' @return a highcharter object
 #' @export
 GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
@@ -393,13 +418,10 @@ GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
 #' @import magrittr
 #'
 #' @param inputResults Data frame (output of ProcessResults())
-#' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
-#' and associated meta-data
 #' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)
 #' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
 #' in Shiny/Knittr (F)
-#' @param treecuts number of clusters (of gene-metabolite pairs) to cut the tree into for color-coding
+#' @param treecuts number of clusters (of pairs) to cut the tree into for color-coding
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
 #' @return a highcharter object
@@ -407,25 +429,25 @@ GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
 #'@param html.file allows user to specify file path to output heatmap onto (used for non-static heatmaply objects)
 #'@param pdf.file allows user to specify file path to output heatmap onto (used for static heatmap.2 objects)
 #' @export
-CorrHeatmap <- function(inputResults,inputData,viewer=T,top_pairs=1200,treecuts=2, 
+CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, 
                         palette = NULL, static = FALSE,
                         html.file=NULL, pdf.file=NULL) {
+  
+  # Stop if not two discrete phenotypes.
+  if(colnames(inputResults)[3] == "interaction_coeff"){
+    stop("CorrHeatmap requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
+  }
   type <- cor <- c()
 
 	if(nrow(inputResults)==0) {
 		stop("Make sure you run ProcessResults before making the heatmap")
 	}
-  p <- inputData$p
-  if(length(unique(p)) !=2){
-    stop("CorrHeatmap requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
-  }
   else{
     allres <- inputResults
     if(nrow(allres)>top_pairs) {
       allp <- inputResults[,"FDRadjPval"]
       allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
     }
-    
     toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
                          allres[,3:4])
     suppressMessages(
@@ -549,7 +571,7 @@ CorrHeatmap <- function(inputResults,inputData,viewer=T,top_pairs=1200,treecuts=
 
 }
 
-#' scatter plot of gene-metabolite pairs (based on user selection)
+#' scatter plot of pairs (based on user selection)
 #'
 #' @import magrittr
 #' @import highcharter
@@ -562,11 +584,15 @@ CorrHeatmap <- function(inputResults,inputData,viewer=T,top_pairs=1200,treecuts=
 #' in Shiny/Knittr (F)
 #' @param outcomeAnalyteOfInterest outcome analyte in pair
 #' @param independentAnalyteOfInterest independent analyte in pair
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
-#' @param independentVariable 'metabolite' or 'gene' must be set as outcome/independent variable
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
 #' @export
 PlotPair<- function(inputData,stype,outcome,independentVariable, independentAnalyteOfInterest, 
                     outcomeAnalyteOfInterest, palette = "Set1",	viewer=T) {
+  # Convert names.
+  name_outcomeAnalyteOfInterest <- make.names(outcomeAnalyteOfInterest)
+  name_independentAnalyteOfInterest <- make.names(independentAnalyteOfInterest)
+  stype <- make.names(stype)
   
   if(is.null(stype)) {
     stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
@@ -584,51 +610,56 @@ PlotPair<- function(inputData,stype,outcome,independentVariable, independentAnal
   independentData <- NULL
   sOutcome <- NULL
   sIndependent <- NULL
-  if(outcome == "gene"){
-    outcomeData <- inputData$gene
-  }else if(outcome == "metabolite"){
-    outcomeData <- inputData$metab
+  if(outcome == 1){
+    outcomeData <- inputData@analyteType1
+  }else if(outcome == 2){
+    outcomeData <- inputData@analyteType2
   }
-  if(independentVariable == "gene"){
-    independentData <- inputData$gene
-  }else if(independentVariable == "metabolite"){
-    independentData <- inputData$metab
+  if(independentVariable == 1){
+    independentData <- inputData@analyteType1
+  }else if(independentVariable == 2){
+    independentData <- inputData@analyteType2
   }
   
   # Check that analytes of interest are found in data.
-  if(length(which(rownames(outcomeData)==outcomeAnalyteOfInterest))>0) {
-    sOutcome<-as.numeric(outcomeData[outcomeAnalyteOfInterest,])
+  if(length(which(rownames(outcomeData)==name_outcomeAnalyteOfInterest))>0) {
+    sOutcome<-as.numeric(outcomeData[name_outcomeAnalyteOfInterest,])
   } else {
     stop(paste0("The analyte ",outcomeAnalyteOfInterest," was not found in your data"))
   }
-  if(length(which(rownames(independentData)==independentAnalyteOfInterest))>0) {
-    sIndependent<-as.numeric(independentData[independentAnalyteOfInterest,])
+  if(length(which(rownames(independentData)==name_independentAnalyteOfInterest))>0) {
+    sIndependent<-as.numeric(independentData[name_independentAnalyteOfInterest,])
   } else {
     stop(paste0("The analyte ",independentAnalyteOfInterest," was not found in your data"))
   }
   
   # Check that data only contains two categories.
-  if(length(unique(inputData$p))!=2) {
+  if(length(unique(inputData@sampleMetaData[,stype]))!=2) {
     stop(paste0("The group selected, '",stype,"', should only contain two different categories"))
   }
   
   # Set up data.
-  mycols <- as.character(inputData$p)
-  mycols[which(inputData$p==unique(inputData$p)[1])] <- cols[1]
-  mycols[which(inputData$p==unique(inputData$p)[2])] <- cols[2]
+  mycols <- as.character(inputData@sampleMetaData[,stype])
+  mycols[which(inputData@sampleMetaData[,stype]==
+                 unique(inputData@sampleMetaData[,stype])[1])] <- cols[1]
+  mycols[which(inputData@sampleMetaData[,stype]==
+                 unique(inputData@sampleMetaData[,stype])[2])] <- cols[2]
   
-  data<-data.frame(x=sIndependent,y=sOutcome,z=colnames(independentData),label=inputData$p,color=mycols)
+  data<-data.frame(x=sIndependent,y=sOutcome,z=colnames(independentData),
+                   label=inputData@sampleMetaData[,stype],color=mycols)
 
   # Get points to draw the lines for each phenotype by hand
   
-  uniqtypes=as.character(unique(inputData$p))
+  uniqtypes=as.character(unique(inputData@sampleMetaData[,stype]))
   
   # Starting with phenotype 1, get min and max x values constrained to the values of y
-  # The reason we do this, is because the lines do not necessary need to go out to the max or min of x, particularly
+  # The reason we do this, is because the lines do not necessary need to go out to the 
+  # max or min of x, particularly
   # when slopes are really steep (abline does this automatically but not highcharter)
-  mytypes <- inputData$p
+  mytypes <- inputData@sampleMetaData[,stype]
   getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
-    y=data$y[which(data$label==uniqtypes[currenttype])]; x=data$x[which(data$label==uniqtypes[currenttype])]
+    y=data$y[which(data$label==uniqtypes[currenttype])]; 
+    x=data$x[which(data$label==uniqtypes[currenttype])]
     min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
     max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
     
@@ -666,11 +697,11 @@ PlotPair<- function(inputData,stype,outcome,independentVariable, independentAnal
 
 
 #' 'volcano' plot (difference in correlations vs p-values)
-#' of all gene-metabolite pairs
+#' of all pairs
 #'
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
+#' FilterData()) with analyte levels 
 #' and associated meta-data
 #' @param nrpoints number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
@@ -681,7 +712,7 @@ pvalCorrVolcano <- function(inputResults, inputData,nrpoints=10000,diffcorr=0.5,
     if(class(inputResults) != "IntLimResults") {
 	stop("input data is not a IntLim class")
     }
-  p <- inputData$p
+  p <- inputData@sampleMetaData[,inputResults@stype]
   
   if (length(unique(p)) !=2){
     stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
@@ -712,8 +743,8 @@ PlotFoldOverlapUpSet<-function(inputResults){
   ComplexHeatmap::UpSet(comb_mat)
 }
 
-#' Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
-#' for the gene-metabolite pair
+#' Graphs a scatterplot of pairs vs. the interaction coefficient
+#' for the pair
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
 #' (default bottom 10 percent (high negative coefficients) and top 10 percent 
@@ -721,17 +752,17 @@ PlotFoldOverlapUpSet<-function(inputResults){
 #' @param percentageToPlot percentage of points to plot (the points will be 
 #' randomly selected) -- plotting all points will likely overwhelm plotting function.
 #' @param independent.var.type type of analyte used as the independent variable 
-#' ("gene" or "metabolite")
-#' @param outcome type of analyte used as the outcome/dependent variable ("gene"
-#' or "metabolite")
+#' ("1" or "2")
+#' @param outcome type of analyte used as the outcome/dependent variable ("1"
+#' or "2")
 #' @return a scatterplot
 #'
 #' @export
 InteractionCoefficientGraph<-function(inputResults,
                                       interactionCoeffPercentile=0.10,
                                       percentageToPlot = 0.01, 
-                                      independent.var.type = "gene",
-                                      outcome = "metabolite"){
+                                      independent.var.type = 1,
+                                      outcome = 2){
 
 
     if(class(inputResults) != "IntLimResults") {
@@ -739,12 +770,12 @@ InteractionCoefficientGraph<-function(inputResults,
     }
 
     #merge and properly name all data to return
-    gene_metabolite_format_coeff = reshape2::melt(inputResults@interaction.coefficients)
-    gene_metabolite_format_pval = reshape2::melt(inputResults@interaction.pvalues)
-    gene_metabolite_format_adjp = reshape2::melt(inputResults@interaction.adj.pvalues)
-    tofilter = cbind(gene_metabolite_format_coeff, gene_metabolite_format_pval$value, 
-                     gene_metabolite_format_adjp$value)
-    colnames(tofilter) = c("gene", "metab", "interaction_coeff", "Pval","FDRadjPval")
+    format_coeff = reshape2::melt(inputResults@interaction.coefficients)
+    format_pval = reshape2::melt(inputResults@interaction.pvalues)
+    format_adjp = reshape2::melt(inputResults@interaction.adj.pvalues)
+    tofilter = cbind(format_coeff, format_pval$value, 
+                     format_adjp$value)
+    colnames(tofilter) = c("analyte1", "analyte2", "interaction_coeff", "Pval","FDRadjPval")
 
 
     #get top and bottom cutoffs (need highest positive and highest negative coeffs)
@@ -764,28 +795,17 @@ InteractionCoefficientGraph<-function(inputResults,
     randomize = function(x) sample(1:nrow(toplot_sort),x,replace=F)
     random_rows_to_keep = sort(randomize(nrow(toplot_sort)*percentageToPlot))
     toplot_sort = toplot_sort[random_rows_to_keep,]
-    if((independent.var.type == "gene" && outcome == "metabolite") || 
-       (independent.var.type == "metabolite" && outcome == "gene"))
-    {
-      plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
-           col=toplot_sort$color, xlab = "Gene Metabolite Pairs", ylab = 
-             "Interaction Coefficient", pch=16)
-    }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
+    if(independent.var.type == outcome){
       toplot_sort = toplot_sort[which(!is.na(toplot_sort$interaction_coeff)),]
+    }
+    if((independent.var.type != 1 && independent.var.type != 2) ||
+       (outcome != 1 && outcome != 2)){
+      stop("Error! outcome and independent.var.type must each be one of the following: 1, 2")
+    }else{
       plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
-           col=toplot_sort$color, xlab = "Metabolite Pairs", ylab = 
+           col=toplot_sort$color, xlab = "AnalytePairs", ylab = 
              "Interaction Coefficient", pch=16)
     }
-    else if(independent.var.type == "gene" && outcome == "gene"){
-      toplot_sort = toplot_sort[which(!is.na(toplot_sort$interaction_coeff)),]
-      plot(1:length(toplot_sort$interaction_coeff),toplot_sort$interaction_coeff, 
-           col=toplot_sort$color, xlab = "Gene Pairs", ylab = 
-             "Interaction Coefficient", pch=16)
-    }
-    else{
-      stop("Error! outcome and independent.var.type must each be one of the following: gene, metabolite.")
-    }
-    
 }
 
 
@@ -795,13 +815,13 @@ InteractionCoefficientGraph<-function(inputResults,
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
 #' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
+#' FilterData()) with analyte levels 
 #' and associated meta-data
 #' @param outcomeAnalyteOfInterest outcome analyte in pair
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param continuous whether or not the outcome is continuous (TRUE or FALSE)
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
-#' @param independentVariable 'metabolite' or 'gene' must be set as outcome/independent variable
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
 #' @return dataframe for further analysis
 #' @export
 MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnalyteOfInterest, 
@@ -816,25 +836,25 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnal
   covariates_class = as.character(inputResults@covar$class.var)
   
   #get dataframes
-  pheno <- inputData$p
+  pheno <- inputData@sampleMetaData[,inputResults@stype]
   outcomeAnalytes <- NULL
   independentAnalytes <- NULL
-  if(outcome == "gene"){
-    outcomeAnalytes <- inputData$gene
-  }else if(outcome == "metabolite"){
-    outcomeAnalytes <- inputData$metab
+  if(outcome == 1){
+    outcomeAnalytes <- inputData@analyteType1
+  }else if(outcome == 2){
+    outcomeAnalytes <- inputData@analyteType2
   }
-  if(independentVariable == "gene"){
-    independentAnalytes <- inputData$gene
-  }else if(independentVariable == "metabolite"){
-    independentAnalytes <- inputData$metab
+  if(independentVariable == 1){
+    independentAnalytes <- inputData@analyteType1
+  }else if(independentVariable == 2){
+    independentAnalytes <- inputData@analyteType2
   }
   
-  #get one gene an metabolite
-  outcomeData = as.numeric(outcomeAnalytes[outcomeAnalyteOfInterest,])
-  independentData = as.numeric(independentAnalytes[independentAnalyteOfInterest,])
+  #get one pair
+  outcomeData = as.numeric(outcomeAnalytes[make.names(outcomeAnalyteOfInterest),])
+  independentData = as.numeric(independentAnalytes[make.names(independentAnalyteOfInterest),])
   
-  #Add gene, phenotype and metabolite data for glm
+  #Add analyte and phenotype data for glm
   forglm  = data.frame(row.names = 1:length(outcomeData))
   forglm$g = outcomeData
   forglm$type = pheno
@@ -848,7 +868,7 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnal
     for(each in covariates){
       names = colnames(forglm)
       i = i+1
-      forglm[,i] = inputData$covar_matrix[,each]
+      forglm[,i] = inputData@sampleMetaData[,each]
       colnames(forglm) = c(names, each)
     }
   }

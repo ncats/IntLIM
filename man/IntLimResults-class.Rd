@@ -26,14 +26,14 @@ IntLimResults class
 
 \item{\code{filt.results}}{data frame of filtered results}
 
-\item{\code{warnings}}{a message of whether genes and metabolites have 0 standard deviation}
+\item{\code{warnings}}{a message of whether analytes have 0 standard deviation}
 
 \item{\code{stype}}{column name that represents sample type (by default, it will be used
 in the interaction term). Only 2 categories are currently supported.}
 
-\item{\code{outcome}}{outcome is either 'metabolite' or 'gene'}
+\item{\code{outcome}}{outcome is either '1' or '2'}
 
-\item{\code{independent.var.type}}{independent variable type (either 'metabolite or 'gene')}
+\item{\code{independent.var.type}}{independent variable type (either '1 or '2')}
 
 \item{\code{covar}}{describing additional variables and the class they form}
 }}

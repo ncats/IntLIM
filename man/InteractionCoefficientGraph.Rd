@@ -2,15 +2,15 @@
 % Please edit documentation in R/plottingfunctions.R
 \name{InteractionCoefficientGraph}
 \alias{InteractionCoefficientGraph}
-\title{Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
-for the gene-metabolite pair}
+\title{Graphs a scatterplot of pairs vs. the interaction coefficient
+for the pair}
 \usage{
 InteractionCoefficientGraph(
   inputResults,
   interactionCoeffPercentile = 0.1,
   percentageToPlot = 0.01,
-  independent.var.type = "gene",
-  outcome = "metabolite"
+  independent.var.type = 1,
+  outcome = 2
 )
 }
 \arguments{
@@ -24,15 +24,15 @@ InteractionCoefficientGraph(
 randomly selected) -- plotting all points will likely overwhelm plotting function.}
 
 \item{independent.var.type}{type of analyte used as the independent variable 
-("gene" or "metabolite")}
+("1" or "2")}
 
-\item{outcome}{type of analyte used as the outcome/dependent variable ("gene"
-or "metabolite")}
+\item{outcome}{type of analyte used as the outcome/dependent variable ("1"
+or "2")}
 }
 \value{
 a scatterplot
 }
 \description{
-Graphs a scatterplot of gene-metabolite pairs vs. the interaction coefficient
-for the gene-metabolite pair
+Graphs a scatterplot of pairs vs. the interaction coefficient
+for the pair
 }

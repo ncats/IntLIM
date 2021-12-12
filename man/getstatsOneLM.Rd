@@ -2,7 +2,7 @@
 % Please edit documentation in R/internalfunctions.R
 \name{getstatsOneLM}
 \alias{getstatsOneLM}
-\title{Function that runs linear models for one gene vs all metabolites}
+\title{Function that runs linear models for analyte vs. all analytes of the other type}
 \usage{
 getstatsOneLM(form, clindata, arraydata, analytename)
 }
@@ -12,10 +12,10 @@ getstatsOneLM(form, clindata, arraydata, analytename)
 \item{clindata}{data frame with 1st column: expression of one analyte; 2nd column
 sample type (e.g. cancer/non-cancer)}
 
-\item{arraydata}{matrix of metabolite values}
+\item{arraydata}{matrix of analyte values}
 
 \item{analytename}{name of dependent analyte in the model}
 }
 \description{
-Function that runs linear models for one gene vs all metabolites
+Function that runs linear models for analyte vs. all analytes of the other type
 }

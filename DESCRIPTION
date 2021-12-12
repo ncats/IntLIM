@@ -17,13 +17,10 @@ Description: This workflow takes normalized gene expression and metabolite level
 License: GPL-2
 Depends: R (>= 3.2.0)
 Imports:
-    Biobase,
-    BiocGenerics,
 	ComplexHeatmap,
 	dendextend,
 	dplyr,
 	DT,
-    GenomicRanges,
 	gplots,
 	graphics,
 	grDevices,
@@ -31,13 +28,11 @@ Imports:
     highcharter,
 	htmltools,
 	htmlwidgets,
-	igraph,
 	lsa,
     magrittr,
     margins,
     methods,
 	MASS,
-    MultiDataSet,
 	parallel,
 	plotly,
 	purrr,
@@ -59,16 +54,13 @@ LazyData: TRUE
 NeedsCompilation: no
 Collate: 
     'AllClasses.R'
-    'MetaboliteSet_addMetabolite.R'
     'internalfunctions.R'
     '01_ReadData.R'
     '02_FilterData.R'
     '03_RunIntLim.R'
     '04_ProcessResults.R'
     'IntLimResults_extendedfunctions.R'
-    'MultiDataSet_extendedfunctions.R'
     'plottingfunctions.R'
-    'ramplinkedinfunctions.R'
     'runShiny.R'
     'statsfunctions.R'
     'writingfunctions.R'

@@ -3,7 +3,7 @@
 \name{pvalCorrVolcano}
 \alias{pvalCorrVolcano}
 \title{'volcano' plot (difference in correlations vs p-values)
-of all gene-metabolite pairs}
+of all pairs}
 \usage{
 pvalCorrVolcano(
   inputResults,
@@ -17,7 +17,7 @@ pvalCorrVolcano(
 \item{inputResults}{Data frame with model results (output of ProcessResults())}
 
 \item{inputData}{Named list (output of 
-FilterData()) with gene expression, metabolite abundances, 
+FilterData()) with analyte levels 
 and associated meta-data}
 
 \item{nrpoints}{number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)}
@@ -31,5 +31,5 @@ a smoothScatter plot
 }
 \description{
 'volcano' plot (difference in correlations vs p-values)
-of all gene-metabolite pairs
+of all pairs
 }

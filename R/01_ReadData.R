@@ -3,121 +3,93 @@
 #' The metadata associated with data files to be analyzed in IntLim is supplied
 #' as a CSV file with two columns and 6 rows: 
 #'    type,filenames
-#'    metabData,myfilename
-#'    geneData,myfilename
-#'    metabMetaData,myfilename (optional)
-#'    geneMetaData,myfilename (optional)
+#'    analyteType1,myfilename
+#'    analyteType2,myfilename
+#'    analyteType1MetaData,myfilename (optional)
+#'    analyteType2MetaData,myfilename (optional)
 #'    sampleMetaData,myfilename
 #'
-#' Note that all files supplied in the CSV file, and the CSV file itself should be placed in the same folder.  The software assumes will automatically retrieve the file path of
+#' Note that all files supplied in the CSV file, and the CSV file itself should 
+#' be placed in the same folder.  The software assumes will automatically retrieve 
+#' the file path of
 #' the input files (based on location of CSV files).  
 #' Note also that the input data files should be in a specific format:
-#'	metabData: rows are metabolites, columns are samples
-#'	geneData: rows are genes, columns are samples
-#'	metabMetaData: rows are metabolites, features are columns
-#'	geneMetaData: rows are genes, features are columns
+#'	analyteType1/2: rows are analytes, columns are samples
+#'	analyteType1/2MetaData: rows are analytes, features are columns
 #'	sampleMetaData: rows are samples, features are columns
 #' In addition, the first column of the sampleMetaData file is assumed to be the sample id, 
-#' and those sample ids should match the columns of metabData and geneData (e.g. it is required
-#' that all sample ids in the metabData and geneData are also in the sampleMetaDatafile).
+#' and those sample ids should match the columns of analyteType1/2 (e.g. it is required
+#' that all sample ids in the analyteType1/2 are also in the sampleMetaData).
 #'
-#' @include MetaboliteSet_addMetabolite.R
 #' @include internalfunctions.R
 #'
 #' @param inputFile input file in CSV format (see Despcription)
-#' @param metabid name of column from metabolite meta data to be used as id
-#'      (required if a metabolite meta dadta file is present, must match metabolite abundances data)
-#' @param geneid name of column from gene meta data to be used as id
-#'	(required if a gene meta data file is present, must match gene expression data)
-#' @param logmetab whether or not to log metabolite values (T/F)
-#' @param loggene whether or not to log gene values (T/F)
-#' @return MultiDataSet object with input data
+#' @param analyteType1id name of column from Analyte Type 1 meta data to be used as id
+#'      (required if an Analyte Type 1 meta data file is present, 
+#'      must match Analyte Type 1 data)
+#' @param analyteType2id name of column from Analyte Type 2 meta data to be used as id
+#'      (required if an Analyte Type 2 meta data file is present, 
+#'      must match Analyte Type 2 data)
+#' @param logAnalyteType1 whether or not to log values for Analyte Type 1(T/F)
+#' @param logAnalyteType2 whether or not to log values for Analyte Type 2(T/F)
+#' @param class.feat class ("factor" or "numeric") for each covariate. The following format
+#' is required: list(covar1="numeric", covar2="factor")
+#' @param suppressWarnings whether or not to suppress warnings
+#' @return IntLimData object with input data
 #'
-#' @examples
-#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-#' csvfile <- file.path(dir, "NCItestinput.csv")
-#' mydata <- ReadData(inputFile = csvfile,metabid='id',geneid='id')
 #' @export
-ReadData <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE){
+ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id", 
+                     logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = NULL,
+                     suppressWarnings = FALSE){
       
-    #Create Multi
-    pieces <- CreateIntLimObjectPieces(inputFile,metabid,geneid, logmetab,loggene)
-    GMdata <- CreateIntLimObject(genefdata=pieces[["GmetaData"]], 
-                                 metabfdata=pieces[["MmetaData"]],
-                                 metabid=pieces[["metabid"]],
-                                 geneid=pieces[["geneid"]],
-                                 pdata=pieces[["pData"]],
-                                 metabdata=pieces[["MData"]],
-                                 genedata=pieces[["GData"]],
-                                 logmetab=pieces[["logmetab"]],
-                                 loggene=pieces[["loggene"]])
-    
-
-    print("CreateMultiDataSet created")
-    return(GMdata)
-}
-
-#' This is the helper function for ReadData. It is also used in CreateCrossValFolds.
-#'
-#' @include MetaboliteSet_addMetabolite.R
-#' @include internalfunctions.R
-#'
-#' @param inputFile input file in CSV format (see Despcription)
-#' @param metabid name of column from metabolite meta data to be used as id
-#'      (required if a metabolite meta dadta file is present, must match metabolite abundances data)
-#' @param geneid name of column from gene meta data to be used as id
-#'	(required if a gene meta data file is present, must match gene expression data)
-#' @param logmetab whether or not to log metabolite values (T/F)
-#' @param loggene whether or not to log gene values (T/F)
-#' @param suppressWarnings whether to suppress warnings
-#' @return Named list of components for MultiDataSet
-CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmetab=FALSE,loggene=FALSE,
-                                     suppressWarnings=FALSE){
+  # Initialize output.
+  intlimData <- NULL
+  
   # Check that file exists
   if (!file.exists(inputFile)) {
     stop("CSV input file does not exist")
   }
   # Make into df to make access easier
   csvfile <- as.data.frame(utils::read.csv(inputFile, header=TRUE,row.names=1))
-  GMData <- NULL
-  GData <- NULL
-  MData <- NULL
+  type1Data <- NULL
+  type2Data <- NULL
   
   # Check column names are correct
   if (colnames(csvfile)!="filenames") {
     stop("Check column names of input files.  'type' and 'filenames' are required")
   }
-  
+
   # Check that all types required are present
-  mytypes <- c("metabData","geneData","metabMetaData","geneMetaData",
+  mytypes <- c("analyteType1","analyteType2","analyteType1MetaData",
+               "analyteType2MetaData",
                "sampleMetaData")
   mymatches <- as.numeric(lapply(mytypes,function(x) 
     length(which(rownames(csvfile)==x))))
   if(sum(mymatches)!=5) {
     stop(paste("The column 'type' contains non-allowed entries (See Description). The",
-               "CSV input file must contain 6 rows (if optional meta data files for metabolites",
-               "and genes are not to be input, have the corresponding filenames be blanks."))
+               "CSV input file must contain 6 rows (if optional meta data files for analytes",
+               "are not to be input, have the corresponding filenames be blanks."))
   }
   
   mydir <- base::dirname(inputFile)
   
-  if((is.na(as.character(csvfile['geneData',])) && is.na(as.character(csvfile['metabData',])))
-     || ((as.character(csvfile['geneData',]) == "") && as.character(csvfile['metabData',]) == "")){
+  if((is.na(as.character(csvfile['analyteType1',])) && is.na(as.character(csvfile['analyteType2',])))
+     || ((as.character(csvfile['analyteType1',]) == "") && as.character(csvfile['analyteType2',]) == "")){
     stop("No data provided.")
   }
   else{
-    # Check that files exist then read them in one by one
-    if(is.na(csvfile['metabData',]) || as.character(csvfile['metabData',])=="") {
+    # Read the data for Analyte Type 2.
+    if(is.na(csvfile['analyteType2',]) || as.character(csvfile['analyteType2',])=="") {
       if(suppressWarnings == FALSE){
-        warning(paste("No data provided for metabolites. This means you cannot run",
-                      "metabolite-metabolite or gene-metabolite analyses.\n"))
-        ;MData<-NULL;
+        warning(paste("No data provided for Analyte Type 2. This means you cannot run",
+                      "analyses involving this analyte type.\n"))
+        ;type2Data<-NULL;
       }
       else{
-        MData<-NULL
+        type2Data<-NULL
       }
     }else{
-      temp <- paste0(mydir,"/",as.character(csvfile['metabData',]))
+      temp <- paste0(mydir,"/",as.character(csvfile['analyteType2',]))
       if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))
       } 
@@ -125,118 +97,291 @@ CreateIntLimObjectPieces <- function(inputFile,metabid=NULL,geneid=NULL, logmeta
         ids <- utils::read.csv(temp,check.names=F)[,1]
         if(length(ids) != length(unique(ids))) {
           stop(paste("Error: your input file",temp,"has duplicate", 
-                       "entries in column 1. Please make sure you have one row per", 
-                       "metabolite"))
+                     "entries in column 1. Please make sure you have one row per", 
+                     "analyte"))
         } 
         else {
-          MData<-utils::read.csv(temp,row.names = 1,check.names=F)
+          type2Data<-utils::read.csv(temp,row.names = 1,check.names=F)
         }
       }
     }
-    if(is.na(csvfile['geneData',]) || as.character(csvfile['geneData',])=="") {
+    # Read the data for Analyte Type 1.
+    if(is.na(csvfile['analyteType1',]) || as.character(csvfile['analyteType1',])=="") {
       if(suppressWarnings == FALSE){
-        warning(paste("No data provided for genes. This means you cannot run",
-                      "gene-gene or gene-metabolite analyses.\n"))
-        ;GData<-NULL;
+        warning(paste("No data provided for Analyte Type 1. This means you cannot run",
+                      "analyses involving this analyte type.\n"))
+        ;type1Data<-NULL;
       }
       else{
-        GData<-NULL
+        type1Data<-NULL
       }
     }else {
-      temp <- paste0(mydir,"/",as.character(csvfile['geneData',]))
+      temp <- paste0(mydir,"/",as.character(csvfile['analyteType1',]))
       if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))
       } else {
         ids <- utils::read.csv(temp,check.names=F)[,1]
         if(length(ids) != length(unique(ids))) {
           stop(paste("Error: your input file",temp,"has duplicate", 
-                         "entries in column 1. Please make sure you have one row per gene"))
+                     "entries in column 1. Please make sure you have one row per analyte"))
         } else {
-          GData<-utils::read.csv(temp,row.names = 1,check.names=F)
+          type1Data<-utils::read.csv(temp,row.names = 1,check.names=F)
         }
       }
     }
-    
-    temp <- paste0(mydir,"/",as.character(csvfile['metabMetaData',]))
-    if(as.character(csvfile['metabMetaData',])=="" || as.character(csvfile['metabMetaData',])==mydir) {
+
+    # Read the Analyte Type 2 metadata.
+    temp <- paste0(mydir,"/",as.character(csvfile['analyteType2MetaData',]))
+    if(as.character(csvfile['analyteType2MetaData',])=="" ||
+       as.character(csvfile['analyteType2MetaData',])==mydir) {
       if(suppressWarnings == FALSE){
-        warning("No metadata provided for metabolites");MmetaData<-NULL;metabid=NULL; 
+        warning("No metadata provided for Analyte Type 2");type2MetaData<-NULL;analyteType2id=NULL; 
       }
       else{
-        MmetaData<-NULL
-        metabid=NULL
+        type2MetaData<-NULL
+        analyteType2id=NULL
       }
     }else if(!file.exists(temp)) {
       stop(paste("File", temp, "does not exist"))
     } else {
-        MmetaData<-utils::read.csv(temp)
-        colnames(MmetaData)[which(colnames(MmetaData)==metabid)]="id"
+      type2MetaData<-utils::read.csv(temp)
+      colnames(type2MetaData)[which(colnames(type2MetaData)==analyteType2id)]="id"
     }
-    
-    temp <- paste0(mydir,"/",as.character(csvfile['geneMetaData',]))
-    if(as.character(csvfile['geneMetaData',])==""|| as.character(csvfile['metabMetaData',])==mydir) {
+
+    # Read the Analyte Type 1 metadata.
+    temp <- paste0(mydir,"/",as.character(csvfile['analyteType1MetaData',]))
+    if(as.character(csvfile['analyteType1MetaData',])==""|| 
+       as.character(csvfile['analyteType1MetaData',])==mydir) {
       if(suppressWarnings == FALSE){
-        warning("No metadata provided for genes");GmetaData<-NULL;geneid=NULL; 
+        warning("No metadata provided for Analyte Type 1");type1MetaData<-NULL;
+        analyteType1id=NULL; 
       }
       else{
-        GmetaData<-NULL
-        metabid=NULL
+        type1MetaData<-NULL
+        analyteType1id=NULL
       }
     }else if(!file.exists(temp)) {
       stop(paste("File", temp, "does not exist"))
     } else {
-        GmetaData<-utils::read.csv(temp)
-        colnames(GmetaData)[which(colnames(GmetaData)==geneid)]="id"
+      type1MetaData<-utils::read.csv(temp)
+      colnames(type1MetaData)[which(colnames(type1MetaData)==analyteType1id)]="id"
     }
+
+    # Read the sample data.
     temp <- paste0(mydir,"/",as.character(csvfile['sampleMetaData',]))
     if(!file.exists(temp)) {
       stop(paste("File", temp, "does not exist"))
     } else {
-        pData<-utils::read.csv(temp,row.names = 1)
+      pData<-utils::read.csv(temp,row.names = 1)
     }
     
-    # Return data.
-    pieces <- list("GmetaData" = GmetaData, "MmetaData" = MmetaData, 
-                   "metabid" = metabid, "geneid" = geneid, "pData" = pData,
-                   "MData" = MData, "GData" = GData, "logmetab" = logmetab,
-                   "loggene" = loggene)
+    # Check that Analyte Type 1 ID's match metadata.
+    if(!is.null(type1Data)){
+      
+      # Check that data and metadata match.
+      if (!is.null(type1MetaData)) {
+        if(length(which(colnames(type1MetaData)=='id'))!=1) {
+          stop(paste("analyteType1id provided",analyteType1id,"does not exist in",
+                     "Analyte Type 1 meta data file"))
+        } else if (length(intersect(rownames(type1Data),as.character(type1MetaData[,"id"])))
+                   <nrow(type1Data)){
+          stop("Analytes in Type 1 data file and meta data files are not equal")
+        }
+        rownames(type1MetaData)=as.character(type1MetaData[,'id'])
+      }
+      
+      # Make sure order of feature data is the same as the data matrix:
+      if(is.null(type1MetaData)) {
+        type1MetaData <- data.frame(id = rownames(type1Data),stringsAsFactors=FALSE)
+        rownames(type1MetaData) <- type1MetaData[,1]
+      }
+      myind=as.numeric(lapply(rownames(type1Data),function(x) which(type1MetaData[,"id"]==x)))
+      type1MetaData <- data.frame(type1MetaData[myind,],stringsAsFactors=FALSE)
+      rownames(type1MetaData) <- type1MetaData[,1]
+    }
+    
+    # Check that Analyte Type 2 ID's match metadata.
+    if(!is.null(type2Data)){
+      
+      # Check that data and metadata match.
+      if (!is.null(type2MetaData)) {
+        if(length(which(colnames(type2MetaData)=='id'))!=1) {
+          stop(paste("analyteType2id provided",analyteType2id,"does not exist in",
+                     "Analyte Type 2 meta data file"))
+        } else if (length(intersect(rownames(type2Data),as.character(type2MetaData[,"id"])))
+                   <nrow(type2Data)){
+          stop("Analytes in Type 2 data file and meta data files are not equal")
+        }
+        rownames(type2MetaData)=as.character(type2MetaData[,'id'])
+      }
+      
+      # Make sure order of feature data is the same as the data matrix:
+      if(is.null(type2MetaData)) {
+        type2MetaData <- data.frame(id = rownames(type2Data),stringsAsFactors=FALSE)
+        rownames(type2MetaData) <- type2MetaData[,1]
+      }
+      myind=as.numeric(lapply(rownames(type2Data),function(x) which(type2MetaData[,"id"]==x)))
+      type2MetaData <- data.frame(type2MetaData[myind,],stringsAsFactors=FALSE)
+      rownames(type2MetaData) <- type2MetaData[,1]
+    }
+    
+    # Log data if applicable.
+    cutoff <- 0.0000001
+    if (logAnalyteType1 == TRUE && !is.null(type1Data)){
+      if(min(type1Data) < 0){
+        warning("Analyte Type 1 data has negative values. Continuing without log-scaling.")
+      }else{
+        type1Data[which(type1Data == 0)] <- cutoff
+        type1Data <- log2(type1Data)
+      }
+    }
+    if (logAnalyteType2 == TRUE && !is.null(type2Data)){
+      if(min(type2Data) < 0){
+        warning("Analyte Type 2 data has negative values. Continuing without log-scaling.")
+      }else{
+        type2Data[which(type2Data == 0)] <- cutoff
+        type2Data <- log2(type2Data)
+      }
+    }
+    
+    # Get common samples.
+    pDataOld <- pData
+    type1DataOld <- type1Data
+    type2DataOld <- type2Data
+    myind <- rownames(pData)
+    if(!is.null(type1Data)){
+      type1Samps <- colnames(type1Data)
+      myind <- intersect(myind, type1Samps)
+    }
+    if(!is.null(type2Data)){
+      type2Samps <- colnames(type2Data)
+      myind <- intersect(myind, type2Samps)
+    }
+    pData<-pData[myind,]
+    pDataSpecific <- setdiff(rownames(pDataOld), myind)
+    if(length(pDataSpecific) > 0){
+      warning(paste("The following samples were only included in the sample data",
+                    "and were removed:", pDataSpecific))
+    }
+    if(!is.null(type1Data)){
+      type1Data <- type1Data[,myind]
+      type1Specific <- setdiff(colnames(type1DataOld), myind)
+      if(length(type1Specific) > 0){
+        warning(paste("The following samples were only included in the Analyte 1 data",
+                      "and were removed:", type1Specific))
+      }
+    }
+    if(!is.null(type2Data)){
+      type2Data <- type2Data[,myind]
+      type2Specific <- setdiff(colnames(type2DataOld), myind)
+      if(length(type2Specific) > 0){
+        warning(paste("The following samples were only included in the Analyte 2 data",
+                      "and were removed:", type2Specific))
+      }
+    }
+    
+    # Fix names.
+    if(!is.null(type2Data)){
+      colnames(type2Data) <- make.names(colnames(type2Data))
+      rownames(type2Data) <- make.names(rownames(type2Data))
+    }
+    if(!is.null(type1Data)){
+      colnames(type1Data) <- make.names(colnames(type1Data))
+      rownames(type1Data) <- make.names(rownames(type1Data))
+    }
+    if(!is.null(type1MetaData)){
+      colnames(type1MetaData) <- make.names(colnames(type1MetaData))
+      rownames(type1MetaData) <- make.names(rownames(type1MetaData))
+    }
+    if(!is.null(type2MetaData)){
+      colnames(type2MetaData) <- make.names(colnames(type2MetaData))
+      rownames(type2MetaData) <- make.names(rownames(type2MetaData))
+    }
+    colnames(pData) <- make.names(colnames(pData))
+    rownames(pData) <- make.names(rownames(pData))
+    
+    # Extract sampleMetaData and coerce to numeric or factor.
+    # Coerce sampleMetaData classes.
+    names(class.feat) <- make.names(names(class.feat))
+    covarMatrix <- pData[,names(class.feat)]
+    for(covar in names(class.feat)){
+      if(class.feat[covar] == "numeric"){
+        covarMatrix[,covar] <- as.numeric(as.character(covarMatrix[,covar]))
+      }else if(class.feat[covar] == "factor"){
+        covarMatrix[,covar] <- as.factor(as.character(covarMatrix[,covar]))
+      }else{
+        stop(paste(class.feat[covar], "is not a valid class for covariate", covar))
+      }
+    }
+    
+    # Convert data to matrix.
+    if(!is.null(type1Data)){
+      type1Data <- as.matrix(type1Data)
+    }else{
+      type1Data <- matrix(, nrow = 0, ncol = 0)
+    }
+    if(!is.null(type2Data)){
+      type2Data <- as.matrix(type2Data)
+    }else{
+      type2Data <- matrix(, nrow = 0, ncol = 0)
+    }
+    
+    # Set null metadata to data frame.
+    if(is.null(type1MetaData)){
+      type1MetaData <- as.data.frame(matrix(, nrow = 0, ncol = 0))
+    }
+    if(is.null(type2MetaData)){
+      type2MetaData <- as.data.frame(matrix(, nrow = 0, ncol = 0))
+    }
+    
+    intlimData <- methods::new("IntLimData",analyteType1=type1Data,
+                               analyteType2=type2Data,
+                               analyteType1MetaData = type1MetaData,
+                               analyteType2MetaData = type2MetaData,
+                               sampleMetaData = covarMatrix)
+    
+    print("IntLIMData created")
   }
-  return(pieces)
+  return(intlimData)
 }
 
-#' Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).
-#'
-#' Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
+#' Creates multiple cross-validation folds from the data. Format is a list of
+#' IntLIMData training and testing pairs. The "training" slot contains all data
+#' except that in the given fold, and the "testing" contains all data in the fold.
 #'
 #' @param inputFile input file in CSV format (see Despcription)
-#' @param metabid name of column from metabolite meta data to be used as id
-#'      (required if a metabolite meta dadta file is present, must match metabolite abundances data)
-#' @param geneid name of column from gene meta data to be used as id
-#'	(required if a gene meta data file is present, must match gene expression data)
-#' @param logmetab whether or not to log metabolite values (T/F)
-#' @param loggene whether or not to log gene values (T/F)
+#' @param analyteType1id name of column from Analyte Type 1 meta data to be used as id
+#'      (required if an Analyte Type 1 meta data file is present, 
+#'      must match Analyte Type 1 data)
+#' @param analyteType2id name of column from Analyte Type 2 meta data to be used as id
+#'      (required if an Analyte Type 2 meta data file is present, 
+#'      must match Analyte Type 2 data)
+#' @param logAnalyteType1 whether or not to log values for Analyte Type 1(T/F)
+#' @param logAnalyteType2 whether or not to log values for Analyte Type 2(T/F)
+#' @param class.feat class ("factor" or "numeric") for each covariate. The following format
+#' is required: list(covar1="numeric", covar2="factor")
 #' @param folds number of folds to create
 #' @param suppressWarnings whether to suppress warnings
-#' @return A set of MultiDataSet training and testing sets, of the following format:
-#' list(list("train" = MultiDataSet, "test" = MultiDataSet), ... list("train" = MultiDataSet,
-#' "test" = MultiDataSet))
+#' @return A set of IntLimData training and testing sets, of the following format:
+#' list(list("train" = IntLimData, "test" = IntLimData), ... list("train" = IntLimData,
+#' "test" = IntLimData))
 #' @export
-CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL, 
-                                logmetab=FALSE,loggene=FALSE,
+CreateCrossValFolds <- function(inputFile,analyteType1id=NULL,analyteType2id=NULL, 
+                                logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = NULL,
                                 folds, suppressWarnings=FALSE) {
   
   # Create the components of the input.
-  pieces <- CreateIntLimObjectPieces(inputFile,metabid,geneid, logmetab,loggene,
-                                     suppressWarnings)
+  pieces <- ReadData(inputFile,analyteType1id,analyteType2id, logAnalyteType1,
+                     logAnalyteType2, class.feat, suppressWarnings)
   
   # Extract all samples.
-  samps <- rownames(pieces[["pData"]])
+  samps <- rownames(pieces@sampleMetaData)
   
   # Stop if the number of folds is greater than the number of samples.
   if(folds > length(samps)){
     stop("ERROR: The number of folds is greater than the number of samples!")
   }
-
+  
   # Permute samples and divide into folds.
   sets_of <- floor(length(samps) / folds)
   perm_samps <- sample(samps, length(samps), replace = FALSE)
@@ -251,67 +396,48 @@ CreateCrossValFolds <- function(inputFile,metabid=NULL,geneid=NULL,
     }
   }
   fold_samps <- split(perm_samps, group_assignment)
-
+  
   # For each fold, extract the samples from the data set.
   trainTestObjects <- lapply(fold_samps, function(fold){
     # Initialize.
-    GmetaData <- pieces$GmetaData
-    MmetaData <- pieces$MmetaData
-    metabid <- pieces$metabid
-    geneid <- pieces$geneid
-    pData_train <- pieces$pData[setdiff(samps, fold),]
-    pData_test <- pieces$pData[fold,]
-    MData_train <- NULL
-    MData_test <- NULL
-    GData_train <- NULL
-    GData_test <- NULL
-    logmetab_train <- NULL
-    logmetab_test <- NULL
-    loggene_train <- NULL
-    loggene_test <- NULL
+    not_fold <- sort(setdiff(samps, fold))
+    type1MetaData <- pieces@analyteType1MetaData
+    type2MetaData <- pieces@analyteType2MetaData
+    covar_train <- pieces@sampleMetaData[not_fold,]
+    covar_test <- pieces@sampleMetaData[fold,]
+    type1_train <- pieces@analyteType1
+    type1_test <- pieces@analyteType1
+    type2_train <- pieces@analyteType2
+    type2_test <- pieces@analyteType2
     
     # Include all but the current fold in the training data.
-    if(!is.null(pieces$MData)){
-      MData_train <- pieces$MData[,setdiff(samps, fold)]
-      MData_test <- as.data.frame(pieces$MData[,fold])
-      logmetab_train <- pieces$logmetab
-      logmetab_test <- pieces$logmetab
-      rownames(MData_test) <- rownames(pieces$MData)
-      colnames(MData_test) <- rownames(pData_test)
+    if(length(pieces@analyteType1)>0){
+      type1_train <- pieces@analyteType1[,not_fold]
+      type1_test <- as.matrix(as.data.frame(pieces@analyteType1[,fold]))
+      rownames(type1_test) <- rownames(pieces@analyteType1)
+      colnames(type1_test) <- rownames(covar_test)
     }
-    if(!is.null(pieces$GData)){
-      GData_train <- pieces$GData[,setdiff(samps, fold)]
-      GData_test <- as.data.frame(pieces$GData[,fold])
-      loggene_train <- pieces$loggene
-      loggene_test <- pieces$loggene
-      rownames(GData_test) <- rownames(pieces$GData)
-      colnames(GData_test) <- rownames(pData_test)
+    if(length(pieces@analyteType2)>0){
+      type2_train <- pieces@analyteType2[,setdiff(samps, fold)]
+      type2_test <- as.matrix(as.data.frame(pieces@analyteType2[,fold]))
+      rownames(type2_test) <- rownames(pieces@analyteType2)
+      colnames(type2_test) <- rownames(covar_test)
     }
+    training <- methods::new("IntLimData",analyteType1=type1_train,
+                             analyteType2=type2_train,
+                             analyteType1MetaData = type1MetaData,
+                             analyteType2MetaData = type2MetaData,
+                             sampleMetaData = covar_train)
     
-    training <- CreateIntLimObject(genefdata=GmetaData, 
-                                 metabfdata=MmetaData,
-                                 metabid=metabid,
-                                 geneid=geneid,
-                                 pdata=pData_train,
-                                 metabdata=MData_train,
-                                 genedata=GData_train,
-                                 logmetab=logmetab,
-                                 loggene=loggene)
     
-
     # Include the current fold in the testing data.
-    testing <- CreateIntLimObject(genefdata=GmetaData, 
-                                   metabfdata=MmetaData,
-                                   metabid=metabid,
-                                   geneid=geneid,
-                                   pdata=pData_test,
-                                   metabdata=MData_test,
-                                   genedata=GData_test,
-                                   logmetab=logmetab,
-                                   loggene=loggene)
+    testing <- methods::new("IntLimData",analyteType1=type1_test,
+                            analyteType2=type2_test,
+                            analyteType1MetaData = type1MetaData,
+                            analyteType2MetaData = type2MetaData,
+                            sampleMetaData = covar_test)
     
     return(list("training"=training, "testing"=testing))
   })
   return(trainTestObjects)
 }
-

@@ -2,42 +2,62 @@
 % Please edit documentation in R/02_FilterData.R
 \name{FilterDataFolds}
 \alias{FilterDataFolds}
-\title{Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).}
+\title{Filter input data by abundance values (analyte data) and number of missing 
+values.}
 \usage{
 FilterDataFolds(
   csvfile,
-  stype,
   inputDataFolds,
-  geneperc = 0,
-  metabperc = 0,
-  metabmiss = 0,
-  class.covar = NULL,
-  stype.type
+  analyteType1perc = 0,
+  analyteType2perc = 0,
+  analyteType2miss = 0,
+  analyteType1id = "id",
+  analyteType2id = "id",
+  logAnalyteType1 = F,
+  logAnalyteType2 = F,
+  class.feat
 )
 }
 \arguments{
 \item{csvfile}{The path to the CSV file that contains the full dataset.}
 
-\item{stype}{phenotype or outcome of interest.}
+\item{inputDataFolds}{List of IntLimData objects (output of ReadData()) with analylte levels and
+associated meta-data}
 
-\item{inputDataFolds}{list of MultiDataSet objects (output of CreateCrossValFolds()) with gene expression, 
-metabolite abundances, and associated meta-data}
+\item{analyteType1perc}{percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
+remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}
 
-\item{geneperc}{percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 
-< 'geneperc' percentile) (default: 0)}
+\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 
+(default: no filtering of analytes) (default:0)}
 
-\item{metabperc}{percentile cutoff (0-1) for filtering metabolites (default: no filtering of metabolites) (default:0)}
+\item{analyteType2miss}{missing value percent cutoff (0-1) for filtering analyte type 2 
+(analytes with > 80\% missing values will be removed) (default:0)}
 
-\item{metabmiss}{missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)}
+\item{analyteType1id}{name of column from Analyte Type 1 meta data to be used as id
+(required if an Analyte Type 1 meta data file is present, 
+must match Analyte Type 1 data), Must coincide with parameter used during 
+CreateCrossValFolds.}
 
-\item{class.covar}{class ("numeric" or "character") for each covariate. The following format
-is required: list(covar1="numeric", covar2="character")}
+\item{analyteType2id}{name of column from Analyte Type 2 meta data to be used as id
+(required if an Analyte Type 2 meta data file is present, 
+must match Analyte Type 2 data). Must coincide with parameter used during 
+CreateCrossValFolds.}
 
-\item{stype.type}{Either "factor" or "numeric". The outcome type.}
+\item{logAnalyteType1}{whether or not to log values for Analyte Type 1(T/F).
+Must coincide with parameter used during CreateCrossValFolds.}
+
+\item{logAnalyteType2}{whether or not to log values for Analyte Type 2(T/F).
+Must coincide with parameter used during CreateCrossValFolds.}
+
+\item{class.feat}{class ("factor" or "numeric") for each covariate. The following format
+is required: list(covar1="numeric", covar2="factor"). 
+Must coincide with parameter used during CreateCrossValFolds.}
 }
 \value{
-filtData list of MultiDataSet objects with input data after filtering
+filtData IntLimData object with input data after filtering
 }
 \description{
-Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
+Filter data by abundance (with user-input percentile cutoff) of missing values 
+(with user-input percent cutoff). Missing values are commonly found in 
+metabolomics data.
 }

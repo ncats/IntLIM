@@ -18,7 +18,7 @@ MarginalEffectsGraphDataframe(
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
 \item{inputData}{Named list (output of 
-FilterData()) with gene expression, metabolite abundances, 
+FilterData()) with analyte levels 
 and associated meta-data}
 
 \item{independentAnalyteOfInterest}{independent analyte in pair}
@@ -27,9 +27,9 @@ and associated meta-data}
 
 \item{continuous}{whether or not the outcome is continuous (TRUE or FALSE)}
 
-\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable}
+\item{outcome}{'1' or '2' must be set as outcome/independent variable}
 
-\item{independentVariable}{'metabolite' or 'gene' must be set as outcome/independent variable}
+\item{independentVariable}{'1' or '2' must be set as outcome/independent variable}
 }
 \value{
 dataframe for further analysis

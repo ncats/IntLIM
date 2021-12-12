@@ -2,7 +2,7 @@
 % Please edit documentation in R/plottingfunctions.R
 \name{PlotPair}
 \alias{PlotPair}
-\title{scatter plot of gene-metabolite pairs (based on user selection)}
+\title{scatter plot of pairs (based on user selection)}
 \usage{
 PlotPair(
   inputData,
@@ -20,9 +20,9 @@ PlotPair(
 
 \item{stype}{category to color-code by}
 
-\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable}
+\item{outcome}{'1' or '2' must be set as outcome/independent variable}
 
-\item{independentVariable}{'metabolite' or 'gene' must be set as outcome/independent variable}
+\item{independentVariable}{'1' or '2' must be set as outcome/independent variable}
 
 \item{independentAnalyteOfInterest}{independent analyte in pair}
 
@@ -35,5 +35,5 @@ PlotPair(
 in Shiny/Knittr (F)}
 }
 \description{
-scatter plot of gene-metabolite pairs (based on user selection)
+scatter plot of pairs (based on user selection)
 }

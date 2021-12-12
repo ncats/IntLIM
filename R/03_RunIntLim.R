@@ -3,36 +3,37 @@
 #' @include internalfunctions.R
 #'
 #' @param inputData Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
+#' FilterData()) with analyte abundances, 
 #' and associated meta-data
 #' @param stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
-#' (default is 'metabolite')
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' (default is '1')
 #' @param covar Additional variables from the phenotypic data that be integrated into linear model
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time. The default is FALSE.
-#' @param independent.var.type 'metabolite' or 'gene' must be set as independent variable
-#' (default is 'metabolite')
-#' @param remove.duplicates boolean to indicate whether or not to remove the metabolite-metabolite
-#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param independent.var.type '1' or '2' must be set as independent variable
+#' (default is '1')
+#' @param remove.duplicates boolean to indicate whether or not to remove the 
+#' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' 
 #' @return IntLimModel object with model results
 #' @export
-RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
+RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL, 
                       continuous = FALSE, 
-                      save.covar.pvals=FALSE, independent.var.type="gene", remove.duplicates = FALSE){
+                      save.covar.pvals=FALSE, independent.var.type=1, remove.duplicates = FALSE){
 
-    if(!continuous & length(unique(stats::na.omit(inputData$p))) != 2) {
+    if(!continuous & length(unique(stats::na.omit(inputData@sampleMetaData[,stype]))) != 2) {
 	    stop(paste("IntLim currently requires only two categories.  Make sure the 
-	               column",stype,"only has two unique values"))
+	               column",stype,"only has two unique values. Did you mean to set",
+	               "continuous to TRUE?"))
     }
     print("Running the analysis on")
     if(continuous == FALSE){
-        print(table(inputData$p))
+        print(table(inputData@sampleMetaData[,stype]))
     }else{
-        print(range(inputData$p))
+        print(range(inputData@sampleMetaData[,stype]))
     }
 
     ptm <- proc.time()
@@ -41,57 +42,60 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
     removeDupWarning <- "remove.duplicates only applies if the independent variable
                     and outcome are of the same analyte type. Duplicates will
                     not be removed."
-    if(independent.var.type == "gene" && outcome == "metabolite"){
+    if(independent.var.type == 1 && outcome == 2){
         if(remove.duplicates == TRUE){
             warning(removeDupWarning)
         }
-        if("gene" %in% names(inputData) && "metab" %in% names(inputData)) {
+        if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0) {
             myres <- RunLM(inputData,outcome=outcome,
                            independentVariable = independent.var.type,
-                    type=inputData$p,covar=covar, continuous = continuous, 
+                    type=inputData@sampleMetaData[,stype],covar=covar, continuous = continuous, 
                     save.covar.pvals=save.covar.pvals)
         }
         else{
-            stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
+            stop("One type of analyte data is missing. Cannot run.\n")
         }
-    }else if(independent.var.type == "metabolite" && outcome == "gene"){
+    }else if(independent.var.type == 2 && outcome == 1){
         if(remove.duplicates == TRUE){
             warning(removeDupWarning)
         }
-        if("gene" %in% names(inputData) && "metab" %in% names(inputData)) {
+        if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0) {
             myres <- RunLM(inputData,outcome=outcome,
                            independentVariable = independent.var.type,
-                           type=inputData$p,covar=covar, continuous = continuous, 
+                           type=inputData@sampleMetaData[,stype],covar=covar, 
+                           continuous = continuous, 
                            save.covar.pvals=save.covar.pvals)
         }
         else{
-            stop("Either the gene data or the metabolite data is missing. Cannot run.\n")
+            stop("One type of analyte data is missing. Cannot run.\n")
         }
-    }else if(independent.var.type == "metabolite" && outcome == "metabolite"){
-        if("metab" %in% names(inputData)) {
+    }else if(independent.var.type == 1 && outcome == 1){
+        if(length(inputData@analyteType1)>0) {
             myres <- RunLM(inputData,outcome=outcome,
                            independentVariable = independent.var.type,
-                           type=inputData$p,covar=covar, continuous = continuous, 
+                           type=inputData@sampleMetaData[,stype],covar=covar, 
+                           continuous = continuous, 
                            save.covar.pvals=save.covar.pvals, 
                            keep.highest.pval = remove.duplicates)
         }
         else{
-            stop("The metabolite data is missing. Cannot run.\n")
+            stop("Analyte Type 1 is missing. Cannot run.\n")
         }
-    }else if(independent.var.type == "gene" && outcome == "gene"){
-        if("gene" %in% names(inputData)) {
-            myres <- myres <- RunLM(inputData,outcome=outcome,
+    }else if(independent.var.type == 2 && outcome == 2){
+        if(length(inputData@analyteType2)>0) {
+            myres <- RunLM(inputData,outcome=outcome,
                                     independentVariable = independent.var.type,
-                                    type=inputData$p,covar=covar, continuous = continuous, 
+                                    type=inputData@sampleMetaData[,stype],covar=covar, 
+                                    continuous = continuous, 
                                     save.covar.pvals=save.covar.pvals, 
                                     keep.highest.pval = remove.duplicates)
         }
         else{
-            stop("The gene data is missing. Cannot run.\n")
+            stop("Analyte Type 2 is missing. Cannot run.\n")
         }
     }else{
         print(paste("Error! independent.var.type and outcome.type must both be either",
-        "gene or metabolite in RunIntLim."))
+        "1 or 2 in RunIntLim."))
     }
     print(proc.time() - ptm)
     myres@stype=stype
@@ -102,7 +106,7 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
         covariate <- covar
         class.var <- c()
         for(i in 1:length(covar)){
-            class.var[i] <- class(inputData$covar_matrix[,i])
+            class.var[i] <- class(covar)
         }
 
         myres@covar <- data.frame(covariate,class.var)
@@ -114,30 +118,28 @@ RunIntLim <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL,
 #'
 #' @include internalfunctions.R
 #'
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression,
-#' metabolite abundances, and associated meta-data
+#' @param inputData MultiDataSet object (output of ReadData()) with analyte levels
+#'  and associated meta-data
 #' @param stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
-#' (default is 'metabolite')
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' (default is '1')
 #' @param covar Additional variables from the phenotypic data that be integrated into linear model
 #' @param continuous boolean to indicate whether the data is continuous or discrete
-#' @param metabolite.pairs boolean to indicate whether to return metabolite-metabolite pairs (TRUE) or gene-metabolite pairs (FALSE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time. The default is FALSE.
-#' @param independent.var.type 'metabolite' or 'gene' must be set as independent variable
-#' (default is 'metabolite')
-#' @param remove.duplicates boolean to indicate whether or not to remove the metabolite-metabolite
-#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param independent.var.type '1' or '2' must be set as independent variable
+#' (default is '1')
+#' @param remove.duplicates boolean to indicate whether or not to remove the 
+#'  pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' 
 #' @return List of IntLimModel objects with model results
 #' @export
-RunIntLimAllFolds <- function(inputData,stype=NULL,outcome="metabolite", covar=NULL, 
-                      continuous = FALSE, metabolite.pairs=FALSE,
-                      save.covar.pvals=FALSE, independent.var.type="gene", remove.duplicates = FALSE){
+RunIntLimAllFolds <- function(inputData,stype=NULL,outcome=1, covar=NULL, 
+                      continuous = FALSE, save.covar.pvals=FALSE, independent.var.type=1, 
+                      remove.duplicates = FALSE){
     myres <- list()
     for(i in 1:length(inputData)){
-        # Gene-metabolite
         myres[i] <- IntLIM::RunIntLim(inputData = inputData[[i]]$training,
                                          stype=stype, 
                                          save.covar.pvals = save.covar.pvals, 

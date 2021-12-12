@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResultsAllFolds}
 \alias{ProcessResultsAllFolds}
-\title{Retrieve significant gene-metabolite pairs, based on adjusted p-values, interaction
+\title{Retrieve significant pairs, based on adjusted p-values, interaction
 coefficient percentile, and r-squared values. This is a wrapper for ProcessResults.}
 \usage{
 ProcessResultsAllFolds(
@@ -19,8 +19,8 @@ ProcessResultsAllFolds(
 \arguments{
 \item{inputResults}{List of IntLimResults object with model results (output of RunIntLimAllFolds())}
 
-\item{inputData}{List of MultiDataSet objects (output of CreateCrossValFolds()) with gene expression,
-metabolite abundances, and associated meta-data}
+\item{inputData}{List of MultiDataSet objects (output of CreateCrossValFolds()) 
+with analyte levels and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
@@ -35,13 +35,13 @@ metabolite abundances, and associated meta-data}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
 
-\item{treecuts}{user-selected number of clusters (of gene-metabolite pairs) 
+\item{treecuts}{user-selected number of clusters (of pairs) 
 to cut the tree into}
 }
 \value{
 List of IntResults object with model results (now includes correlations)
 }
 \description{
-Retrieve significant gene-metabolite pairs, based on adjusted p-values, interaction
+Retrieve significant pairs, based on adjusted p-values, interaction
 coefficient percentile, and r-squared values. This is a wrapper for ProcessResults.
 }

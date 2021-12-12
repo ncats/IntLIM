@@ -2,26 +2,26 @@
 % Please edit documentation in R/02_FilterData.R
 \name{FilterFromKeepers}
 \alias{FilterFromKeepers}
-\title{Filter a data set given the metabolites and genes to keep.}
+\title{Filter a data set given the analytes to keep.}
 \usage{
 FilterFromKeepers(
   inputData,
   stype,
-  genekeepers,
-  metabkeepers,
+  type1keepers,
+  type2keepers,
   stype.type,
   class.covar = NULL
 )
 }
 \arguments{
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
-metabolite abundances, and associated meta-data}
+\item{inputData}{IntLimData object (output of ReadData()) with analyte leves
+and associated meta-data}
 
 \item{stype}{phenotype or outcome of interest.}
 
-\item{genekeepers}{Genes to keep.}
+\item{type1keepers}{Type 1 analytes to keep.}
 
-\item{metabkeepers}{Metabolites to keep.}
+\item{type2keepers}{Type 2 analytes to keep.}
 
 \item{stype.type}{Either "factor" or "numeric". The outcome type.}
 
@@ -29,8 +29,8 @@ metabolite abundances, and associated meta-data}
 is required: list(covar1="numeric", covar2="character")}
 }
 \value{
-filtData MultiDataSet object with input data after filtering
+filtData IntLimData object with input data after filtering
 }
 \description{
-Filter a data set given the metabolites and genes to keep.
+Filter a data set given the analytes to keep.
 }

@@ -1,16 +1,19 @@
 #' Get some stats after reading in data
 #'
-#' @include MultiDataSet_extendedfunctions.R
-#'
 #' @param IntLimObject output of ReadData()
 #' @return data.frame with some # of samples, features, etc.
-#'
-#' @examples
-#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-#' csvfile <- file.path(dir, "NCItestinput.csv")
-#' mydata <- ReadData(csvfile,metabid='id',geneid='id')
-#' ShowStats(mydata)
 #' @export
 ShowStats <- function(IntLimObject) {
-        return(getStats(IntLimObject))
+  if(length(IntLimObject@analyteType1)>0 && length(IntLimObject@analyteType2)>0){
+    mystats <- data.frame(Num_Analytes_Type1 = nrow(IntLimObject@analyteType1),
+                          Num_Analytes_Type2 = nrow(IntLimObject@analyteType2),
+                          Num_Samples = nrow(IntLimObject@sampleMetaData))
+  } else if(length(IntLimObject@analyteType1)>0){
+    mystats <- data.frame(Num_Analytes_Type1 = nrow(IntLimObject@analyteType1),
+                          Num_Samples = nrow(IntLimObject@sampleMetaData))      
+  } else if(length(IntLimObject@analyteType1)>0){
+    mystats <- data.frame(Num_Analytes_Type2 = nrow(IntLimObject@analyteType2),
+                          Num_Samples = nrow(IntLimObject@sampleMetaData))
+  }
+  print(mystats)
 }

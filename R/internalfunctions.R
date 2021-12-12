@@ -1,276 +1,13 @@
-#' Generic function to create constructor of MultiDataSet gene object
-#'
-#' @include MetaboliteSet_addMetabolite.R
-#' @include AllClasses.R
-#'
-#' @param genefdata gene meta data
-#' @param metabfdata metabolite meta data
-#' @param pdata sample meta data
-#' @param geneid name of column from metabolite meta data to be used as id
-#'	(required if a gene meta data file is present, must match gene expression matrix))
-#' @param metabid name of column from gene meta data to be used as id
-#'      (required if a metabolite meta data file is present, must match metabolite abundances matrix))
-#' @param metabdata metabolite abundances (samples are in columns)
-#' @param genedata gene expression (samples are in columns)
-#' @param logmetab T/F
-#' @param loggene T/F
-CreateIntLimObject <- function(genefdata, metabfdata, pdata, geneid, metabid,
-                               metabdata, genedata, logmetab=FALSE,loggene=FALSE) {
-  
-  multi <- MultiDataSet::createMultiDataSet()
-  
-  # Check that feature data and abundance data metabolites corresponds
-  if(!is.null(metabdata)){
-    if (!is.null(metabfdata)) {
-      if(length(which(colnames(metabfdata)=='id'))!=1) {
-        stop(paste("metabid provided",metabid,"does not exist in metabolite meta data file"))
-      } else if (length(intersect(rownames(metabdata),as.character(metabfdata[,"id"])))<nrow(metabdata)){
-        stop("Metabolites in abundance data file and metabolite meta data file are not equal")
-      } else {
-        myind <- as.numeric(lapply(rownames(metabdata),function(x) {
-          which(as.character(metabfdata[,'id'])==x)[1]}))
-        metabpdata<-pdata[myind,,drop=FALSE]
-      }
-      rownames(metabfdata)=as.character(metabfdata[,'id'])
-    }
-    
-    # Check that samples data and abundance data samples correspond
-    if(length(intersect(colnames(metabdata),rownames(pdata)))<ncol(metabdata)){
-      stop("All samples in abundance data file must be in metabolite meta data file")
-    } else {
-      myind <- as.numeric(lapply(colnames(metabdata),function(x) {
-        which(rownames(pdata)==x)[1]}))
-      metabpdata<-pdata[myind,,drop=FALSE]
-    }
-    
-    #new data frames are set for phenoData and featureData
-    metabpdata$id=rownames(metabpdata)
-    metabphenoData <- Biobase::AnnotatedDataFrame(data = metabpdata)
-    if (logmetab == TRUE){
-      metabdata <- log2(metabdata)
-    }
-    
-    if(is.null(metabfdata)) {
-      metabfdata <- data.frame(id = rownames(metabdata),stringsAsFactors=FALSE)
-      rownames(metabfdata) <- metabfdata[,1]
-    }
-    # Make sure order of feature data is the same as the data matrix:
-    myind=as.numeric(lapply(rownames(metabdata),function(x) which(metabfdata[,"id"]==x)))
-    metabfdata <- data.frame(metabfdata[myind,],stringsAsFactors=FALSE)
-    rownames(metabfdata) <- metabfdata[,1]
-    metabfeatureData <- Biobase::AnnotatedDataFrame(data = metabfdata)
-    metab.set <- methods::new("MetaboliteSet",metabData = metabdata,
-                              phenoData = metabphenoData, featureData = metabfeatureData)
-    multi <- add_metabolite(multi, metab.set)
-  }
-  
-  
-  #####  Now the genes
-  # Check that feature data and gene expression data corresponds
-  if(!is.null(genedata)){
-    if(!is.null(genefdata)) {
-      if(length(which(colnames(genefdata)=="id"))!=1) {
-        stop(paste("geneid provided",geneid,"does not exist in gene meta data file"))
-      } else if(length(intersect(rownames(genedata),as.character(genefdata[,'id']))) < nrow(genedata)){
-        stop("Genes in expression data file and gene meta data file are not equal")
-      } else {
-        myind <- as.numeric(lapply(rownames(genedata),function(x) {
-          which(as.character(genefdata[,'id'])==x)[1]}))
-        genepdata<-pdata[myind,,drop=FALSE]
-      }
-      
-      rownames(genefdata)=as.character(genefdata[,'id'])
-    }
-    # Check that samples data and abundance data samples correspond
-    if(length(intersect(colnames(genedata),rownames(pdata)))<ncol(genedata)){
-      stop("Samples in expression data file and sample meta data file are not equal")
-    } else {
-      myind <- as.numeric(lapply(colnames(genedata),function(x) {
-        which(rownames(pdata)==x)[1]}))
-      genepdata<-pdata[myind,,drop=FALSE]
-    }
-    
-    #new data frames are set for phenoData and featureData
-    if (loggene == TRUE){
-      genedata <- log2(genedata)
-    }
-    
-    gene.set <- Biobase::ExpressionSet(assayData=as.matrix(genedata))
-    if(is.null(genefdata)) {
-      genefdata <- data.frame(id = rownames(genedata))
-      rownames(genefdata) <- genefdata[,1]
-    }
-    if(length(which(colnames(genefdata)=="chromosome"))==0) {
-      genefdata$chromosome <- rep("chr",nrow(genefdata))}
-    if(length(which(colnames(genefdata)=="start"))==0) {
-      genefdata$start <- rep(0,nrow(genefdata))}
-    if(length(which(colnames(genefdata)=="end"))==0) {
-      genefdata$end <- rep(0,nrow(genefdata))}
-    # Make sure that the order of genefdata is the same as the input data
-    myind=as.numeric(lapply(rownames(genedata),function(x) which(genefdata$id==x)))
-    genefdata <- genefdata[myind,]
-    Biobase::fData(gene.set) <- data.frame(genefdata,stringAsFactors=FALSE)
-    genepdata$id=rownames(genepdata)
-    Biobase::pData(gene.set) <- genepdata
-    multi <- MultiDataSet::add_genexp(multi, gene.set)
-  }
-  
-  return(multi)
-}
-
-
-#' Function that returns a list of all data for samples in common between metabolite and gene datasets
-#'
-##' @include AllClasses.R
-#'
-#' @import MultiDataSet
-#' @param inputData MultiDataSet object (output of ReadData())
-#' @param stype category to color-code by (can be more than two categories)
-#' @param continuous boolean value indicating whether outcome is continuous
-#' @export
-getCommon <- function(inputData,stype=NULL, continuous=FALSE) {
-  incommon<-MultiDataSet::commonSamples(inputData)
-  mp <- Biobase::pData(incommon[["metabolite"]])
-  gp <- Biobase::pData(incommon[["expression"]])
-  
-  if(all.equal(mp[,stype],gp[,stype])[1] != TRUE) {
-    stop(paste("The column", stype,"for the samples in common between the metabolite and gene datasets are not equal.  Please check your input."))
-  }
-  
-  
-  gene <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
-  metab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
-  
-  # Force the order to be the same, in case it isn't
-  p <- mp[rownames(gp),]
-  p.0 <- p
-  rmetab <- rownames(metab)
-  cmetab <- colnames(metab)
-  metab <- as.data.frame(metab[,colnames(gene)])
-  colnames(metab) <- cmetab
-  
-  if(!is.null(stype)) {
-    p <- p[,stype]
-    uniqp <- unique(p)
-    
-    uniqtypes <- unique(p)
-    # Deal with missing values or ""
-    if(length(which(p==""))>0) {
-      new.p <- p[which(p!="")]
-      metab <- metab[,which(p!="")]
-      gene <- gene[,which(p!="")]
-      p <- new.p
-    }
-    if(length(which(is.na(p)))>0) {
-      new.p <- p[which(!is.na(p))]
-      metab <- metab[,which(!is.na(p))]
-      gene <- gene[,which(!is.na(p))]
-      p <- new.p
-    }
-  }
-  
-  # Add covariates.
-  covar_matrix <- p.0[colnames(gene),, drop = FALSE]
-  na.covar <- which(is.na(covar_matrix) | covar_matrix == '',arr.ind = TRUE)
-  na.covar.list <- unique(rownames(na.covar))
-  new.overall.list <- setdiff(colnames(gene), na.covar.list)
-  
-  covar_matrix <- covar_matrix[new.overall.list,,drop = FALSE]
-  
-  class.var <- apply(covar_matrix,2,class)
-  
-  gene <- gene[,new.overall.list]
-  metab <- metab[,new.overall.list]
-  p <- p.0[new.overall.list,stype]
-  
-  # Check that everything is in right order
-  if(!all.equal(rownames(mp),rownames(gp)) || !all.equal(colnames(metab),colnames(gene))){
-    stop("Something went wrong with the merging!  Sample names of input files may not match.")
-  } else {
-    out <- list(p=p,gene=gene,metab=metab,covar_matrix=covar_matrix)
-    if(continuous == FALSE){
-      out <- list(p=as.factor(as.character(p)),gene=gene,metab=metab,covar_matrix=covar_matrix)
-    }
-  }
-  return(out)
-}
-
-#' Function that returns a list of all data for samples in metabolite or gene dataset.
-#'
-##' @include AllClasses.R
-#'
-#' @import MultiDataSet
-#' @param inputData MultiDataSet object (output of ReadData())
-#' @param stype category to color-code by (can be more than two categories)
-#' @param type either "metabolite" or "expression"
-#' @param continuous boolean value indicating whether outcome is continuous
-formatSingleOmicInput <- function(inputData,stype=NULL,
-                                  type = NULL, continuous=FALSE) {
-  incommon<-inputData
-  p <- NULL
-  analyte <- NULL
-  if(type == "metabolite"){
-    p <- Biobase::pData(incommon[["metabolite"]])
-    analyte <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
-  }else if(type == "expression"){
-    p <- Biobase::pData(incommon[["expression"]])
-    analyte <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
-  }
-  p.0 <- p
-  
-  if(!is.null(stype)) {
-    p <- p[,stype]
-    uniqp <- unique(p)
-    
-    uniqtypes <- unique(p)
-    # Deal with missing values or ""
-    if(length(which(p==""))>0) {
-      new.p <- p[which(p!="")]
-      analyte <- analyte[,which(p!="")]
-    }
-    if(length(which(is.na(p)))>0) {
-      new.p <- p[which(!is.na(p))]
-      analyte <- analyte[,which(!is.na(p))]
-      p <- new.p
-    }
-  }
-  
-  # Add covariates.
-  covar_matrix <- p.0[colnames(analyte),, drop = FALSE]
-  na.covar <- which(is.na(covar_matrix) | covar_matrix == '',arr.ind = TRUE)
-  na.covar.list <- unique(rownames(na.covar))
-  new.overall.list <- setdiff(colnames(analyte), na.covar.list)
-  
-  covar_matrix <- covar_matrix[new.overall.list,,drop = FALSE]
-  
-  analyte <- analyte[,new.overall.list]
-  p <- p.0[new.overall.list,stype]
-  
-  # Check that everything is in right order
-  out <- list(p=p,covar_matrix=covar_matrix)
-  if(continuous == FALSE){
-    out <- list(p=as.factor(as.character(p)),covar_matrix=covar_matrix)
-  }
-  if(type == "metabolite"){
-    out[["metab"]] <- analyte
-  }
-  if(type == "expression"){
-    out[["gene"]] <- analyte
-  }
-  return(out)
-}
-
 #' Function that runs linear models and returns interaction p-values.
 #'
-#' @include MetaboliteSet_addMetabolite.R
 #' @include AllClasses.R
 #'
 #' @param incommon Named list (output of 
-#' FilterData()) with gene expression, metabolite abundances, 
+#' FilterData()) with analyte levels, 
 #' and associated meta-data
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
-#' (default is 'metabolite')
-#' @param independentVariable 'metabolite' or 'gene' must be set as outcome/independent variable
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' (default is '1')
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
 #' @param type vector of sample type (by default, it will be used in the interaction term).
 #' Only 2 categories are currently supported.
 #' @param covar vector of additional vectors to consider
@@ -278,44 +15,46 @@ formatSingleOmicInput <- function(inputData,stype=NULL,
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
 #' (rather than interaction terms).
-#' @param keep.highest.pval boolean to indicate whether or not to remove the metabolite-metabolite
-#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
-RunLM <- function(incommon, outcome="metabolite", independentVariable = "gene", type=NULL, covar=NULL, 
+#' @param keep.highest.pval boolean to indicate whether or not to remove the 
+#' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+RunLM <- function(incommon, outcome=1, independentVariable = 2, type=NULL, covar=NULL, 
                   continuous=FALSE, save.covar.pvals = FALSE, keep.highest.pval = FALSE) {
-  gene <- incommon$gene
-  metab <- incommon$metab
+  type1 <- incommon@analyteType1
+  type2 <- incommon@analyteType2
   mymessage=""
   if(!continuous){
     uniqtypes <- unique(type)
     
-    genesd1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) 
+    type1sd1 <- as.numeric(apply(type1[,which(type==uniqtypes[1])],1,function(x) 
       stats::sd(x,na.rm=T)))
-    metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) 
+    type2sd1 <- as.numeric(apply(type2[,which(type==uniqtypes[1])],1,function(x) 
       stats::sd(x,na.rm=T)))
-    genesd2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) 
+    type1sd2 <- as.numeric(apply(type1[,which(type==uniqtypes[2])],1,function(x) 
       stats::sd(x,na.rm=T)))
-    metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) 
+    type2sd2 <- as.numeric(apply(type2[,which(type==uniqtypes[2])],1,function(x) 
       stats::sd(x,na.rm=T)))
     
-    if(length(which(genesd1==0))>0 || length(which(genesd2==0))>0) {
-      toremove <- c(which(genesd1==0),which(genesd2==0))
-      gene <- gene[-toremove,]
-      mymessage <- c(mymessage,paste("Removed",length(toremove),"genes that had 
-    	                               a standard deviation of 0:"))
-      mymessage <- c(mymessage,rownames(gene)[toremove])
+    if(length(which(type1sd1==0))>0 || length(which(type1sd2==0))>0) {
+      toremove <- c(which(type1sd1==0),which(type1sd2==0))
+      type1 <- type1[-toremove,]
+      mymessage <- c(mymessage,paste("Removed",length(toremove),"analytes of",
+                                     "type 1 that had", 
+    	                               "a standard deviation of 0:"))
+      mymessage <- c(mymessage,rownames(type1)[toremove])
     }
-    if(length(which(metabsd1==0))>0 || length(which(metabsd2==0))>0) {
-      toremove <- c(which(metabsd1==0),which(metabsd2==0))
-      metab <- metab[-toremove,]
-      mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites 
-                                           that had a standard deviation of 0:"))
-      mymessage <- c(mymessage,rownames(metab)[toremove])
+    if(length(which(type2sd1==0))>0 || length(which(type2sd2==0))>0) {
+      toremove <- c(which(type2sd1==0),which(type2sd2==0))
+      type2 <- type2[-toremove,]
+      mymessage <- c(mymessage,paste("Removed",length(toremove),"analytes of", 
+                                           "type 2 that had",
+                                           "a standard deviation of 0:"))
+      mymessage <- c(mymessage,rownames(type2)[toremove])
     }
   }
   
   mat.list <- getStatsAllLM(outcome = outcome, independentVariable = independentVariable,
-                            gene = gene, metab = metab, type = 
-                              type, covar = covar, covarMatrix = incommon$covar_matrix, 
+                            type1 = type1, type2 = type2, type = 
+                              type, covar = covar, covarMatrix = incommon@sampleMetaData[,covar], 
                             continuous = continuous, save.covar.pvals = save.covar.pvals,
                             remove.tri = keep.highest.pval)
   
@@ -330,21 +69,21 @@ RunLM <- function(incommon, outcome="metabolite", independentVariable = "gene", 
   return(myres)
 }
 
-#' Function that runs linear models for one gene vs all metabolites
+#' Function that runs linear models for analyte vs. all analytes of the other type
 #'
 #' @include AllClasses.R
 #'
 #' @param form LM formulat (typically m~g+t+g:t)
 #' @param clindata data frame with 1st column: expression of one analyte; 2nd column
 #' sample type (e.g. cancer/non-cancer)
-#' @param arraydata matrix of metabolite values
+#' @param arraydata matrix of analyte values
 #' @param analytename name of dependent analyte in the model
 getstatsOneLM <- function(form, clindata, arraydata, analytename) {
-  #array data is metabolites
-  #clindata is genes
+  #array data is one analyte type
+  #clindata is the other analyte type
   call=match.call()
   YY <- t(arraydata)                      # the data matrix
-  #mean of metabolites accross all samples
+  #mean of analytes across all samples
   EY <- apply(YY, 2, mean)                # its mean vector
   #sum of squares after centering
   SYY <- apply(YY, 2, function(y) {sum(y^2)}) - nrow(YY)*EY^2     # sum of squares after centering
@@ -416,43 +155,42 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename) {
   ))
 }
 
-#' Function that runs Linear Models for all genes or metabolites
+#' Function that runs Linear Models for all analytes
 #' @include AllClasses.R
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable
-#' @param independentVariable 'metabolite' or 'gene' must be set as outcome/independent variable
-#' @param gene gene dataset (incommon$gene)
-#' @param metab metabolite dataset (incommon$metab)
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @param type1 Analyte type 1 dataset
+#' @param type2 Analyte type 2 dataset
 #' @param type vector of sample type (by default, it will be used in the interaction term).
 #' Only 2 categories are currently supported.
 #' @param covar vector of additional vectors to consider
-#' @param covarMatrix covariate matrix in (incommon$covar_matrix)
+#' @param covarMatrix covariate matrix
 #' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time.
-#' @param remove.tri boolean to indicate whether or not to remove the metabolite-metabolite
-#' or gene-gene pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param remove.tri boolean to indicate whether or not to remove the 1-1
+#' or 2-2 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
-getStatsAllLM <- function(outcome, independentVariable, gene, metab, type, covar, covarMatrix, 
+getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, covar, covarMatrix, 
                           continuous, save.covar.pvals, remove.tri = FALSE) {
-
   outcomeArrayData <- NULL
   independentArrayData <- NULL
   num <- NULL
   
   # Get array data based on outcome.
-  if (outcome=="metabolite") {
-    outcomeArrayData <- data.frame(metab)
-  } else if (outcome == "gene"){
-    outcomeArrayData <- data.frame(gene)
+  if (outcome==1) {
+    outcomeArrayData <- data.frame(type1)
+  } else if (outcome == 2){
+    outcomeArrayData <- data.frame(type2)
   }
   
   # Get array data based on independent variable type.
-  if (independentVariable=="metabolite") {
-    independentArrayData <- data.frame(metab)
-    num <- nrow(metab)
-  } else if (independentVariable == "gene"){
-    num <- nrow(gene)
-    independentArrayData <- data.frame(gene)
+  if (independentVariable==1) {
+    independentArrayData <- data.frame(type1)
+    num <- nrow(type1)
+  } else if (independentVariable == 2){
+    num <- nrow(type2)
+    independentArrayData <- data.frame(type2)
   }
 
   # Set up formula and interaction term.
@@ -486,6 +224,7 @@ getStatsAllLM <- function(outcome, independentVariable, gene, metab, type, covar
       clindata <- data.frame(a, type)
     } else {
       clindata <- data.frame(a, type, covarMatrix)
+      colnames(clindata)[3:ncol(clindata)] <- covar
     }
     
     # Change type for continuous data (factor to numeric)
@@ -560,23 +299,23 @@ getStatsAllLM <- function(outcome, independentVariable, gene, metab, type, covar
   mat.pvalsadj <- matrix(mypsadj, row.pvt, col.pvt)
   
   # Assign names to results.
-  if (outcome=="metabolite") {
-    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(metab)
-    colnames(mat.coefficients) <- rownames(metab)
-    colnames(mat.rsquared) <- rownames(metab)
-  } else if (outcome=="gene") {
-    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(gene)
-    colnames(mat.coefficients) <- rownames(gene)
-    colnames(mat.rsquared) <- rownames(gene)
+  if (outcome==1) {
+    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(type1)
+    colnames(mat.coefficients) <- rownames(type1)
+    colnames(mat.rsquared) <- rownames(type1)
+  } else if (outcome==2) {
+    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(type2)
+    colnames(mat.coefficients) <- rownames(type2)
+    colnames(mat.rsquared) <- rownames(type2)
   }
-  if(independentVariable == "metabolite"){
-    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(metab)
-    rownames(mat.coefficients) <- rownames(metab)
-    rownames(mat.rsquared) <- rownames(metab)
-  }else if (independentVariable == "gene"){
-    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(gene)
-    rownames(mat.coefficients) <- rownames(gene)
-    rownames(mat.rsquared) <- rownames(gene)
+  if(independentVariable == 1){
+    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(type1)
+    rownames(mat.coefficients) <- rownames(type1)
+    rownames(mat.rsquared) <- rownames(type1)
+  }else if (independentVariable == 2){
+    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(type2)
+    rownames(mat.coefficients) <- rownames(type2)
+    rownames(mat.rsquared) <- rownames(type2)
   }
   
   # Remove the triangular matrix if applicable.

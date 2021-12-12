@@ -10,12 +10,14 @@ GetCorrClusters(inputResults, inputData, top_pairs = 1200, treecuts = 2)
 \item{inputResults}{Data frame (output of ProcessResults())}
 
 \item{inputData}{Named list (output of 
-FilterData()) with gene expression, metabolite abundances, 
+FilterData()) with analyte levles
 and associated meta-data}
 
-\item{top_pairs}{cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)}
+\item{top_pairs}{cutoff of the top pairs, sorted by adjusted p-values, to be 
+plotted (plotting more than 1200 can take some time) (default: 1200)}
 
-\item{treecuts}{number of clusters (of gene-metabolite pairs) to cut the tree into for color-coding}
+\item{treecuts}{number of clusters (of pairs) to cut the tree 
+into for color-coding}
 }
 \value{
 a highcharter object
