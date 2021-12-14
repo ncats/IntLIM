@@ -60,6 +60,7 @@ Collate:
     '03_RunIntLim.R'
     '04_ProcessResults.R'
     'IntLimResults_extendedfunctions.R'
+    'crossvalfunctions.R'
     'plottingfunctions.R'
     'runShiny.R'
     'statsfunctions.R'

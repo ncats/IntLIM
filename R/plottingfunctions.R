@@ -738,8 +738,11 @@ PlotFoldOverlapUpSet<-function(inputResults){
   sig_list <- lapply(1:length(inputResults), function(i){
     return(paste(inputResults[[i]][,1], inputResults[[i]][,2], sep = "_"))
   })
-  names(sig_list) <- names(inputResults)
-  comb_mat <- ComplexHeatmap::make_comb_mat(ComplexHeatmap::list_to_matrix(sig_list))
+  sig_mat <- ComplexHeatmap::list_to_matrix(sig_list)
+  colnames(sig_mat) <- lapply(1:length(inputResults), function(i){
+    return(paste("Fold", i, sep = "_"))
+  })
+  comb_mat <- ComplexHeatmap::make_comb_mat(sig_mat)
   ComplexHeatmap::UpSet(comb_mat)
 }
 

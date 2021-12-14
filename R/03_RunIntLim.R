@@ -113,39 +113,3 @@ RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL,
     }
     return(myres)
 }
-
-#' Run linear models for all data folds. This is a wrapper to RunIntLim.
-#'
-#' @include internalfunctions.R
-#'
-#' @param inputData MultiDataSet object (output of ReadData()) with analyte levels
-#'  and associated meta-data
-#' @param stype column name that represents sample type (by default, it will be used
-#' in the interaction term). Only 2 categories are currently supported.
-#' @param outcome '1' or '2' must be set as outcome/independent variable
-#' (default is '1')
-#' @param covar Additional variables from the phenotypic data that be integrated into linear model
-#' @param continuous boolean to indicate whether the data is continuous or discrete
-#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
-#' which can be analyzed later but will also lengthen computation time. The default is FALSE.
-#' @param independent.var.type '1' or '2' must be set as independent variable
-#' (default is '1')
-#' @param remove.duplicates boolean to indicate whether or not to remove the 
-#'  pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
-#' 
-#' @return List of IntLimModel objects with model results
-#' @export
-RunIntLimAllFolds <- function(inputData,stype=NULL,outcome=1, covar=NULL, 
-                      continuous = FALSE, save.covar.pvals=FALSE, independent.var.type=1, 
-                      remove.duplicates = FALSE){
-    myres <- list()
-    for(i in 1:length(inputData)){
-        myres[i] <- IntLIM::RunIntLim(inputData = inputData[[i]]$training,
-                                         stype=stype, 
-                                         save.covar.pvals = save.covar.pvals, 
-                                         outcome = outcome, 
-                                         independent.var.type = independent.var.type,
-                                         continuous = continuous)
-    }
-    return(myres)
-}
