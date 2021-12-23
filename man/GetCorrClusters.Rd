@@ -4,23 +4,17 @@
 \alias{GetCorrClusters}
 \title{Returns the clusters found using CorrHeatmap.}
 \usage{
-GetCorrClusters(inputResults, inputData, top_pairs = 1200, treecuts = 2)
+GetCorrClusters(inputResults, treecuts = 2)
 }
 \arguments{
 \item{inputResults}{Data frame (output of ProcessResults())}
-
-\item{inputData}{Named list (output of 
-FilterData()) with analyte levles
-and associated meta-data}
-
-\item{top_pairs}{cutoff of the top pairs, sorted by adjusted p-values, to be 
-plotted (plotting more than 1200 can take some time) (default: 1200)}
 
 \item{treecuts}{number of clusters (of pairs) to cut the tree 
 into for color-coding}
 }
 \value{
-a highcharter object
+A data frame including the independent and outcome analytes in each
+for each pair and the cluster to which that pair belongs.
 }
 \description{
 Returns the clusters found using CorrHeatmap.

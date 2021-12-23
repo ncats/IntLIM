@@ -8,11 +8,11 @@ except that in the given fold, and the "testing" contains all data in the fold.}
 \usage{
 CreateCrossValFolds(
   inputFile,
-  analyteType1id = NULL,
-  analyteType2id = NULL,
+  analyteType1id = "id",
+  analyteType2id = "id",
   logAnalyteType1 = FALSE,
   logAnalyteType2 = FALSE,
-  class.feat = NULL,
+  class.feat = "factor",
   folds,
   suppressWarnings = FALSE
 )

@@ -5,7 +5,7 @@
 #'
 #' @return the filename of the CSV file with results named with cohort
 #' @export
-OutputData <- function (inputData=NULL,filename="~/output.zip"){
+OutputData <- function (inputData,filename="~/output.zip"){
   type1 <- inputData@analyteType1
   type2 <- inputData@analyteType2
 	phenoData <- inputData@sampleMetaData
@@ -29,8 +29,7 @@ OutputData <- function (inputData=NULL,filename="~/output.zip"){
 #'
 #' @return the filename of the CSV file with results named with cohort
 #' @export
-OutputResults <- function (inputResults=NULL,filename="results.csv"){
-	if(is.null(inputResults)) {stop("Input results from ProcessResults()")}
+OutputResults <- function (inputResults,filename="results.csv"){
 	utils::write.csv(inputResults,filename,quote=T,row.names=F)
 }
 

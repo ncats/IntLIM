@@ -56,18 +56,18 @@
 #'  pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' @return List of IntResults object with model results (now includes correlations)
 RunCrossValidation <- function(inputFile,
-                               analyteType1id=NULL,
-                               analyteType2id=NULL,
+                               analyteType1id="id",
+                               analyteType2id="id",
                                logAnalyteType1=FALSE,
                                logAnalyteType2=FALSE, 
-                               class.feat = NULL,
+                               class.feat = "factor",
                                folds, 
                                analyteType1perc=0, 
                                analyteType2perc=0,
                                analyteType2miss=0,
-                               stype=NULL,
+                               stype="",
                                outcome=c(1), 
-                               covar=NULL, 
+                               covar=c(), 
                                continuous = FALSE, 
                                save.covar.pvals=FALSE, 
                                independent.var.type=c(1), 
@@ -132,8 +132,8 @@ RunCrossValidation <- function(inputFile,
 #' "test" = IntLimData))
 #' 
 #' @return List of IntLimModel objects with model results
-CreateCrossValFolds <- function(inputFile,analyteType1id=NULL,analyteType2id=NULL, 
-                                logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = NULL,
+CreateCrossValFolds <- function(inputFile,analyteType1id="id",analyteType2id="id", 
+                                logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = "factor",
                                 folds, suppressWarnings=FALSE) {
   
   # Create the components of the input.
@@ -280,15 +280,10 @@ FilterDataFolds <- function(csvfile,inputDataFolds,analyteType1perc=0,
 #'
 #' @param inputData IntLimData object (output of ReadData()) with analyte leves
 #'  and associated meta-data
-#' @param stype phenotype or outcome of interest.
 #' @param type2keepers Type 2 analytes to keep.
 #' @param type1keepers Type 1 analytes to keep.
-#' @param stype.type Either "factor" or "numeric". The outcome type.
-#' @param class.covar class ("numeric" or "character") for each covariate. The following format
-#' is required: list(covar1="numeric", covar2="character")
 #' @return filtData IntLimData object with input data after filtering
-FilterFromKeepers <- function(inputData,stype,type1keepers, type2keepers, stype.type,
-                              class.covar = NULL) {
+FilterFromKeepers <- function(inputData,type1keepers, type2keepers) {
   # Initialize
   type1Data <- NULL
   type2Data <- NULL
@@ -340,7 +335,7 @@ FilterFromKeepers <- function(inputData,stype,type1keepers, type2keepers, stype.
 #'  pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' 
 #' @return List of IntLimModel objects with model results
-RunIntLimAllFolds <- function(inputData,stype=NULL,outcome=1, covar=NULL, 
+RunIntLimAllFolds <- function(inputData,stype="",outcome=1, covar=c(), 
                               continuous = FALSE, save.covar.pvals=FALSE, independent.var.type=1, 
                               remove.duplicates = FALSE){
   myres <- list()

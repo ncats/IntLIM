@@ -1,6 +1,7 @@
 #' Run linear models and retrieve relevant statistics
 #'
 #' @include internalfunctions.R
+#' @include AllClasses.R
 #'
 #' @param inputData Named list (output of 
 #' FilterData()) with analyte abundances, 
@@ -17,16 +18,23 @@
 #' (default is '1')
 #' @param remove.duplicates boolean to indicate whether or not to remove the 
 #' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param suppressWarnings whether or not to print warnings. If TRUE, do not print.
 #' 
 #' @return IntLimModel object with model results
 #' @export
-RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL, 
+RunIntLim <- function(inputData,stype="",outcome=1, covar=c(), 
                       continuous = FALSE, 
-                      save.covar.pvals=FALSE, independent.var.type=1, remove.duplicates = FALSE){
+                      save.covar.pvals=FALSE, independent.var.type=1, 
+                      remove.duplicates = FALSE, suppressWarnings = FALSE){
+    
+    # If the wrong data type, stop.
+    if(class(inputData) != "IntLimData"){
+        stop("Input must be an IntLimData object")
+    }
 
     if(!continuous & length(unique(stats::na.omit(inputData@sampleMetaData[,stype]))) != 2) {
-	    stop(paste("IntLim currently requires only two categories.  Make sure the 
-	               column",stype,"only has two unique values. Did you mean to set",
+	    stop(paste("IntLim currently requires only two categories.  Make sure the column",
+	               stype,"only has two unique values. Did you mean to set",
 	               "continuous to TRUE?"))
     }
     print("Running the analysis on")
@@ -39,11 +47,11 @@ RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL,
     ptm <- proc.time()
 
     myres <- NULL
-    removeDupWarning <- "remove.duplicates only applies if the independent variable
-                    and outcome are of the same analyte type. Duplicates will
-                    not be removed."
+    removeDupWarning <- paste("remove.duplicates only applies if the independent variable",
+                    "and outcome are of the same analyte type. Duplicates will",
+                    "not be removed.")
     if(independent.var.type == 1 && outcome == 2){
-        if(remove.duplicates == TRUE){
+        if(remove.duplicates == TRUE && suppressWarnings == FALSE){
             warning(removeDupWarning)
         }
         if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0) {
@@ -56,7 +64,7 @@ RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL,
             stop("One type of analyte data is missing. Cannot run.\n")
         }
     }else if(independent.var.type == 2 && outcome == 1){
-        if(remove.duplicates == TRUE){
+        if(remove.duplicates == TRUE && suppressWarnings == FALSE){
             warning(removeDupWarning)
         }
         if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0) {
@@ -94,7 +102,7 @@ RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL,
             stop("Analyte Type 2 is missing. Cannot run.\n")
         }
     }else{
-        print(paste("Error! independent.var.type and outcome.type must both be either",
+        stop(paste("Error! independent.var.type and outcome.type must both be either",
         "1 or 2 in RunIntLim."))
     }
     print(proc.time() - ptm)
@@ -102,14 +110,5 @@ RunIntLim <- function(inputData,stype=NULL,outcome=1, covar=NULL,
     myres@outcome=outcome
     myres@independent.var.type=independent.var.type
 
-    if(!is.null(covar)){
-        covariate <- covar
-        class.var <- c()
-        for(i in 1:length(covar)){
-            class.var[i] <- class(covar)
-        }
-
-        myres@covar <- data.frame(covariate,class.var)
-    }
     return(myres)
 }

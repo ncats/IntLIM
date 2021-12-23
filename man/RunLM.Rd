@@ -8,8 +8,8 @@ RunLM(
   incommon,
   outcome = 1,
   independentVariable = 2,
-  type = NULL,
-  covar = NULL,
+  type = "",
+  covar = c(),
   continuous = FALSE,
   save.covar.pvals = FALSE,
   keep.highest.pval = FALSE

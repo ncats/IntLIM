@@ -6,9 +6,9 @@
 \usage{
 RunIntLimAllFolds(
   inputData,
-  stype = NULL,
+  stype = "",
   outcome = 1,
-  covar = NULL,
+  covar = c(),
   continuous = FALSE,
   save.covar.pvals = FALSE,
   independent.var.type = 1,

@@ -17,46 +17,84 @@
 #' (rather than interaction terms).
 #' @param keep.highest.pval boolean to indicate whether or not to remove the 
 #' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
-RunLM <- function(incommon, outcome=1, independentVariable = 2, type=NULL, covar=NULL, 
+RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c(), 
                   continuous=FALSE, save.covar.pvals = FALSE, keep.highest.pval = FALSE) {
+  
+  # Initialize types 1 and 2 and warning list.
   type1 <- incommon@analyteType1
   type2 <- incommon@analyteType2
-  mymessage=""
-  if(!continuous){
-    uniqtypes <- unique(type)
-    
-    type1sd1 <- as.numeric(apply(type1[,which(type==uniqtypes[1])],1,function(x) 
-      stats::sd(x,na.rm=T)))
-    type2sd1 <- as.numeric(apply(type2[,which(type==uniqtypes[1])],1,function(x) 
-      stats::sd(x,na.rm=T)))
-    type1sd2 <- as.numeric(apply(type1[,which(type==uniqtypes[2])],1,function(x) 
-      stats::sd(x,na.rm=T)))
-    type2sd2 <- as.numeric(apply(type2[,which(type==uniqtypes[2])],1,function(x) 
-      stats::sd(x,na.rm=T)))
-    
-    if(length(which(type1sd1==0))>0 || length(which(type1sd2==0))>0) {
-      toremove <- c(which(type1sd1==0),which(type1sd2==0))
-      type1 <- type1[-toremove,]
-      mymessage <- c(mymessage,paste("Removed",length(toremove),"analytes of",
-                                     "type 1 that had", 
-    	                               "a standard deviation of 0:"))
-      mymessage <- c(mymessage,rownames(type1)[toremove])
+  covarMatrix <- as.matrix(incommon@sampleMetaData[,covar])
+  stype <- type
+  mymessage<-list()
+  
+  # Find all standard deviations.
+  type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
+  type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
+  covarsd <- as.numeric(apply(covarMatrix,2,function(x){
+    if(class(x) == "character"){
+      x <- as.numeric(as.factor(x))
+    }else if (class(x) == "factor"){
+      x <- as.numeric(x)
     }
-    if(length(which(type2sd1==0))>0 || length(which(type2sd2==0))>0) {
-      toremove <- c(which(type2sd1==0),which(type2sd2==0))
-      type2 <- type2[-toremove,]
-      mymessage <- c(mymessage,paste("Removed",length(toremove),"analytes of", 
-                                           "type 2 that had",
-                                           "a standard deviation of 0:"))
-      mymessage <- c(mymessage,rownames(type2)[toremove])
-    }
+    return(stats::sd(x,na.rm=T))}))
+  if(class(stype) == "character"){
+    stype <- as.numeric(as.factor(stype))
+  }else if(class(stype) == "factor"){
+    stype <- as.numeric(stype)
+  }
+  stypesd <- stats::sd(stype,na.rm=T)
+  
+  # If the standard deviation of the phenotype is zero, then stop.
+  if(stypesd == 0){
+    stop("stype variable has a standard deviation of zero. Cannot run.")
+  }
+  # If the standard deviation of analyte type 1 is zero, then remove and add a warning.
+  if(length(which(type1sd==0))>0) {
+    toremove <- c(which(type1sd==0))
+    namestoremove <- rownames(type1)[toremove]
+    type1 <- type1[-toremove,]
+    mymessage[[length(mymessage)+1]] <- paste("Removed",length(toremove),"analytes of",
+                                              "type 1 that had", 
+                                              "a standard deviation of 0:", 
+                                              namestoremove)
+  }
+  # If the standard deviation of analyte type 2 is zero, then remove and add a warning.
+  if(length(which(type2sd==0))>0) {
+    toremove <- c(which(type2sd==0))
+    namestoremove <- rownames(type2)[toremove]
+    type2 <- type2[-toremove,]
+    mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),"analytes of", 
+                                             "type 2 that had",
+                                             "a standard deviation of 0:", 
+                                             namestoremove)
+  }
+  # If the standard deviation of a covariate is zero, then remove and add a warning.
+  if(length(which(covarsd==0))>0) {
+    toremove <- c(which(covarsd==0))
+    namestoremove <- colnames(covarMatrix)[toremove]
+    namestokeep <- colnames(covarMatrix)[-toremove]
+    rows <- rownames(covarMatrix)
+    covarMatrix <- as.matrix(covarMatrix[,-toremove])
+    colnames(covarMatrix) <- namestokeep
+    rownames(covarMatrix) <- rows
+    covar <- namestokeep
+    mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),
+                                             "covariates that had",
+                                             "a standard deviation of 0:", 
+                                             namestoremove)
   }
   
   mat.list <- getStatsAllLM(outcome = outcome, independentVariable = independentVariable,
                             type1 = type1, type2 = type2, type = 
-                              type, covar = covar, covarMatrix = incommon@sampleMetaData[,covar], 
+                              type, covar = covar, covarMatrix = covarMatrix, 
                             continuous = continuous, save.covar.pvals = save.covar.pvals,
                             remove.tri = keep.highest.pval)
+  if(length(mat.list[["warnings"]])>0){
+    for(i in 1:length(mat.list[["warnings"]])){
+      mymessage[[length(mymessage)+1]] <- mat.list[["warnings"]][[i]]
+    }
+  }
+  mat.list <- mat.list[["list"]]
   
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
@@ -66,6 +104,18 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type=NULL, covar
                         covariate.pvalues = mat.list$covariate.pvals,
                         covariate.coefficients = mat.list$covariate.coefficients,
                         warnings=mymessage)
+  
+  # Add covariates.
+  if(length(covar)>0){
+    covariate <- covar
+    class.var <- c()
+    for(i in 1:length(covar)){
+      class.var[i] <- class(covar)
+    }
+    
+    myres@covar <- data.frame(covariate,class.var)
+  }
+  
   return(myres)
 }
 
@@ -100,28 +150,58 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename) {
   ixtx <- MASS::ginv(XtX)
   # Use the pseudoinverse if the inverse cannot be found.
   # Print out correlated covariates in this case.
-  tryCatch({
-    ixtx <- solve(XtX)
-  }, error=function(e){
-    print(paste("Using pseudoinverse for", analytename))
-    cutoff = 0.9
-    cormat <- stats::cor(XtX)
-    cormat[lower.tri(cormat, diag = TRUE)] <- 0
-    if(length(which(cormat > cutoff)) > 0){
-      which_greater <- multi.which(cormat > cutoff)
-      print(paste("The following covariates have correlation >", cutoff, ":"))
-      for(i in 1:nrow(which_greater)){
-        print(paste0("(",colnames(cormat)[which_greater[i,1]],", ",
-                     colnames(cormat)[which_greater[i,2]], ")"))
+  
+  # Initialize warnings. We will later remove if needed.
+  pinv_message <- paste("Using pseudoinverse for", analytename)
+  cutoff = 0.9
+  covariate_msg1 <- paste("The following covariates have correlation >", cutoff, ":")
+  covariate_msg2 <- paste("The following covariates have correlation <", -1 * cutoff, ":")
+  cormat <- stats::cor(X[,which(colnames(X) != "(Intercept)")])
+  cormat[lower.tri(cormat, diag = TRUE)] <- 0
+  if(length(which(cormat > cutoff)) > 0){
+    which_greater <- multi.which(cormat > cutoff)
+    for(i in 1:nrow(which_greater)){
+      if(i == 1){
+        covariate_msg1 <- paste(covariate_msg1, paste0("(",colnames(cormat)[which_greater[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_greater[i,2]], 
+                                                       ")"))
+      }else{
+        covariate_msg1 <- paste(covariate_msg1, paste0("(",colnames(cormat)[which_greater[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_greater[i,2]], 
+                                                       ")"), sep = ", ")
       }
     }
-    if(length(which(cormat < -1 * cutoff)) > 0){
-      which_less <- multi.which(cormat < -1 * cutoff)
-      print(paste("The following covariates have correlation <", -1 * cutoff, ":"))
-      for(i in 1:nrow(which_less)){
-        print(paste0("(",colnames(cormat)[which_less[i,1]],", ",
-                     colnames(cormat)[which_less[i,2]], ")"))
+  }
+  if(length(which(cormat < -1 * cutoff)) > 0){
+    which_less <- multi.which(cormat < -1 * cutoff)
+    for(i in 1:nrow(which_less)){
+      if(i == 1){
+        covariate_msg2 <- paste(covariate_msg2, paste0("(",colnames(cormat)[which_less[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_less[i,2]], 
+                                                       ")"))
+      }else{
+        covariate_msg2 <- paste(covariate_msg2, paste0("(",colnames(cormat)[which_less[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_less[i,2]], 
+                                                       ")"), sep = ", ")
       }
+    }
+  }
+  warnings <- c(pinv_message, covariate_msg1, covariate_msg2)
+  
+  tryCatch({
+    ixtx <- solve(XtX)
+    warnings <- list()
+  }, error=function(e){
+    print(pinv_message)
+    if(length(which(cormat > cutoff)) > 0){
+      print(covariate_msg1)
+    }
+    if(length(which(cormat < -1 * cutoff)) > 0){
+      print(covariate_msg2)
     }
   })
   bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
@@ -149,10 +229,10 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename) {
   r.squared <- 1 - (sse / var.y)
   rownames(bhat) <- colnames(X)
   rownames(p.val.coeff) <- colnames(X)
-  return(list(coefficients=bhat,
+  return(list("mlin" = list(coefficients=bhat,
               p.value.coeff = p.val.coeff, # interaction p-value
-              r.squared.val = r.squared # r-squared value
-  ))
+              r.squared.val = r.squared),# r-squared value
+              "warnings" = warnings))
 }
 
 #' Function that runs Linear Models for all analytes
@@ -201,7 +281,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   numprog <- round(num*0.1)
   
   # Add covariates to the formula.
-  if (!is.null(covar)) {
+  if (length(covar)>0) {
     len.covar <- length(covar)
     for (i in 1:len.covar) {
       form.add <- paste(form.add, '+', covar[i])
@@ -216,6 +296,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   list.covariate.coefficients <- list()
   
   # Run each model.
+  warnings <- list()
   for (i in 1:num) {
     
     # Set up clinical data.
@@ -237,6 +318,8 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = outcomeArrayData, 
                           analytename = rownames(independentArrayData)[i])
+    warnings <- c(warnings, mlin[["warnings"]])
+    mlin <- mlin[["mlin"]]
     term.pvals <- rownames(mlin$p.value.coeff)
     
     # Return the primary p-values and coefficients.
@@ -399,13 +482,16 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   
   # Add the matrices to a final list.
   list.mat <- list()
+  list.final <- list()
   list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
   list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
   list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
   list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
   list.mat[["covariate.coefficients"]] <- as.data.frame(covariate.coefficients)
-  return(list.mat)
+  list.final[["list"]] <- list.mat
+  list.final[["warnings"]] <- warnings
+  return(list.final)
 }
 
 #' Function that gets numeric cutoffs from percentile
@@ -432,6 +518,7 @@ getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercent
 #' @name multi.which
 #' @param A Boolean function defined over a matrix
 #' @return vector with numeric cutoffs
+#' @export
 multi.which <- function(A){
   if ( is.vector(A) ) return(which(A))
   d <- dim(A)

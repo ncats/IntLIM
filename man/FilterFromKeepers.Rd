@@ -4,29 +4,15 @@
 \alias{FilterFromKeepers}
 \title{Filter a data set given the analytes to keep.}
 \usage{
-FilterFromKeepers(
-  inputData,
-  stype,
-  type1keepers,
-  type2keepers,
-  stype.type,
-  class.covar = NULL
-)
+FilterFromKeepers(inputData, type1keepers, type2keepers)
 }
 \arguments{
 \item{inputData}{IntLimData object (output of ReadData()) with analyte leves
 and associated meta-data}
 
-\item{stype}{phenotype or outcome of interest.}
-
 \item{type1keepers}{Type 1 analytes to keep.}
 
 \item{type2keepers}{Type 2 analytes to keep.}
-
-\item{stype.type}{Either "factor" or "numeric". The outcome type.}
-
-\item{class.covar}{class ("numeric" or "character") for each covariate. The following format
-is required: list(covar1="numeric", covar2="character")}
 }
 \value{
 filtData IntLimData object with input data after filtering

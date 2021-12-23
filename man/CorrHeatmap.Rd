@@ -9,10 +9,10 @@ CorrHeatmap(
   viewer = T,
   top_pairs = 1200,
   treecuts = 2,
-  palette = NULL,
+  palette = "Set1",
   static = FALSE,
-  html.file = NULL,
-  pdf.file = NULL
+  html.file = NA,
+  pdf.file = NA
 )
 }
 \arguments{
@@ -26,7 +26,7 @@ in Shiny/Knittr (F)}
 \item{treecuts}{number of clusters (of pairs) to cut the tree into for color-coding}
 
 \item{palette}{choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-"Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors}
+"Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors. "Set1" is the default.}
 
 \item{static}{allows user to decide whether heatmap is interactive or static}
 

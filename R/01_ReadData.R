@@ -39,7 +39,7 @@
 #'
 #' @export
 ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id", 
-                     logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = NULL,
+                     logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = "factor",
                      suppressWarnings = FALSE){
       
   # Initialize output.
@@ -51,8 +51,8 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
   }
   # Make into df to make access easier
   csvfile <- as.data.frame(utils::read.csv(inputFile, header=TRUE,row.names=1))
-  type1Data <- NULL
-  type2Data <- NULL
+  type1Data <- matrix(, nrow = 0, ncol = 0)
+  type2Data <- matrix(, nrow = 0, ncol = 0)
   
   # Check column names are correct
   if (colnames(csvfile)!="filenames") {
@@ -83,25 +83,27 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       if(suppressWarnings == FALSE){
         warning(paste("No data provided for Analyte Type 2. This means you cannot run",
                       "analyses involving this analyte type.\n"))
-        ;type2Data<-NULL;
+        ;type2Data<-matrix(, nrow = 0, ncol = 0);
       }
       else{
-        type2Data<-NULL
+        type2Data<-matrix(, nrow = 0, ncol = 0)
       }
     }else{
       temp <- paste0(mydir,"/",as.character(csvfile['analyteType2',]))
       if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))
-      } 
+      }
       else {
         ids <- utils::read.csv(temp,check.names=F)[,1]
         if(length(ids) != length(unique(ids))) {
-          stop(paste("Error: your input file",temp,"has duplicate", 
-                     "entries in column 1. Please make sure you have one row per", 
+          stop(paste("Error: your input file",temp,"has duplicate",
+                     "entries in column 1. Please make sure you have one row per",
                      "analyte"))
-        } 
+        }
         else {
           type2Data<-utils::read.csv(temp,row.names = 1,check.names=F)
+          colnames(type2Data) <- make.names(colnames(type2Data))
+          rownames(type2Data) <- make.names(rownames(type2Data))
         }
       }
     }
@@ -110,10 +112,10 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       if(suppressWarnings == FALSE){
         warning(paste("No data provided for Analyte Type 1. This means you cannot run",
                       "analyses involving this analyte type.\n"))
-        ;type1Data<-NULL;
+        ;type1Data<-matrix(, nrow = 0, ncol = 0);
       }
       else{
-        type1Data<-NULL
+        type1Data<-matrix(, nrow = 0, ncol = 0)
       }
     }else {
       temp <- paste0(mydir,"/",as.character(csvfile['analyteType1',]))
@@ -122,10 +124,12 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       } else {
         ids <- utils::read.csv(temp,check.names=F)[,1]
         if(length(ids) != length(unique(ids))) {
-          stop(paste("Error: your input file",temp,"has duplicate", 
+          stop(paste("Error: your input file",temp,"has duplicate",
                      "entries in column 1. Please make sure you have one row per analyte"))
         } else {
           type1Data<-utils::read.csv(temp,row.names = 1,check.names=F)
+          colnames(type1Data) <- make.names(colnames(type1Data))
+          rownames(type1Data) <- make.names(rownames(type1Data))
         }
       }
     }
@@ -135,36 +139,47 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
     if(as.character(csvfile['analyteType2MetaData',])=="" ||
        as.character(csvfile['analyteType2MetaData',])==mydir) {
       if(suppressWarnings == FALSE){
-        warning("No metadata provided for Analyte Type 2");type2MetaData<-NULL;analyteType2id=NULL; 
+        warning("No metadata provided for Analyte Type 2");
+        type2MetaData<-matrix(, nrow = 0, ncol = 0);
+        analyteType2id=matrix(, nrow = 0, ncol = 0);
       }
       else{
-        type2MetaData<-NULL
-        analyteType2id=NULL
+        type2MetaData<-matrix(, nrow = 0, ncol = 0)
+        analyteType2id=matrix(, nrow = 0, ncol = 0)
       }
     }else if(!file.exists(temp)) {
       stop(paste("File", temp, "does not exist"))
     } else {
       type2MetaData<-utils::read.csv(temp)
       colnames(type2MetaData)[which(colnames(type2MetaData)==analyteType2id)]="id"
+      colnames(type2MetaData) <- make.names(colnames(type2MetaData))
+      if("id" %in% colnames(type2MetaData)){
+        type2MetaData$id <- make.names(type2MetaData$id)
+      }
     }
 
     # Read the Analyte Type 1 metadata.
     temp <- paste0(mydir,"/",as.character(csvfile['analyteType1MetaData',]))
-    if(as.character(csvfile['analyteType1MetaData',])==""|| 
+    if(as.character(csvfile['analyteType1MetaData',])==""||
        as.character(csvfile['analyteType1MetaData',])==mydir) {
       if(suppressWarnings == FALSE){
-        warning("No metadata provided for Analyte Type 1");type1MetaData<-NULL;
-        analyteType1id=NULL; 
+        warning("No metadata provided for Analyte Type 1");
+        type1MetaData<-matrix(, nrow = 0, ncol = 0);
+        analyteType1id=matrix(, nrow = 0, ncol = 0);
       }
       else{
-        type1MetaData<-NULL
-        analyteType1id=NULL
+        type1MetaData<-matrix(, nrow = 0, ncol = 0)
+        analyteType1id=matrix(, nrow = 0, ncol = 0)
       }
     }else if(!file.exists(temp)) {
       stop(paste("File", temp, "does not exist"))
     } else {
       type1MetaData<-utils::read.csv(temp)
       colnames(type1MetaData)[which(colnames(type1MetaData)==analyteType1id)]="id"
+      colnames(type1MetaData) <- make.names(colnames(type1MetaData))
+      if("id" %in% colnames(type1MetaData)){
+        type1MetaData$id <- make.names(type1MetaData$id)
+      }
     }
 
     # Read the sample data.
@@ -173,13 +188,15 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       stop(paste("File", temp, "does not exist"))
     } else {
       pData<-utils::read.csv(temp,row.names = 1)
+      colnames(pData) <- make.names(colnames(pData))
+      rownames(pData) <- make.names(rownames(pData))
     }
-    
+
     # Check that Analyte Type 1 ID's match metadata.
-    if(!is.null(type1Data)){
-      
+    if(length(type1Data)>0){
+
       # Check that data and metadata match.
-      if (!is.null(type1MetaData)) {
+      if (length(type1MetaData)>0) {
         if(length(which(colnames(type1MetaData)=='id'))!=1) {
           stop(paste("analyteType1id provided",analyteType1id,"does not exist in",
                      "Analyte Type 1 meta data file"))
@@ -188,23 +205,16 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
           stop("Analytes in Type 1 data file and meta data files are not equal")
         }
         rownames(type1MetaData)=as.character(type1MetaData[,'id'])
+        myind=as.numeric(lapply(rownames(type1Data),function(x) which(type1MetaData[,"id"]==x)))
+        type1MetaData <- data.frame(type1MetaData[myind,],stringsAsFactors=FALSE)
       }
-      
-      # Make sure order of feature data is the same as the data matrix:
-      if(is.null(type1MetaData)) {
-        type1MetaData <- data.frame(id = rownames(type1Data),stringsAsFactors=FALSE)
-        rownames(type1MetaData) <- type1MetaData[,1]
-      }
-      myind=as.numeric(lapply(rownames(type1Data),function(x) which(type1MetaData[,"id"]==x)))
-      type1MetaData <- data.frame(type1MetaData[myind,],stringsAsFactors=FALSE)
-      rownames(type1MetaData) <- type1MetaData[,1]
     }
-    
+
     # Check that Analyte Type 2 ID's match metadata.
-    if(!is.null(type2Data)){
-      
+    if(length(type2Data)>0){
+
       # Check that data and metadata match.
-      if (!is.null(type2MetaData)) {
+      if (length(type2MetaData)>0) {
         if(length(which(colnames(type2MetaData)=='id'))!=1) {
           stop(paste("analyteType2id provided",analyteType2id,"does not exist in",
                      "Analyte Type 2 meta data file"))
@@ -213,93 +223,68 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
           stop("Analytes in Type 2 data file and meta data files are not equal")
         }
         rownames(type2MetaData)=as.character(type2MetaData[,'id'])
+        myind=as.numeric(lapply(rownames(type2Data),function(x) which(type2MetaData[,"id"]==x)))
+        type2MetaData <- data.frame(type2MetaData[myind,],stringsAsFactors=FALSE)
       }
-      
-      # Make sure order of feature data is the same as the data matrix:
-      if(is.null(type2MetaData)) {
-        type2MetaData <- data.frame(id = rownames(type2Data),stringsAsFactors=FALSE)
-        rownames(type2MetaData) <- type2MetaData[,1]
-      }
-      myind=as.numeric(lapply(rownames(type2Data),function(x) which(type2MetaData[,"id"]==x)))
-      type2MetaData <- data.frame(type2MetaData[myind,],stringsAsFactors=FALSE)
-      rownames(type2MetaData) <- type2MetaData[,1]
     }
-    
+
     # Log data if applicable.
     cutoff <- 0.0000001
-    if (logAnalyteType1 == TRUE && !is.null(type1Data)){
-      if(min(type1Data) < 0){
+    if (logAnalyteType1 == TRUE && length(type1Data)>0){
+      if(min(type1Data) < 0 && suppressWarnings == FALSE){
         warning("Analyte Type 1 data has negative values. Continuing without log-scaling.")
-      }else{
-        type1Data[which(type1Data == 0)] <- cutoff
+      }else if(min(type2Data) >= 0){
+        type1Data[IntLIM::multi.which(type1Data == 0)] <- cutoff
         type1Data <- log2(type1Data)
       }
     }
-    if (logAnalyteType2 == TRUE && !is.null(type2Data)){
-      if(min(type2Data) < 0){
+    if (logAnalyteType2 == TRUE && length(type2Data)>0){
+      if(min(type2Data) < 0 && suppressWarnings == FALSE){
         warning("Analyte Type 2 data has negative values. Continuing without log-scaling.")
-      }else{
-        type2Data[which(type2Data == 0)] <- cutoff
+      }else if(min(type2Data) >= 0){
+        type2Data[IntLIM::multi.which(type2Data == 0)] <- cutoff
         type2Data <- log2(type2Data)
       }
     }
-    
+
     # Get common samples.
     pDataOld <- pData
     type1DataOld <- type1Data
     type2DataOld <- type2Data
     myind <- rownames(pData)
-    if(!is.null(type1Data)){
+    if(length(type1Data)>0){
       type1Samps <- colnames(type1Data)
       myind <- intersect(myind, type1Samps)
     }
-    if(!is.null(type2Data)){
+    if(length(type2Data)>0){
       type2Samps <- colnames(type2Data)
       myind <- intersect(myind, type2Samps)
     }
     pData<-pData[myind,]
     pDataSpecific <- setdiff(rownames(pDataOld), myind)
-    if(length(pDataSpecific) > 0){
-      warning(paste("The following samples were only included in the sample data",
-                    "and were removed:", pDataSpecific))
+    if(length(pDataSpecific) > 0 && suppressWarnings == FALSE){
+      warning(do.call(paste, list("The following samples were only included in the sample data",
+                    "and were removed:", pDataSpecific)))
     }
-    if(!is.null(type1Data)){
+    if(length(type1Data)>0){
       type1Data <- type1Data[,myind]
       type1Specific <- setdiff(colnames(type1DataOld), myind)
-      if(length(type1Specific) > 0){
-        warning(paste("The following samples were only included in the Analyte 1 data",
-                      "and were removed:", type1Specific))
+      if(length(type1Specific) > 0 && suppressWarnings == FALSE){
+        warning(do.call(paste, list("The following samples were only included in the Analyte 1 data",
+                      "and were removed:", type1Specific)))
       }
     }
-    if(!is.null(type2Data)){
+    if(length(type2Data)>0){
       type2Data <- type2Data[,myind]
       type2Specific <- setdiff(colnames(type2DataOld), myind)
-      if(length(type2Specific) > 0){
-        warning(paste("The following samples were only included in the Analyte 2 data",
-                      "and were removed:", type2Specific))
+      if(length(type2Specific) > 0 && suppressWarnings == FALSE){
+        warning(do.call(paste, list("The following samples were only included in the Analyte 2 data",
+                      "and were removed:", type2Specific)))
       }
-    }
-    
-    # Fix names.
-    if(!is.null(type2Data)){
-      colnames(type2Data) <- make.names(colnames(type2Data))
-      rownames(type2Data) <- make.names(rownames(type2Data))
-    }
-    if(!is.null(type1Data)){
-      colnames(type1Data) <- make.names(colnames(type1Data))
-      rownames(type1Data) <- make.names(rownames(type1Data))
-    }
-    if(!is.null(type1MetaData)){
-      colnames(type1MetaData) <- make.names(colnames(type1MetaData))
-      rownames(type1MetaData) <- make.names(rownames(type1MetaData))
-    }
-    if(!is.null(type2MetaData)){
-      colnames(type2MetaData) <- make.names(colnames(type2MetaData))
-      rownames(type2MetaData) <- make.names(rownames(type2MetaData))
     }
     colnames(pData) <- make.names(colnames(pData))
     rownames(pData) <- make.names(rownames(pData))
-    
+
     # Extract sampleMetaData and coerce to numeric or factor.
     # Coerce sampleMetaData classes.
     names(class.feat) <- make.names(names(class.feat))
@@ -313,33 +298,13 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
         stop(paste(class.feat[covar], "is not a valid class for covariate", covar))
       }
     }
-    
-    # Convert data to matrix.
-    if(!is.null(type1Data)){
-      type1Data <- as.matrix(type1Data)
-    }else{
-      type1Data <- matrix(, nrow = 0, ncol = 0)
-    }
-    if(!is.null(type2Data)){
-      type2Data <- as.matrix(type2Data)
-    }else{
-      type2Data <- matrix(, nrow = 0, ncol = 0)
-    }
-    
-    # Set null metadata to data frame.
-    if(is.null(type1MetaData)){
-      type1MetaData <- as.data.frame(matrix(, nrow = 0, ncol = 0))
-    }
-    if(is.null(type2MetaData)){
-      type2MetaData <- as.data.frame(matrix(, nrow = 0, ncol = 0))
-    }
-    
-    intlimData <- methods::new("IntLimData",analyteType1=type1Data,
-                               analyteType2=type2Data,
-                               analyteType1MetaData = type1MetaData,
-                               analyteType2MetaData = type2MetaData,
+
+    intlimData <- methods::new("IntLimData",analyteType1=as.matrix(type1Data),
+                               analyteType2=as.matrix(type2Data),
+                               analyteType1MetaData = as.data.frame(type1MetaData),
+                               analyteType2MetaData = as.data.frame(type2MetaData),
                                sampleMetaData = covarMatrix)
-    
+
     print("IntLIMData created")
   }
   return(intlimData)

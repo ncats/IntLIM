@@ -51,7 +51,7 @@ methods::setClass(
 		covariate.coefficients = "data.frame",
 		corr="data.frame",
 		filt.results="data.frame",
-		warnings="character",
+		warnings="list",
 		stype="character",
 		outcome="numeric",
 		independent.var.type="numeric",

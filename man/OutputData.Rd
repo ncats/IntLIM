@@ -4,7 +4,7 @@
 \alias{OutputData}
 \title{Output data into individual CSV files.  All data will be zipped into one file with all data.}
 \usage{
-OutputData(inputData = NULL, filename = "~/output.zip")
+OutputData(inputData, filename = "~/output.zip")
 }
 \arguments{
 \item{inputData}{data output from ReadData() or FilterData() function}

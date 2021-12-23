@@ -135,7 +135,6 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
       p <- highcharter::hw_grid(m)
     }
   }
-  
   return(p)
 }
 
@@ -152,7 +151,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 #' in Shiny/Knittr (F)
 #' @return a highcharter object
 #' @export
-PlotPCA <- function(inputData,viewer=T,stype=NULL,palette = "Set1") {
+PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
   
   if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
     warning("The resulting PCA plot is not color-coded because you did not provide 
@@ -346,33 +345,25 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #' Returns the clusters found using CorrHeatmap.
 #'
 #' @param inputResults Data frame (output of ProcessResults())
-#' @param inputData Named list (output of 
-#' FilterData()) with analyte levles
-#' and associated meta-data
-#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be 
-#' plotted (plotting more than 1200 can take some time) (default: 1200)
 #' @param treecuts number of clusters (of pairs) to cut the tree 
 #' into for color-coding
-#' @return a highcharter object
+#' @return A data frame including the independent and outcome analytes in each
+#' for each pair and the cluster to which that pair belongs.
 #' @export
-GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
+GetCorrClusters <- function(inputResults,treecuts=2) {
   type <- cor <- c()
-  clusters <- NULL
+  clusterdata <- NULL
   
-  if(nrow(inputResults)==0) {
-    stop("Make sure you run ProcessResults before making the heatmap")
+  if(is.null(inputResults)){
+    stop('Please run ProcessResults() before inputting into HistogramPairs')
   }
-  p <- inputData$p
-  if(length(unique(p)) !=2){
+  
+  # Stop if not two discrete phenotypes.
+  if(colnames(inputResults)[3] == "interaction_coeff"){
     stop("GetCorrClusters requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
   }
   else{
     allres <- inputResults
-    if(nrow(allres)>top_pairs) {
-      allp <- inputResults[,"FDRadjPval"]
-      allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
-    }
-    
     toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
                          allres[,3:4])
     suppressMessages(
@@ -410,8 +401,25 @@ GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
     # hclust is used under the hood of heatmaply.
     dend <- stats::hclust(stats::dist(heat_data, method = "euclidean"))
     clusters <- stats::cutree(dend, k = treecuts)
+    
+    # Split clusters.
+    analyte1 <- unlist(lapply(names(clusters), function(c){
+      return(strsplit(c, " vs ")[[1]][1])
+    }))
+    analyte2 <- unlist(lapply(names(clusters), function(c){
+      return(strsplit(c, " vs ")[[1]][2])
+    }))
+    
+    # Formulate cluster data.
+    clusterdata <- data.frame(IndependentAnalyte = analyte1, OutcomeAnalyte = analyte2,
+                           Cluster = clusters)
+    
+    # Add average correlation for each phenotype.
+    for(phen in colnames(heat_data)){
+      clusterdata[,paste0(phen, "Corr")] <- heat_data[,phen]
+    }
   }
-  return(clusters)
+  return(clusterdata)
 }
 #' Plot correlation heatmap
 #'
@@ -423,15 +431,15 @@ GetCorrClusters <- function(inputResults,inputData,top_pairs=1200,treecuts=2) {
 #' in Shiny/Knittr (F)
 #' @param treecuts number of clusters (of pairs) to cut the tree into for color-coding
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-#' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
+#' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors. "Set1" is the default.
 #' @return a highcharter object
 #'@param static allows user to decide whether heatmap is interactive or static
 #'@param html.file allows user to specify file path to output heatmap onto (used for non-static heatmaply objects)
 #'@param pdf.file allows user to specify file path to output heatmap onto (used for static heatmap.2 objects)
 #' @export
 CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, 
-                        palette = NULL, static = FALSE,
-                        html.file=NULL, pdf.file=NULL) {
+                        palette = "Set1", static = FALSE,
+                        html.file=NA, pdf.file=NA) {
   
   # Stop if not two discrete phenotypes.
   if(colnames(inputResults)[3] == "interaction_coeff"){
@@ -481,22 +489,19 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
     heat_data[,1] <- meltedtoplot[1:num,3]
     
     heat_data[,2] <- meltedtoplot[-1:-num,3]
-    if (is.null(palette)){
-      palette=grDevices::colorRampPalette(c("#D01C8B", "#F1B6DA", "#F7F7F7", "#B8E186", "#4DAC26")) (255)[255:1]
-    }
     
     if(static == FALSE){
-      hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                 k_row = treecuts,#k_col = 2,
-                                 margins = c(80,5),
-                                 dendrogram = "row",
-                                 y_axis_font_size ="1px",
-                                 colors = palette,
-                                 key.title = 'Correlation \n differences',
-                                 file=html.file)
-      hm
-      
-      if(!is.null(pdf.file)){
+      if(is.na(pdf.file) && is.na(html.file)){
+        hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
+                                   k_row = treecuts,#k_col = 2,
+                                   margins = c(80,5),
+                                   dendrogram = "row",
+                                   y_axis_font_size ="1px",
+                                   colors = palette,
+                                   key.title = 'Correlation \n differences')
+        hm
+      }
+      else if(!is.na(pdf.file)){
         
         hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
                                    k_row = treecuts,#k_col = 2,
@@ -520,27 +525,16 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
       }
       return(hm)
     }else{
-      
-      hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
-                                 k_row = treecuts,#k_col = 2,
-                                 margins = c(80,5),
-                                 dendrogram = "row",
-                                 y_axis_font_size ="1px",
-                                 colors = palette,
-                                 key.title = 'Correlation \n differences' )
-      
-      row_dend = hmr$rows
-      gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                        dendrogram = "row",
-                        col = palette,
-                        density.info = 'none',
-                        key.title = 'Correlation \n differences',
-                        labRow = rep('',nrow(heat_data)),
-                        cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                        trace = 'none', Rowv = row_dend)
-      
-      if(!is.null(pdf.file)){
-        grDevices::pdf(file=pdf.file, width=12, height=6.3)
+      if(is.na(pdf.file) && is.na(html.file)){
+        hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
+                                   k_row = treecuts,#k_col = 2,
+                                   margins = c(80,5),
+                                   dendrogram = "row",
+                                   y_axis_font_size ="1px",
+                                   colors = palette,
+                                   key.title = 'Correlation \n differences' )
+        
+        row_dend = hmr$rows
         gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
                           dendrogram = "row",
                           col = palette,
@@ -549,26 +543,33 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
                           labRow = rep('',nrow(heat_data)),
                           cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
                           trace = 'none', Rowv = row_dend)
-        grDevices::dev.off()
       }
-      
-      
-    }
-    
-    
-    if(!is.null(html.file) & static==TRUE){
-      hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                          k_row = treecuts,#k_col = 2,
-                                          margins = c(80,5),
-                                          dendrogram = "row",
-                                          y_axis_font_size ="1px",
-                                          colors = palette,
-                                          key.title = 'Correlation \n differences',
-                                          file=html.file)
+      else{  
+        if(!is.na(pdf.file)){
+          grDevices::pdf(file=pdf.file, width=12, height=6.3)
+          gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
+                            dendrogram = "row",
+                            col = palette,
+                            density.info = 'none',
+                            key.title = 'Correlation \n differences',
+                            labRow = rep('',nrow(heat_data)),
+                            cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
+                            trace = 'none', Rowv = row_dend)
+          grDevices::dev.off()
+        }
+        if(!is.na(html.file) & static==TRUE){
+          hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
+                                              k_row = treecuts,#k_col = 2,
+                                              margins = c(80,5),
+                                              dendrogram = "row",
+                                              y_axis_font_size ="1px",
+                                              colors = palette,
+                                              key.title = 'Correlation \n differences',
+                                              file=html.file)
+        }
+      }
     }
   }
-		
-
 }
 
 #' scatter plot of pairs (based on user selection)
