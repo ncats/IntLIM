@@ -4,7 +4,7 @@
 \alias{PlotPCA}
 \title{PCA plots of data for QC}
 \usage{
-PlotPCA(inputData, viewer = T, stype = NULL, palette = "Set1")
+PlotPCA(inputData, viewer = T, stype = "", palette = "Set1")
 }
 \arguments{
 \item{inputData}{IntLimObject output of ReadData()}
