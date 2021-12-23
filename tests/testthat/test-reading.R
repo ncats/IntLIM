@@ -65,6 +65,7 @@ test_that("Absence of data causes early termination.", {
 })
 
 # If only one data type is missing, a warning should be given.
+# However, fields should still be populated appropriately.
 test_that("Absence of one omic type results in a warning.", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
@@ -92,7 +93,7 @@ test_that("Absence of one omic type results in a warning.", {
   geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
                                 c("Gene1", "Gene2", "Gene3"))
   fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
-  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE)
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
 
   # Create patient data file.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
@@ -114,9 +115,25 @@ test_that("Absence of one omic type results in a warning.", {
                    "analyses involving this analyte type.")
   expect_warning(IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
                                                           Feat2 = "numeric",
-                                                          Feat3 = "numeric")), 
+                                                          Feat3 = "numeric")),
                  message, ignore.case = TRUE)
-  file.remove(fname)
+
+  # Check that fields are still populated appropriately.
+  data_nometab <- IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                                 suppressWarnings = TRUE)
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(data_nometab), expected_names)
+  expect_identical(colnames(data_nometab@sampleMetaData),
+                   c("Feat1", "Feat2", "Feat3"))
+  expect_identical(rownames(data_nometab@analyteType2),
+                   c("Gene1", "Gene2","Gene3"))
+  expect_identical(rownames(data_nometab@analyteType2MetaData),
+                   c("Gene1", "Gene2","Gene3"))
+  expect_equal(length(data_nometab@analyteType2), 12)
+  expect_equal(length(data_nometab@analyteType1),0)
 
   # Create a file with only gene data missing.
   missing_gene_df = data.frame("filenames"=c("metab_file.csv","",
@@ -132,8 +149,25 @@ test_that("Absence of one omic type results in a warning.", {
                    "analyses involving this analyte type.")
   expect_warning(IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
                                                          Feat2 = "numeric",
-                                                         Feat3 = "numeric")), 
+                                                         Feat3 = "numeric")),
                  message, ignore.case = TRUE)
+
+  # Check that fields are still populated appropriately.
+  data_nogene <- IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                                  suppressWarnings = TRUE)
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(data_nogene), expected_names)
+  expect_identical(colnames(data_nogene@sampleMetaData),
+                   c("Feat1", "Feat2", "Feat3"))
+  expect_identical(rownames(data_nogene@analyteType1),
+                   c("Metab1", "Metab2","Metab3"))
+  expect_identical(rownames(data_nogene@analyteType1MetaData),
+                   c("Metab1", "Metab2","Metab3"))
+  expect_equal(length(data_nogene@analyteType1),12)
+  expect_equal(length(data_nogene@analyteType2),0)
 
   # Remove files.
   file.remove(fname_metab)
@@ -324,6 +358,7 @@ test_that("Inaccessible data files cause early termination.", {
 
 # If analyte metadata files are missing, this should throw a warning but not lead
 # to early termination.
+# Fields should still be populated.
 test_that("Missing metadata causes a warning.", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
@@ -367,6 +402,23 @@ test_that("Missing metadata causes a warning.", {
                                                                        Feat2 = "numeric",
                                                                        Feat3 = "numeric")),
                  "No metadata provided for Analyte Type 1", fixed = TRUE)
+  # Check that fields are still populated appropriately.
+  data_metab <- IntLIM::ReadData(fname_metab_missing, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                                 suppressWarnings = TRUE)
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(data_metab), expected_names)
+  expect_identical(colnames(data_metab@sampleMetaData),
+                   c("Feat1", "Feat2", "Feat3"))
+  expect_identical(rownames(data_metab@analyteType1),
+                   c("Metab1", "Metab2","Metab3"))
+  expect_identical(rownames(data_metab@analyteType2),
+                   c("Gene1", "Gene2","Gene3"))
+  expect_equal(length(data_metab@analyteType1MetaData), 0)
+  expect_identical(rownames(data_metab@analyteType2MetaData),
+				   c("Gene1", "Gene2","Gene3"))
 
   # Check when only gene data is missing.
   missing_gene_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv",
@@ -379,6 +431,24 @@ test_that("Missing metadata causes a warning.", {
                                                                         Feat2 = "numeric",
                                                                         Feat3 = "numeric")),
                  "No metadata provided for Analyte Type 2", fixed = TRUE)
+
+  # Check that fields are still populated appropriately.
+  data_gene <- IntLIM::ReadData(fname_gene_missing, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                                suppressWarnings = TRUE)
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(data_gene), expected_names)
+  expect_identical(colnames(data_gene@sampleMetaData),
+                   c("Feat1", "Feat2", "Feat3"))
+  expect_identical(rownames(data_gene@analyteType1),
+                   c("Metab1", "Metab2","Metab3"))
+  expect_identical(rownames(data_gene@analyteType2),
+                   c("Gene1", "Gene2","Gene3"))
+  expect_equal(length(data_gene@analyteType2MetaData), 0)
+  expect_identical(rownames(data_gene@analyteType1MetaData),
+				   c("Metab1", "Metab2","Metab3"))
 
   # Remove files.
   file.remove(fname_metab)
@@ -518,6 +588,8 @@ test_that("Missing 'id' column in metadata leads to early termination.",{
   file.remove(fname_gene)
   file.remove(fname_gene_meta)
   file.remove(fname_pdata)
+  file.remove(fname_metab_meta_missing)
+  file.remove(fname_gene_meta_missing)
   file.remove(fname_metab_meta_noid)
   file.remove(fname_gene_meta_noid)
 })
@@ -666,13 +738,358 @@ test_that("All fields are present", {
   file.remove(ref_file)
 })
 
-# TODO: When log scaling is requested for positive valued data, data should be
+# When log scaling is requested for positive valued data, data should be
 # appropriately log-scaled.
+test_that("Data is log-scaled", {
+  # Data types expected
+  expected <- c("analyteType1","analyteType2","analyteType1MetaData",
+                "analyteType2MetaData","sampleMetaData")
 
-# TODO: Log-scaling for negative data should result in a warning.
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,1,2,4), "Metab2"=c(0,1,2,4), "Metab3"=c(0,1,2,4))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
-# TODO: Test that output is appropriate when a different ID is used.
+  geneData <- data.frame("Gene1"=c(0,1,2,4), "Gene2"=c(0,1,2,4), "Gene3"=c(0,1,2,4))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
-# TODO: Test that samples not shared between patient and analyte files are removed.
+  pData <- data.frame("Feat1"=c(0,1,2,4), "Feat2"=c(0,1,2,4), "Feat3"=c(0,1,2,4))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
 
-# TODO: Test that names are converted appropriately.
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+
+  # Check the characteristics of the data set (both gene and metabolite).
+  dataset <- IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                              logAnalyteType1 = TRUE, logAnalyteType2 = TRUE)
+  cutoff <- 0.0000001
+  expect_lt(dataset@analyteType1[1,1],0)
+  expect_lt(dataset@analyteType1[2,1],0)
+  expect_lt(dataset@analyteType1[3,1],0)
+  expect_equal(dataset@analyteType1[1,2],0, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[2,2],0, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[3,2],0, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[1,3],1, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[2,3],1, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[3,3],1, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[1,4],2, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[2,4],2, tolerance=cutoff)
+  expect_equal(dataset@analyteType1[3,4],2, tolerance=cutoff)
+
+  expect_lt(dataset@analyteType2[1,1],0)
+  expect_lt(dataset@analyteType2[2,1],0)
+  expect_lt(dataset@analyteType2[3,1],0)
+  expect_equal(dataset@analyteType2[1,2],0, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[2,2],0, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[3,2],0, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[1,3],1, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[2,3],1, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[3,3],1, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[1,4],2, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[2,4],2, tolerance=cutoff)
+  expect_equal(dataset@analyteType2[3,4],2, tolerance=cutoff)
+
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+})
+
+# Log-scaling for negative data should result in a warning.
+test_that("Negative data is not log-scaled", {
+  # Data types expected
+  expected <- c("analyteType1","analyteType2","analyteType1MetaData",
+                "analyteType2MetaData","sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(-1,1,2,4), "Metab2"=c(0,1,2,4), "Metab3"=c(0,1,2,4))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+
+  geneData <- data.frame("Gene1"=c(0,1,2,4), "Gene2"=c(-1,1,2,4), "Gene3"=c(0,1,2,4))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+
+  pData <- data.frame("Feat1"=c(0,1,2,4), "Feat2"=c(0,1,2,4), "Feat3"=c(0,1,2,4))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+
+  # Check the characteristics of the data set (both gene and metabolite).
+  dataset <- IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+														  suppressWarnings = TRUE, logAnalyteType1 = TRUE, 
+														  logAnalyteType2 = TRUE)
+  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                                  logAnalyteType1 = TRUE, logAnalyteType2 = TRUE),
+														  "Analyte Type 1 data has negative values. Continuing without log-scaling.", fixed = TRUE)
+  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+                                  logAnalyteType1 = TRUE, logAnalyteType2 = TRUE),
+														  "Analyte Type 2 data has negative values. Continuing without log-scaling.", fixed = TRUE)
+  expect_equal(dataset@analyteType1,t(metabData))
+  expect_equal(dataset@analyteType2,t(geneData))
+
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+})
+
+# Test that output is appropriate when a different ID is used.
+  # Data types expected
+test_that("Other ID's also work", {
+  expected <- c("analyteType1","analyteType2","analyteType1MetaData",
+                "analyteType2MetaData","sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+
+  geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+
+  metabMetaData <- data.frame("metabIdentifier"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+
+  geneMetaData <- data.frame("geneIdentifier"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+
+  # Check the characteristics of the data set (both gene and metabolite).
+  dataset <- IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+														  analyteType1id = "metabIdentifier",
+														  analyteType2id = "geneIdentifier")
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(dataset), expected_names)
+  expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
+  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
+                                                "Bambam"))
+  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
+                                                       "Bambam"))
+  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
+                                                     "Bambam"))
+
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+ })
+
+# Test that samples not shared between patient and analyte files are removed.
+test_that("Samples not shared are removed", {
+
+  # Data types expected
+  expected <- c("analyteType1","analyteType2","analyteType1MetaData",
+                "analyteType2MetaData","sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab1"=c(0,0,0,0,0), "Metab2"=c(0,0,0,0,0), "Metab3"=c(0,0,0,0,0))
+  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Deeno")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+
+  geneData <- data.frame("Gene1"=c(0,0,0,0,0), "Gene2"=c(0,0,0,0,0), "Gene3"=c(0,0,0,0,0))
+  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+
+  pData <- data.frame("Feat1"=c(0,0,0,0,0), "Feat2"=c(0,0,0,0,0), "Feat3"=c(0,0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Barney")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+
+  # Check for the warning.
+  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric")),
+				"The following samples were only included in the sample data and were removed: Barney",
+				fixed = TRUE)
+  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric")),
+				"The following samples were only included in the Analyte 1 data and were removed: Deeno",
+				fixed = TRUE)
+  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric")),
+				"The following samples were only included in the Analyte 2 data and were removed: Betty",
+				fixed = TRUE)
+
+  # Check the characteristics of the data set (both gene and metabolite).
+  dataset <- IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+                                                          Feat2 = "numeric",
+                                                          Feat3 = "numeric"),
+														  suppressWarnings = TRUE)
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(dataset), expected_names)
+  expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
+  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
+                                                "Bambam"))
+  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
+                                                       "Bambam"))
+  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
+                                                     "Bambam"))
+
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+ })
+
+# Test that names are converted appropriately.
+test_that("Names with special symbols are converted appropriately", {
+  # Data types expected
+  expected <- c("analyteType1","analyteType2","analyteType1MetaData",
+                "analyteType2MetaData","sampleMetaData")
+
+  # Save files.
+  metabData <- data.frame("Metab-1"=c(0,0,0,0), "Met-ab2"=c(0,0,0,0), "Metab&3"=c(0,0,0,0))
+  rownames(metabData) <- c("Fred%%", "4Wilma", "*Pebbles-", "Bam*bam")
+  fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
+  write.csv(t(metabData), file = fname_metab, quote=FALSE)
+
+  geneData <- data.frame("Gene*1"=c(0,0,0,0), "Gene&&2"=c(0,0,0,0), "Gene()3"=c(0,0,0,0))
+  rownames(geneData) <- c("Fred%%", "4Wilma", "*Pebbles-", "Bam*bam")
+  fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
+  write.csv(t(geneData), file = fname_gene, quote=FALSE)
+
+  pData <- data.frame("Feat-1"=c(0,0,0,0), "Feat~2"=c(0,0,0,0), "Feat`3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred%%", "4Wilma", "*Pebbles-", "Bam*bam")
+  fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
+  write.csv(pData, file = fname_pdata, quote=FALSE)
+
+  metabMetaData <- data.frame("id"=c("Metab-1", "Met-ab2", "Metab&3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  fname_metab_meta <- paste(getwd(), "metab_metadata_file.csv", sep = "/")
+  write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
+
+  geneMetaData <- data.frame("id"=c("Gene*1", "Gene&&2", "Gene()3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
+  write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
+
+  all_df = data.frame("filenames"=c("metab_file.csv","gene_file.csv","metab_metadata_file.csv"
+                                    ,"gene_metadata_file.csv","pdata_file.csv"))
+  rownames(all_df) <- expected
+  ref_file <- paste(getwd(), "all_ref.csv", sep = "/")
+  write.csv(all_df, file = ref_file, quote=FALSE)
+
+  # Check the characteristics of the data set (both gene and metabolite).
+  dataset <- IntLIM::ReadData(ref_file, class.feat = list(Feat.1 = "numeric",
+                                                          Feat.2 = "numeric",
+                                                          Feat.3 = "numeric"))
+  expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
+                      "analyteType2MetaData", "sampleMetaData")
+  expect_identical(slotNames(dataset), expected_names)
+  expect_identical(colnames(dataset@sampleMetaData), c("Feat.1", "Feat.2", "Feat.3"))
+  expect_identical(rownames(dataset@sampleMetaData), c("Fred..", "X4Wilma", "X.Pebbles.", "Bam.bam"))
+  expect_identical(rownames(dataset@analyteType1), c("Metab.1", "Met.ab2","Metab.3"))
+  expect_identical(colnames(dataset@analyteType1), c("Fred..", "X4Wilma", "X.Pebbles.", "Bam.bam"))
+  expect_identical(rownames(dataset@analyteType2), c("Gene.1","Gene..2","Gene..3"))
+  expect_identical(colnames(dataset@analyteType2), c("Fred..", "X4Wilma", "X.Pebbles.", "Bam.bam"))
+
+  # Remove files.
+  file.remove(fname_metab)
+  file.remove(fname_metab_meta)
+  file.remove(fname_gene)
+  file.remove(fname_gene_meta)
+  file.remove(fname_pdata)
+  file.remove(ref_file)
+})
