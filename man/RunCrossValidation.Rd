@@ -9,12 +9,7 @@
 4. Process the results for all folds.}
 \usage{
 RunCrossValidation(
-  inputFile,
-  analyteType1id = "id",
-  analyteType2id = "id",
-  logAnalyteType1 = FALSE,
-  logAnalyteType2 = FALSE,
-  class.feat = "factor",
+  inputData,
   folds,
   analyteType1perc = 0,
   analyteType2perc = 0,
@@ -36,27 +31,10 @@ RunCrossValidation(
 )
 }
 \arguments{
-\item{inputFile}{input file in CSV format (see Description)}
+\item{inputData}{IntLimData object (output of ReadData()) with analylte levels and
+associated meta-data}
 
-\item{analyteType1id}{name of column from Analyte Type 1 meta data to be used as id
-(required if an Analyte Type 1 meta data file is present, 
-must match Analyte Type 1 data)}
-
-\item{analyteType2id}{name of column from Analyte Type 2 meta data to be used as id
-(required if an Analyte Type 2 meta data file is present, 
-must match Analyte Type 2 data)}
-
-\item{logAnalyteType1}{whether or not to log values for Analyte Type 1(T/F).
-Must coincide with parameter used during CreateCrossValFolds.}
-
-\item{logAnalyteType2}{whether or not to log values for Analyte Type 2(T/F).
-Must coincide with parameter used during CreateCrossValFolds.}
-
-\item{class.feat}{class ("factor" or "numeric") for each covariate. The following format
-is required: list(covar1="numeric", covar2="factor"). 
-Must coincide with parameter used during CreateCrossValFolds.}
-
-\item{folds}{Number of folds to run.}
+\item{folds}{number of folds to create}
 
 \item{analyteType1perc}{percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}

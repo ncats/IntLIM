@@ -294,6 +294,9 @@ Note: This function is only applicable to discrete phenotypes.
 ```{r}
 IntLIM::CorrHeatmap(inputResults = myres.gm.sig)
 ```
+**TODO**: Add the clustering analysis function.
+```{r}
+```
 
 The __HistogramPairs()__ function plots the count of analyte pairs by either
 outcome or independent variable analyte.
@@ -341,10 +344,7 @@ reading, filtering, running IntLIM, and processing the results for multiple fold
 __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within each
 fold and common between folds.
 ```{r eval = FALSE}
-feats <- list(panelnbr = "factor", cellnbr = "numeric",
-              PBO_vs_Leukemia = "factor", drugscore = "numeric")
-crossValResults <- RunCrossValidation(inputFile = csvfile,analyteType1id='id',analyteType2id='id',
-                   class.feat = feats, analyteType1perc = 0.10, 
+crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10, 
                    analyteType2perc = 0.10, analyteType2miss = 0.80,
                    stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1), 
                    independent.var.type = c(2), save.covar.pvals = TRUE,

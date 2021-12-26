@@ -12,11 +12,12 @@ RunIntLimAllFolds(
   continuous = FALSE,
   save.covar.pvals = FALSE,
   independent.var.type = 1,
-  remove.duplicates = FALSE
+  remove.duplicates = FALSE,
+  suppressWarnings = FALSE
 )
 }
 \arguments{
-\item{inputData}{MultiDataSet object (output of ReadData()) with analyte levels
+\item{inputData}{IntLimData object (output of ReadData()) with analyte levels
 and associated meta-data}
 
 \item{stype}{column name that represents sample type (by default, it will be used
@@ -37,6 +38,8 @@ which can be analyzed later but will also lengthen computation time. The default
 
 \item{remove.duplicates}{boolean to indicate whether or not to remove the 
 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
+
+\item{suppressWarnings}{whether to suppress warnings}
 }
 \value{
 List of IntLimModel objects with model results

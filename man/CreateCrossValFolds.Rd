@@ -6,38 +6,13 @@
 IntLIMData training and testing pairs. The "training" slot contains all data
 except that in the given fold, and the "testing" contains all data in the fold.}
 \usage{
-CreateCrossValFolds(
-  inputFile,
-  analyteType1id = "id",
-  analyteType2id = "id",
-  logAnalyteType1 = FALSE,
-  logAnalyteType2 = FALSE,
-  class.feat = "factor",
-  folds,
-  suppressWarnings = FALSE
-)
+CreateCrossValFolds(inputData, folds)
 }
 \arguments{
-\item{inputFile}{input file in CSV format (see Despcription)}
-
-\item{analyteType1id}{name of column from Analyte Type 1 meta data to be used as id
-(required if an Analyte Type 1 meta data file is present, 
-must match Analyte Type 1 data)}
-
-\item{analyteType2id}{name of column from Analyte Type 2 meta data to be used as id
-(required if an Analyte Type 2 meta data file is present, 
-must match Analyte Type 2 data)}
-
-\item{logAnalyteType1}{whether or not to log values for Analyte Type 1(T/F)}
-
-\item{logAnalyteType2}{whether or not to log values for Analyte Type 2(T/F)}
-
-\item{class.feat}{class ("factor" or "numeric") for each covariate. The following format
-is required: list(covar1="numeric", covar2="factor")}
+\item{inputData}{IntLimData object (output of ReadData()) with analylte levels and
+associated meta-data}
 
 \item{folds}{number of folds to create}
-
-\item{suppressWarnings}{whether to suppress warnings}
 }
 \value{
 A set of IntLimData training and testing sets, of the following format:
