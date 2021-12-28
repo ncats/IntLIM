@@ -33,18 +33,26 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     whiskerLength = '20%',
     whiskerWidth = 3)
   if(length(inputData@analyteType1)>0){
+    # Compute boxplot statistics for analyte type 1.
     type1Data <- inputData@analyteType1
     toplot <- suppressMessages(reshape2::melt(type1Data))
-    df <- dplyr::tibble(value = toplot$value, by = toplot$Var2)
-    df <- dplyr::group_by_at(df, "by")
-    df <- dplyr::do(df, data = grDevices::boxplot.stats(.$value))
-    bxps <- purrr::map(df$data, "stats")
-    outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
-      if (length(y$out) > 0)
-        d <- dplyr::tibble(x = x - 1, y = y$out)
-      else d <- dplyr::tibble()
-      d
+    df <- data.frame(value = toplot$value, by = toplot$Var2)
+    stats <- lapply(sort(unique(df$by)), function(grp){
+      return(grDevices::boxplot.stats(df$value[which(df$by == grp)]))
     })
+    bxps <- lapply(stats, function(stat){
+      return(stat$stats)
+    })
+    
+    # Construct output.
+    outsList <- lapply(seq(length(unique(df$by))), function(x) {
+      y <- stats[[x]]
+      d <- data.frame()
+      if (length(y$out) > 0)
+        d <- data.frame(x = x - 1, y = y$out)
+      return(d)
+    })
+    outs <- do.call(rbind, outsList)
     outs <- data.frame(outs, 'z' = colnames(type1Data)[outs$x + 1])
     z <- outs$z
     # To try to get the analyte names of outliers, would have to go back and get 
@@ -70,19 +78,27 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     g <- highcharter::hc_exporting(g, enabled = TRUE)
   }
   if(length(inputData@analyteType2)>0){
+    # Compute boxplot statistics for analyte type 2.
     type2Data <- inputData@analyteType2
-    toplot <- suppressMessages(reshape2::melt(t(type2Data)))
-    df <- dplyr::data_frame(value = toplot$value, by = toplot$Var1)
-    df <- dplyr::group_by_at(df, "by")
-    df <- dplyr::do(df, data = grDevices::boxplot.stats(.$value))
-    bxps <- purrr::map(df$data, "stats")
-    outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
-      if (length(y$out) > 0)
-        d <- dplyr::data_frame(x = x - 1, y = y$out)
-      else d <- dplyr::data_frame()
-      d
+    toplot <- suppressMessages(reshape2::melt(type2Data))
+    df <- data.frame(value = toplot$value, by = toplot$Var2)
+    stats <- lapply(sort(unique(df$by)), function(grp){
+      return(grDevices::boxplot.stats(df$value[which(df$by == grp)]))
     })
-    outs <- data.frame(outs, 'z' = colnames(type2Data)[outs$x + 1])
+    bxps <- lapply(stats, function(stat){
+      return(stat$stats)
+    })
+    
+    # Construct output.
+    outsList <- lapply(seq(length(unique(df$by))), function(x) {
+      y <- stats[[x]]
+      d <- data.frame()
+      if (length(y$out) > 0)
+        d <- data.frame(x = x - 1, y = y$out)
+      return(d)
+    })
+    outs <- do.call(rbind, outsList)
+    outs <- data.frame(outs, 'z' = colnames(type1Data)[outs$x + 1])
     z <- outs$z
     
     m <- highcharter::highchart(width = 750, height = 750 )
@@ -360,11 +376,10 @@ GetCorrClusters <- function(inputResults,treecuts=2) {
     allres <- inputResults
     toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
                          allres[,3:4])
-    suppressMessages(
-      meltedtoplot <- tidyr::gather(
-        toplot,
-        type,cor,colnames(toplot)[2],colnames(toplot)[3]))
-    
+    suppressMessages(meltedtoplot <- reshape2::melt(toplot))
+    colnames(meltedtoplot) <- c("name", "type", "cor")
+    meltedtoplot$type <- as.character(meltedtoplot$type)
+
     #all possible values of X (type) and Y (name)
     theXAxis <- as.character(meltedtoplot[, "type"])
     theYAxis <- as.character(meltedtoplot[, "name"])
@@ -427,8 +442,10 @@ GetCorrClusters <- function(inputResults,treecuts=2) {
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors. "Set1" is the default.
 #' @return a highcharter object
 #'@param static allows user to decide whether heatmap is interactive or static
-#'@param html.file allows user to specify file path to output heatmap onto (used for non-static heatmaply objects)
-#'@param pdf.file allows user to specify file path to output heatmap onto (used for static heatmap.2 objects)
+#'@param html.file allows user to specify file path to output heatmap onto (used for 
+#'non-static heatmaply objects)
+#'@param pdf.file allows user to specify file path to output heatmap onto (used for 
+#'static heatmap.2 objects)
 #' @export
 CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, 
                         palette = "Set1", static = FALSE,
@@ -451,10 +468,9 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
     }
     toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
                          allres[,3:4])
-    suppressMessages(
-      meltedtoplot <- tidyr::gather(
-        toplot,
-        type,cor,colnames(toplot)[2],colnames(toplot)[3]))
+    suppressMessages(meltedtoplot <- reshape2::melt(toplot))
+    colnames(meltedtoplot) <- c("name", "type", "cor")
+    meltedtoplot$type <- as.character(meltedtoplot$type)
     
     #all possible values of X (type) and Y (name)
     theXAxis <- as.character(meltedtoplot[, "type"])
@@ -493,30 +509,16 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
                                    colors = palette,
                                    key.title = 'Correlation \n differences')
         hm
+      }else if(!is.na(html.file)){
+        hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
+                                            k_row = treecuts,#k_col = 2,
+                                            margins = c(80,5),
+                                            dendrogram = "row",
+                                            y_axis_font_size ="1px",
+                                            colors = palette,
+                                            key.title = 'Correlation \n differences',
+                                            file=html.file)
       }
-      else if(!is.na(pdf.file)){
-        
-        hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
-                                   k_row = treecuts,#k_col = 2,
-                                   margins = c(80,5),
-                                   dendrogram = "row",
-                                   y_axis_font_size ="1px",
-                                   colors = palette,
-                                   key.title = 'Correlation \n differences' )
-        
-        row_dend = hmr$rows
-        grDevices::pdf(file=pdf.file, width=12, height=6.3)
-        gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                          dendrogram = "row",
-                          col = palette,
-                          density.info = 'none',
-                          key.title = 'Correlation \n differences',
-                          labRow = rep('',nrow(heat_data)),
-                          cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                          trace = 'none', Rowv = row_dend)
-        grDevices::dev.off()
-      }
-      return(hm)
     }else{
       if(is.na(pdf.file) && is.na(html.file)){
         hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
@@ -528,17 +530,8 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
                                    key.title = 'Correlation \n differences' )
         
         row_dend = hmr$rows
-        gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                          dendrogram = "row",
-                          col = palette,
-                          density.info = 'none',
-                          key.title = 'Correlation \n differences',
-                          labRow = rep('',nrow(heat_data)),
-                          cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                          trace = 'none', Rowv = row_dend)
       }
-      else{  
-        if(!is.na(pdf.file)){
+      else if(!is.na(pdf.file)){
           grDevices::pdf(file=pdf.file, width=12, height=6.3)
           gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
                             dendrogram = "row",
@@ -549,17 +542,6 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
                             cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
                             trace = 'none', Rowv = row_dend)
           grDevices::dev.off()
-        }
-        if(!is.na(html.file) & static==TRUE){
-          hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                              k_row = treecuts,#k_col = 2,
-                                              margins = c(80,5),
-                                              dendrogram = "row",
-                                              y_axis_font_size ="1px",
-                                              colors = palette,
-                                              key.title = 'Correlation \n differences',
-                                              file=html.file)
-        }
       }
     }
   }

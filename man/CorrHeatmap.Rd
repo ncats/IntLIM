@@ -31,9 +31,11 @@ plotted (plotting more than 1200 can take some time) (default: 1200)}
 
 \item{static}{allows user to decide whether heatmap is interactive or static}
 
-\item{html.file}{allows user to specify file path to output heatmap onto (used for non-static heatmaply objects)}
+\item{html.file}{allows user to specify file path to output heatmap onto (used for 
+non-static heatmaply objects)}
 
-\item{pdf.file}{allows user to specify file path to output heatmap onto (used for static heatmap.2 objects)}
+\item{pdf.file}{allows user to specify file path to output heatmap onto (used for 
+static heatmap.2 objects)}
 }
 \value{
 a highcharter object
