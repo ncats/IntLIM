@@ -1,7 +1,5 @@
 #' Get some stats after reading in data
 #'
-#' @import magrittr
-#' @import highcharter
 #' @param inputData IntLimObject output of ReadData()
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
@@ -37,8 +35,9 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
   if(length(inputData@analyteType1)>0){
     type1Data <- inputData@analyteType1
     toplot <- suppressMessages(reshape2::melt(type1Data))
-    df <- dplyr::tibble(value = toplot$value, by = toplot$Var2) %>% dplyr::group_by_at("by") %>%
-      dplyr::do(data = grDevices::boxplot.stats(.$value))
+    df <- dplyr::tibble(value = toplot$value, by = toplot$Var2)
+    df <- dplyr::group_by_at(df, "by")
+    df <- dplyr::do(df, data = grDevices::boxplot.stats(.$value))
     bxps <- purrr::map(df$data, "stats")
     outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
       if (length(y$out) > 0)
@@ -51,33 +50,31 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     # To try to get the analyte names of outliers, would have to go back and get 
     # the analyte names from original data frame and put htem in outs$color
     
-    g <- highcharter::highchart(width = 750, height = 750 ) %>%
-      highcharter::hc_title(text = "Analyte Type 1 Levels",
+    g <- highcharter::highchart(width = 750, height = 750 )
+    g <- highcharter::hc_title(g, text = "Analyte Type 1 Levels",
                             style = list(color = '#2E1717',
-                                         fontWeight = 'bold', fontSize = "20px")) %>%
-      highcharter::hc_plotOptions(
-        boxplot = boxplotOptions
-      ) %>%
-      hc_add_series(data = bxps,name = "Analyte Type 1 Levels", type="boxplot",
-                    color=cols[1],showInLegend=FALSE) %>%
-      highcharter::hc_add_series(data=list_parse(outs),name = "Analyte Type 1 Levels",
+                                         fontWeight = 'bold', fontSize = "20px"))
+    g <- highcharter::hc_plotOptions(g, boxplot = boxplotOptions)
+    g <- highcharter::hc_add_series(g, data = bxps,name = "Analyte Type 1 Levels", type="boxplot",
+                    color=cols[1],showInLegend=FALSE)
+    g <- highcharter::hc_add_series(g, data=highcharter::list_parse(outs),name = "Analyte Type 1 Levels",
                                  type="scatter",color=cols[1],showInLegend=FALSE,
                                  tooltip = list(headerFormat = "",
                                                 pointFormat = "{point.z} <br/> {point.y}",
-                                                showInLegend = FALSE)) %>%
-      highcharter::hc_yAxis(title = list(text = "Levels",
+                                                showInLegend = FALSE))
+    g <- highcharter::hc_yAxis(g, title = list(text = "Levels",
                                          style = list(fontSize = "13px")),
-                            labels = list(format = "{value}")) %>%
-      highcharter::hc_xAxis(labels="", categories = colnames(type1Data)) %>%
-      highcharter::hc_tooltip(valueDecimals = 2) %>%
-      highcharter::hc_exporting(enabled = TRUE)
+                            labels = list(format = "{value}"))
+    g <- highcharter::hc_xAxis(g, labels="", categories = colnames(type1Data))
+    g <- highcharter::hc_tooltip(g, valueDecimals = 2)
+    g <- highcharter::hc_exporting(g, enabled = TRUE)
   }
   if(length(inputData@analyteType2)>0){
     type2Data <- inputData@analyteType2
     toplot <- suppressMessages(reshape2::melt(t(type2Data)))
-    df <- dplyr::data_frame(value = toplot$value, by = toplot$Var1) %>%
-      dplyr::group_by_at("by") %>%
-      dplyr::do(data = grDevices::boxplot.stats(.$value))
+    df <- dplyr::data_frame(value = toplot$value, by = toplot$Var1)
+    df <- dplyr::group_by_at(df, "by")
+    df <- dplyr::do(df, data = grDevices::boxplot.stats(.$value))
     bxps <- purrr::map(df$data, "stats")
     outs <- purrr::map2_df(seq(nrow(df)), df$data, function(x, y) {
       if (length(y$out) > 0)
@@ -88,27 +85,24 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     outs <- data.frame(outs, 'z' = colnames(type2Data)[outs$x + 1])
     z <- outs$z
     
-    m <- highcharter::highchart(width = 750, height = 750 ) %>%
-      highcharter::hc_title(text = "Analyte Type 2 Levels",
+    m <- highcharter::highchart(width = 750, height = 750 )
+    m <- highcharter::hc_title(m, text = "Analyte Type 2 Levels",
                             style = list(color = '#2E1717',
-                                         fontWeight = 'bold', fontSize = "20px")) %>%
-      highcharter::hc_plotOptions(
-        boxplot = boxplotOptions
-      ) %>%
-      highcharter::hc_add_series(data = bxps,name = "Analyte Type 2 Levels",
-                                 type="boxplot",color=cols[2],showInLegend=FALSE) %>%
-      highcharter::hc_add_series(data=list_parse(outs),name = "Analyte Type 2 Levels",
+                                         fontWeight = 'bold', fontSize = "20px"))
+    m <- highcharter::hc_plotOptions(m, boxplot = boxplotOptions)
+    m <- highcharter::hc_add_series(m, data = bxps,name = "Analyte Type 2 Levels",
+                                 type="boxplot",color=cols[2],showInLegend=FALSE)
+    m <- highcharter::hc_add_series(m, data=highcharter::list_parse(outs),name = "Analyte Type 2 Levels",
                                  type="scatter",color=cols[2],showInLegend=FALSE,
                                  tooltip = list(headerFormat = "", 
                                                 pointFormat = "{point.z} <br/> {point.y}",
-                                                showInLegend = FALSE)) %>%
-      
-      highcharter::hc_yAxis(title = list(text = "Levels",
+                                                showInLegend = FALSE))
+    m <- highcharter::hc_yAxis(m, title = list(text = "Levels",
                                          style = list(fontSize = "13px")),
-                            labels = list(format = "{value}")) %>%
-      highcharter::hc_xAxis(labels="", categories = colnames(type2Data)) %>%
-      highcharter::hc_tooltip(valueDecimals = 2) %>%
-      highcharter::hc_exporting(enabled = TRUE)
+                            labels = list(format = "{value}"))
+    m <- highcharter::hc_xAxis(m, labels="", categories = colnames(type2Data))
+    m <- highcharter::hc_tooltip(m, valueDecimals = 2)
+    m <- highcharter::hc_exporting(m, enabled = TRUE)
   }
   if(!is.null(g) & !is.null(m)){
     if (viewer == TRUE) {
@@ -141,8 +135,6 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 
 #' PCA plots of data for QC
 #'
-#' @import magrittr
-#' @import highcharter
 #' @param inputData IntLimObject output of ReadData()
 #' @param stype category to color-code by (can be more than two categories)
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
@@ -204,15 +196,15 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=rep("blue",nrow(gpca$x)))
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=rep("blue",nrow(mpca$x)))
-      gds <- list_parse(gtoplot)
+      gds <- highcharter::list_parse(gtoplot)
       pg <- highcharter::highchart(width = 350, height = 350 )
-      pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
+      pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
                                               tooltip = list(headerFormat="",
                                                              pointFormat=paste("{point.label}","{point.z}")),
                                               showInLegend=FALSE)
-      mds <- list_parse(mtoplot)
+      mds <- highcharter::list_parse(mtoplot)
       pm <- highcharter::highchart(width = 350, height = 350)
-      pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
+      pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
                                               tooltip = list(headerFormat="",
                                                              pointFormat=paste("{point.label}","{point.z}")),
                                               showInLegend=FALSE)
@@ -229,21 +221,24 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       mpca <- stats::prcomp(t(type2),center=T,scale=F)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
-      mds <- list_parse(mtoplot)
-      gds <- list_parse(gtoplot)
+      mds <- highcharter::list_parse(mtoplot)
+      gds <- highcharter::list_parse(gtoplot)
       pg <- highcharter::highchart(width = 350, height = 350)
       pm <- highcharter::highchart(width = 350, height = 350)
       for (i in 1:length(uniqtypes)) {
         mytype <- unique(alltype)[i]
-        gds <- list_parse(gtoplot[which(gtoplot$label==mytype),])
-        pg <- pg %>% highcharter::hc_add_series(data=gds,type="scatter",
-                                                name=mytype,color=cols[which(alltype==mytype)[1]],tooltip = list(headerFormat="",
-                                                                                                                 pointFormat=paste("{point.label}","{point.z}")),
-                                                showInLegend=TRUE)
-        mds <- list_parse(mtoplot[which(mtoplot$label==mytype),])
-        pm <- pm %>% highcharter::hc_add_series(data=mds,type="scatter",
-                                                name=mytype,color=cols[which(alltype==mytype)[1]],tooltip = list(headerFormat="",
-                                                                                                                 pointFormat=paste("{point.label}","{point.z}")),
+        gds <- highcharter::list_parse(gtoplot[which(gtoplot$label==mytype),])
+        pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
+                                                name=mytype,
+                                         color=cols[which(alltype==mytype)[1]],
+                                         tooltip = list(headerFormat="",
+                                                        showInLegend=TRUE))
+        mds <- highcharter::list_parse(mtoplot[which(mtoplot$label==mytype),])
+        pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
+                                                name=mytype,
+                                                color=cols[which(alltype==mytype)[1]],
+                                         tooltip = list(headerFormat="",
+                                                        pointFormat=paste("{point.label}","{point.z}")),
                                                 showInLegend=TRUE)
       }
     }
@@ -252,17 +247,17 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
   # Set up plots.
   if(length(inputData@analyteType1)>0){
     mpercvar=round((mpca$sdev)^2 / sum(mpca$sdev^2)*100,2)
-    pm <- pm %>% highcharter::hc_title(text="PCA of analyte type 2") %>%
-      highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(mpercvar[1],1),"%"))) %>%
-      highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(mpercvar[2],2),"%"))) %>%
-      hc_chart(zoomType = "xy")
+    pm <- highcharter::hc_title(pm, text="PCA of analyte type 2")
+    pm <- highcharter::hc_xAxis(pm, title=list(text=paste0("PC1:",round(mpercvar[1],1),"%")))
+    pm <- highcharter::hc_yAxis(pm, title=list(text=paste0("PC2:",round(mpercvar[2],2),"%")))
+    pm <- highcharter::hc_chart(pm, zoomType = "xy")
   }
   if(length(inputData@analyteType2)>0){
     gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
-    pg <- pg %>% highcharter::hc_title(text="PCA of analyte type 1") %>%
-      highcharter::hc_xAxis(title=list(text=paste0("PC1:",round(gpercvar[1],1),"%"))) %>%
-      highcharter::hc_yAxis(title=list(text=paste0("PC2:",round(gpercvar[2],2),"%"))) %>%
-      hc_chart(zoomType = "xy")
+    pg <- highcharter::hc_title(pg, text="PCA of analyte type 1")
+    pg <- highcharter::hc_xAxis(pg, title=list(text=paste0("PC1:",round(gpercvar[1],1),"%")))
+    pg <- highcharter::hc_yAxis(pg, title=list(text=paste0("PC2:",round(gpercvar[2],2),"%")))
+    pg <- highcharter::hc_chart(pg, zoomType = "xy")
   }
   p <- NULL
   if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
@@ -299,7 +294,6 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
 #' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
 #' @param adjusted Whether or not to plot adjusted p-values. If TRUE (default),
 #' adjusted p-values are plotted. If FALSE, unadjusted p-values are plotted.
-#' @importFrom graphics boxplot par
 #' @export
 DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 
@@ -324,8 +318,8 @@ PValueBoxPlots<- function(IntLimResults) {
   if(length(IntLimResults@covariate.pvalues) == 0){
     print("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
   }else{
-    par(mar=c(8, 4.1, 4.1, 2.1))
-    boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
+    graphics::par(mar=c(8, 4.1, 4.1, 2.1))
+    graphics::boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
   }
 }
 
@@ -423,10 +417,9 @@ GetCorrClusters <- function(inputResults,treecuts=2) {
 }
 #' Plot correlation heatmap
 #'
-#' @import magrittr
-#'
 #' @param inputResults Data frame (output of ProcessResults())
-#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be plotted (plotting more than 1200 can take some time) (default: 1200)
+#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be 
+#' plotted (plotting more than 1200 can take some time) (default: 1200)
 #' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
 #' in Shiny/Knittr (F)
 #' @param treecuts number of clusters (of pairs) to cut the tree into for color-coding
@@ -574,9 +567,6 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
 
 #' scatter plot of pairs (based on user selection)
 #'
-#' @import magrittr
-#' @import highcharter
-#'
 #' @param inputData IntLimObject output of ReadData() or FilterData()
 #' @param stype category to color-code by
 ##' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
@@ -596,7 +586,9 @@ PlotPair<- function(inputData,stype,outcome,independentVariable, independentAnal
   stype <- make.names(stype)
   
   if(is.null(stype)) {
-    stop("Users must define stype which defines the categories to be compared (e.g. tumor vs non-tumor).  This could be the same parameter that was used to run RunIntLim()")
+    stop("Users must define stype which defines the categories to be compared 
+         (e.g. tumor vs non-tumor).  This could be the same parameter that was 
+         used to run RunIntLim()")
   }
   if (length(palette) == 2) {
     cols <- c(palette)
@@ -675,21 +667,21 @@ PlotPair<- function(inputData,stype,outcome,independentVariable, independentAnal
   
   ds <- highcharter::list_parse(data)
   
-  hc <- highcharter::highchart(width = 350, height = 350 ) %>%
-    highcharter::hc_title(text=paste(independentAnalyteOfInterest,' vs. ', outcomeAnalyteOfInterest, sep = '')) %>%
-    highcharter::hc_xAxis(title=list(text=independentAnalyteOfInterest)) %>%
-    highcharter::hc_yAxis(title=list(text=outcomeAnalyteOfInterest)) %>%
-    hc_chart(zoomType = "xy") %>%
-    highcharter::hc_add_series(data=ds,type="scatter",#col=cols[1],
+  hc <- highcharter::highchart(width = 350, height = 350 )
+  hc <- highcharter::hc_title(hc, text=paste(independentAnalyteOfInterest,' vs. ', 
+                                       outcomeAnalyteOfInterest, sep = ''))
+  hc <- highcharter::hc_xAxis(hc, title=list(text=independentAnalyteOfInterest))
+  hc <- highcharter::hc_yAxis(hc, title=list(text=outcomeAnalyteOfInterest))
+  hc <- highcharter::hc_chart(hc, zoomType = "xy")
+  hc <- highcharter::hc_add_series(hc, data=ds,type="scatter",#col=cols[1],
                                tooltip = list(headerFormat="",
                                               pointFormat=paste("{point.label}","{point.z}")),
                                showInLegend=FALSE)
   
-  hc <- hc %>%
-    highcharter::hc_add_series(name = uniqtypes[1],
+  hc <- highcharter::hc_add_series(hc, name = uniqtypes[1],
                                data=line1,type='line',#name=sprintf("regression line %s",type1),
-                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE) %>%
-    highcharter::hc_add_series(name = uniqtypes[2],
+                               color = cols[1],enableMouseTracking=FALSE,marker=FALSE)
+  hc <- highcharter::hc_add_series(hc, name = uniqtypes[2],
                                data=line2,type='line',#name=sprintf("regression line %s",type2),
                                color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
   
@@ -815,8 +807,6 @@ InteractionCoefficientGraph<-function(inputResults,
 
 #' Creates a dataframe of the marginal effect of phenotype
 #'
-#' @import margins
-#'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
 #' @param inputData Named list (output of 
 #' FilterData()) with analyte levels 
@@ -896,7 +886,7 @@ MarginalEffectsGraph<-function(dataframe, title){
   }
   model = stats::glm(formula = form, data=dataframe)
   tryCatch({
-    cplot(model, "type", data = dataframe, what = "prediction", main = title)
+    margins::cplot(model, "type", data = dataframe, what = "prediction", main = title)
   }, error = function(cond){
     print("Could not plot the data. Check to see whether your outcome is continuous.
           Only categorical outcomes are valid for this function.")
