@@ -14,7 +14,8 @@ getStatsAllLM(
   covarMatrix,
   continuous,
   save.covar.pvals,
-  remove.tri = FALSE
+  remove.tri = FALSE,
+  suppressWarnings = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ which can be analyzed later but will also lengthen computation time.}
 
 \item{remove.tri}{boolean to indicate whether or not to remove the 1-1
 or 2-2 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
+
+\item{suppressWarnings}{whether or not to suppress warnings}
 }
 \value{
 list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)

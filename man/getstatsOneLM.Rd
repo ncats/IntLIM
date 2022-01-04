@@ -4,7 +4,7 @@
 \alias{getstatsOneLM}
 \title{Function that runs linear models for analyte vs. all analytes of the other type}
 \usage{
-getstatsOneLM(form, clindata, arraydata, analytename)
+getstatsOneLM(form, clindata, arraydata, analytename, suppressWarnings = FALSE)
 }
 \arguments{
 \item{form}{LM formulat (typically m~g+t+g:t)}
@@ -15,6 +15,8 @@ sample type (e.g. cancer/non-cancer)}
 \item{arraydata}{matrix of analyte values}
 
 \item{analytename}{name of dependent analyte in the model}
+
+\item{suppressWarnings}{whether or not to suppress warnings}
 }
 \description{
 Function that runs linear models for analyte vs. all analytes of the other type

@@ -350,7 +350,7 @@ crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2,
                    folds = 4)
-IntLIM::PlotFoldOverlapUpSet(crossValResults$processed[[1]])
+IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
 ##References
 

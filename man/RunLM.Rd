@@ -12,7 +12,8 @@ RunLM(
   covar = c(),
   continuous = FALSE,
   save.covar.pvals = FALSE,
-  keep.highest.pval = FALSE
+  keep.highest.pval = FALSE,
+  suppressWarnings = FALSE
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ which can be analyzed later but will also lengthen computation time.
 
 \item{keep.highest.pval}{boolean to indicate whether or not to remove the 
 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
+
+\item{suppressWarnings}{whether or not to suppress warnings.}
 }
 \description{
 Function that runs linear models and returns interaction p-values.

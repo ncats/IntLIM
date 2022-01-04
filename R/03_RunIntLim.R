@@ -58,7 +58,8 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
             myres <- RunLM(inputData,outcome=outcome,
                            independentVariable = independent.var.type,
                     type=inputData@sampleMetaData[,stype],covar=covar, continuous = continuous, 
-                    save.covar.pvals=save.covar.pvals)
+                    save.covar.pvals=save.covar.pvals,
+                    suppressWarnings = suppressWarnings)
         }
         else{
             stop("One type of analyte data is missing. Cannot run.\n")
@@ -72,7 +73,8 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
                            independentVariable = independent.var.type,
                            type=inputData@sampleMetaData[,stype],covar=covar, 
                            continuous = continuous, 
-                           save.covar.pvals=save.covar.pvals)
+                           save.covar.pvals=save.covar.pvals,
+                           suppressWarnings = suppressWarnings)
         }
         else{
             stop("One type of analyte data is missing. Cannot run.\n")
@@ -84,7 +86,8 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
                            type=inputData@sampleMetaData[,stype],covar=covar, 
                            continuous = continuous, 
                            save.covar.pvals=save.covar.pvals, 
-                           keep.highest.pval = remove.duplicates)
+                           keep.highest.pval = remove.duplicates,
+                           suppressWarnings = suppressWarnings)
         }
         else{
             stop("Analyte Type 1 is missing. Cannot run.\n")
@@ -96,7 +99,8 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
                                     type=inputData@sampleMetaData[,stype],covar=covar, 
                                     continuous = continuous, 
                                     save.covar.pvals=save.covar.pvals, 
-                                    keep.highest.pval = remove.duplicates)
+                                    keep.highest.pval = remove.duplicates,
+                           suppressWarnings = suppressWarnings)
         }
         else{
             stop("Analyte Type 2 is missing. Cannot run.\n")

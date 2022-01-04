@@ -55,5 +55,5 @@ methods::setClass(
 		stype="character",
 		outcome="numeric",
 		independent.var.type="numeric",
-		covar="data.frame")
+		covar="character")
 	)

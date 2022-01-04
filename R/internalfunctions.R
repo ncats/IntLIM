@@ -1,3 +1,43 @@
+#' @name RemovePlusInCovars
+#' @title RemovePlusInCovars
+# If there is a '+' in the covariate names, this will cause a problem
+# because the covariates will be collapsed using '+'. For example, if
+# covariate names are 'age', 'sex', and 'stage3+4', the formula will
+# become 'f ~ a + type + a:type + age + sex + stage3 + 4'. We fix
+# this problem by changing all '+' to 'plus'.
+#' @param covar vector of additional vectors to consider
+#' @param sampleDataColnames vector of column names, which is a superset
+#' of the covar vector.
+#' @return list containing two elements: new covariates and new column names.
+RemovePlusInCovars <- function(covar=c(), sampleDataColnames){
+  # Find which covariates have plus signs.
+  which_plus <- which(grepl("+", covar, fixed = TRUE) == TRUE)
+  oldCovars <- covar
+  
+  # Replace each plus sign with "plus".
+  covar <- unlist(lapply(1:length(covar), function(i){
+    retval <- covar[i]
+    if(i %in% which_plus){
+      splitOnPlus <- strsplit(covar[i], "+", fixed = TRUE)
+      retval <- paste(splitOnPlus[[1]], collapse = "plus")
+    }
+    return(retval)
+  }))
+  
+  # Replace the plus signs in the sampleMetaData column names as well.
+  sampleDataColnames <- unlist(lapply(1:length(sampleDataColnames),
+                                                     function(i){
+                                                       retval <- sampleDataColnames[i]
+                                                       if(retval %in% oldCovars){
+                                                         whichMatch <- which(oldCovars == retval)
+                                                         retval <- covar[whichMatch]
+                                                       }
+                                                       return(retval)
+                                                     }))
+  # Return new values.
+  return(list(covar = covar, sampleDataColnames = sampleDataColnames))
+}
+
 #' Function that runs linear models and returns interaction p-values.
 #'
 #' @include AllClasses.R
@@ -17,25 +57,48 @@
 #' (rather than interaction terms).
 #' @param keep.highest.pval boolean to indicate whether or not to remove the 
 #' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param suppressWarnings whether or not to suppress warnings.
 RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c(), 
-                  continuous=FALSE, save.covar.pvals = FALSE, keep.highest.pval = FALSE) {
+                  continuous=FALSE, save.covar.pvals = FALSE, keep.highest.pval = FALSE,
+                  suppressWarnings = FALSE) {
   
   # Initialize types 1 and 2 and warning list.
   type1 <- incommon@analyteType1
   type2 <- incommon@analyteType2
+  
+  # Initialize covariate matrix, type, and messages.
   covarMatrix <- as.matrix(incommon@sampleMetaData[,covar])
   stype <- type
   mymessage<-list()
-  
+  if(length(covar)>0){
+    # If one of the covariate names contains a plus sign, change it because this
+    # will cause problems when constructing the formula.
+    adjNames <- RemovePlusInCovars(covar, colnames(incommon@sampleMetaData))
+    covar <- adjNames$covar
+    colnames(incommon@sampleMetaData) <- adjNames$sampleDataColnames
+    
+    # Convert covariates to matrix. Ensure that matrix is one-hot encoded.
+    f <- paste('~ 0 + ', paste(covar, collapse = ' + '))
+    dat <- incommon@sampleMetaData[,covar]
+    if(length(covar) == 1){
+      dat <- data.frame(V1 = incommon@sampleMetaData[,covar])
+      colnames(dat) <- covar[1]
+    }
+    covarMatrix <- stats::model.matrix(stats::as.formula(f), data = dat)
+    covar <- colnames(covarMatrix)
+    
+    # Since names will be changed now, we need to remove plus signs again. For example,
+    # if we have a variable 'treatment' that has values 'med1', 'med2', and 'med1+med2',
+    # the column names will now include 'treatmentmed1' and 'treatmentmed1+med2'.
+    adjNames <- RemovePlusInCovars(covar, colnames(covarMatrix))
+    covar <- adjNames$covar
+    colnames(covarMatrix) <- adjNames$sampleDataColnames
+  }
+
   # Find all standard deviations.
   type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
   type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
   covarsd <- as.numeric(apply(covarMatrix,2,function(x){
-    if(class(x) == "character"){
-      x <- as.numeric(as.factor(x))
-    }else if (class(x) == "factor"){
-      x <- as.numeric(x)
-    }
     return(stats::sd(x,na.rm=T))}))
   if(class(stype) == "character"){
     stype <- as.numeric(as.factor(stype))
@@ -43,7 +106,7 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
     stype <- as.numeric(stype)
   }
   stypesd <- stats::sd(stype,na.rm=T)
-  
+
   # If the standard deviation of the phenotype is zero, then stop.
   if(stypesd == 0){
     stop("stype variable has a standard deviation of zero. Cannot run.")
@@ -54,8 +117,8 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
     namestoremove <- rownames(type1)[toremove]
     type1 <- type1[-toremove,]
     mymessage[[length(mymessage)+1]] <- paste("Removed",length(toremove),"analytes of",
-                                              "type 1 that had", 
-                                              "a standard deviation of 0:", 
+                                              "type 1 that had",
+                                              "a standard deviation of 0:",
                                               namestoremove)
   }
   # If the standard deviation of analyte type 2 is zero, then remove and add a warning.
@@ -63,9 +126,9 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
     toremove <- c(which(type2sd==0))
     namestoremove <- rownames(type2)[toremove]
     type2 <- type2[-toremove,]
-    mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),"analytes of", 
+    mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),"analytes of",
                                              "type 2 that had",
-                                             "a standard deviation of 0:", 
+                                             "a standard deviation of 0:",
                                              namestoremove)
   }
   # If the standard deviation of a covariate is zero, then remove and add a warning.
@@ -80,22 +143,28 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
     covar <- namestokeep
     mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),
                                              "covariates that had",
-                                             "a standard deviation of 0:", 
+                                             "a standard deviation of 0:",
                                              namestoremove)
   }
-  
   mat.list <- getStatsAllLM(outcome = outcome, independentVariable = independentVariable,
-                            type1 = type1, type2 = type2, type = 
-                              type, covar = covar, covarMatrix = covarMatrix, 
+                            type1 = type1, type2 = type2, type =
+                              type, covar = covar, covarMatrix = covarMatrix,
                             continuous = continuous, save.covar.pvals = save.covar.pvals,
-                            remove.tri = keep.highest.pval)
+                            remove.tri = keep.highest.pval, suppressWarnings = suppressWarnings)
   if(length(mat.list[["warnings"]])>0){
     for(i in 1:length(mat.list[["warnings"]])){
       mymessage[[length(mymessage)+1]] <- mat.list[["warnings"]][[i]]
     }
   }
   mat.list <- mat.list[["list"]]
-  
+
+  # Add covariates.
+  intLimResultsCovar <- ""
+  if(!is.null(covar)){
+    intLimResultsCovar <- covar
+  }
+
+  # Create object to return.
   myres <- methods::new('IntLimResults',
                         interaction.pvalues=mat.list$mat.pvals,
                         interaction.adj.pvalues = mat.list$mat.pvalsadj,
@@ -103,19 +172,8 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
                         model.rsquared = mat.list$mat.rsquared,
                         covariate.pvalues = mat.list$covariate.pvals,
                         covariate.coefficients = mat.list$covariate.coefficients,
-                        warnings=mymessage)
-  
-  # Add covariates.
-  if(length(covar)>0){
-    covariate <- covar
-    class.var <- c()
-    for(i in 1:length(covar)){
-      class.var[i] <- class(covar)
-    }
-    
-    myres@covar <- data.frame(covariate,class.var)
-  }
-  
+                        warnings=mymessage, covar = intLimResultsCovar)
+
   return(myres)
 }
 
@@ -128,7 +186,8 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
 #' sample type (e.g. cancer/non-cancer)
 #' @param arraydata matrix of analyte values
 #' @param analytename name of dependent analyte in the model
-getstatsOneLM <- function(form, clindata, arraydata, analytename) {
+#' @param suppressWarnings whether or not to suppress warnings
+getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnings = FALSE) {
   #array data is one analyte type
   #clindata is the other analyte type
   call=match.call()
@@ -196,11 +255,13 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename) {
     ixtx <- solve(XtX)
     warnings <- list()
   }, error=function(e){
-    print(pinv_message)
-    if(length(which(cormat > cutoff)) > 0){
+    if(suppressWarnings == FALSE){
+      print(pinv_message)
+    }
+    if(length(which(cormat > cutoff)) > 0 && suppressWarnings == FALSE){
       print(covariate_msg1)
     }
-    if(length(which(cormat < -1 * cutoff)) > 0){
+    if(length(which(cormat < -1 * cutoff)) > 0 && suppressWarnings == FALSE){
       print(covariate_msg2)
     }
   })
@@ -250,9 +311,11 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename) {
 #' which can be analyzed later but will also lengthen computation time.
 #' @param remove.tri boolean to indicate whether or not to remove the 1-1
 #' or 2-2 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param suppressWarnings whether or not to suppress warnings
 #' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
 getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, covar, covarMatrix, 
-                          continuous, save.covar.pvals, remove.tri = FALSE) {
+                          continuous, save.covar.pvals, remove.tri = FALSE,
+                          suppressWarnings = FALSE) {
   outcomeArrayData <- NULL
   independentArrayData <- NULL
   num <- NULL
@@ -313,11 +376,12 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
       clindata[2] <- lapply(clindata[2], as.character)
       clindata[2] <- lapply(clindata[2], as.numeric)
     }
-    
+
     # Run all models for this outcome analyte.
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = outcomeArrayData, 
-                          analytename = rownames(independentArrayData)[i])
+                          analytename = rownames(independentArrayData)[i],
+                          suppressWarnings = suppressWarnings)
     warnings <- c(warnings, mlin[["warnings"]])
     mlin <- mlin[["mlin"]]
     term.pvals <- rownames(mlin$p.value.coeff)

@@ -808,9 +808,8 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnal
   }
   
   #get covariates
-  covariates = as.character(inputResults@covar$covariate)
-  covariates_class = as.character(inputResults@covar$class.var)
-  
+  covariates = as.character(inputResults@covar)
+
   #get dataframes
   pheno <- inputData@sampleMetaData[,inputResults@stype]
   outcomeAnalytes <- NULL

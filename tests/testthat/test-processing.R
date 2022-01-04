@@ -48,7 +48,7 @@ test_that("Inputting the wrong class causes early termination.", {
                                    stype="Level", 
                                    outcome=1,
                                    independent.var.type=2,
-                                   covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                                   covar="")
   inputResultsBad <- "Hello World"
   
   
@@ -109,7 +109,7 @@ test_that("Check that outcome and independent analyte types are appropriate.", {
                                 stype="Level",
                                 outcome=50,
                                 independent.var.type=2,
-                                covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                                covar="")
   inputResults2 <- methods::new("IntLimResults",
                                 interaction.pvalues=pvals,
                                 interaction.adj.pvalues=adj_pvals,
@@ -123,7 +123,7 @@ test_that("Check that outcome and independent analyte types are appropriate.", {
                                 stype="Level",
                                 outcome=1,
                                 independent.var.type=-3,
-                                covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                                covar="")
   
   
   expect_error(IntLIM::ProcessResults(inputResults1, inputData), 
@@ -190,7 +190,7 @@ test_that("An error is thrown if an analyte type is used that is not present in 
                                warnings=list(),stype="Level",
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
   
   expect_error(IntLIM::ProcessResults(inputResults, inputData2), 
                paste("Outcome type is not present in original data"),
@@ -251,7 +251,7 @@ test_that("More than two levels causes an error.", {
                                stype="Level",
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
   
   expect_error(IntLIM::ProcessResults(inputResults, inputData), paste(
     "IntLim requires two categories only for correlation analysis. Make sure the column",
@@ -309,7 +309,7 @@ test_that("Cannot set diffcorr for continuous data.", {
                                stype="Level",
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
   
   expect_error(IntLIM::ProcessResults(inputResults, inputData), paste(
     "IntLim requires two categories only for correlation analysis. Make sure the column",
@@ -368,7 +368,7 @@ test_that("Out of bounds values are not allowed.", {
                                stype="Level",
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
   
   # Check boundaries
   expect_error(IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = -2), paste(
@@ -459,7 +459,7 @@ test_that("Data is returned appropriately with no filtering.", {
                                stype="Level",
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
 
   # Check results
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1, diffcorr = 0,
@@ -550,7 +550,7 @@ test_that("Check that coefficients are filtered as expected.", {
                                warnings=list(),
                                stype="Level",
                                outcome=1,
-                               independent.var.type=2,covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               independent.var.type=2,covar="")
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1, diffcorr = 0,
@@ -651,7 +651,7 @@ test_that("Check that p-values are filtered as expected.", {
                                stype="Level",
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 0.3, diffcorr = 0,
@@ -752,7 +752,7 @@ test_that("Check that R-squared values are filtered as expected.", {
                                stype="Level", 
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1, diffcorr = 0,
@@ -840,7 +840,7 @@ test_that("Check that diffcorr values are filtered as expected.", {
                                stype="Level", 
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1, diffcorr = 0.5,
@@ -930,7 +930,7 @@ test_that("Check that tree is cut as expected.", {
                                stype="Level", 
                                outcome=1,
                                independent.var.type=2,
-                               covar=data.frame(matrix(, nrow = 0, ncol = 0)))
+                               covar="")
 
   # Check clustering.
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1, diffcorr = 0.5,
