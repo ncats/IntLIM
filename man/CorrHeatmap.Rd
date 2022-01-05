@@ -4,16 +4,7 @@
 \alias{CorrHeatmap}
 \title{Plot correlation heatmap}
 \usage{
-CorrHeatmap(
-  inputResults,
-  viewer = T,
-  top_pairs = 1200,
-  treecuts = 2,
-  palette = "Set1",
-  static = FALSE,
-  html.file = NA,
-  pdf.file = NA
-)
+CorrHeatmap(inputResults, viewer = T, top_pairs = 1200, treecuts = 2)
 }
 \arguments{
 \item{inputResults}{Data frame (output of ProcessResults())}
@@ -25,17 +16,6 @@ in Shiny/Knittr (F)}
 plotted (plotting more than 1200 can take some time) (default: 1200)}
 
 \item{treecuts}{number of clusters (of pairs) to cut the tree into for color-coding}
-
-\item{palette}{choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-"Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors. "Set1" is the default.}
-
-\item{static}{allows user to decide whether heatmap is interactive or static}
-
-\item{html.file}{allows user to specify file path to output heatmap onto (used for 
-non-static heatmaply objects)}
-
-\item{pdf.file}{allows user to specify file path to output heatmap onto (used for 
-static heatmap.2 objects)}
 }
 \value{
 a highcharter object

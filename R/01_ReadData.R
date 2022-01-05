@@ -1,5 +1,7 @@
 #' Read in CSV file
 #'
+#' @include internalfunctions.R
+#'
 #' The metadata associated with data files to be analyzed in IntLim is supplied
 #' as a CSV file with two columns and 6 rows: 
 #'    type,filenames
@@ -234,7 +236,7 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       if(min(type1Data) < 0 && suppressWarnings == FALSE){
         warning("Analyte Type 1 data has negative values. Continuing without log-scaling.")
       }else if(min(type2Data) >= 0){
-        type1Data[IntLIM::multi.which(type1Data == 0)] <- cutoff
+        type1Data[multi.which(type1Data == 0)] <- cutoff
         type1Data <- log2(type1Data)
       }
     }
@@ -242,7 +244,7 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       if(min(type2Data) < 0 && suppressWarnings == FALSE){
         warning("Analyte Type 2 data has negative values. Continuing without log-scaling.")
       }else if(min(type2Data) >= 0){
-        type2Data[IntLIM::multi.which(type2Data == 0)] <- cutoff
+        type2Data[multi.which(type2Data == 0)] <- cutoff
         type2Data <- log2(type2Data)
       }
     }

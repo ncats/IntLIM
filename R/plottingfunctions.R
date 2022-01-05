@@ -162,9 +162,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
   
   if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
-    warning("The resulting PCA plot is not color-coded because you did not provide 
-		        a categorical variable in 'stype'")
-    mytype <- NULL
+    mytype <- inputData@sampleMetaData[,stype]
   } 
   else {
     mytype <- as.character(inputData@sampleMetaData[,stype])
@@ -207,23 +205,35 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
   pm <- NULL
   
   if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
-    if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
+    if(is.numeric(mytype) == TRUE) {
       mpca <- stats::prcomp(t(inputData@analyteType1),center=T,scale=F)
       gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
-      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=rep("blue",nrow(gpca$x)))
-      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=rep("blue",nrow(mpca$x)))
+      
+      # Set colors.
+      bin_count <- 100
+      # Make sure the spacing is even. We need to do this using seq.
+      intervals <- seq(min(mytype), max(mytype),
+                       by = (max(mytype) - min(mytype)) / (bin_count - 1))
+      subject_color_scale <- findInterval(mytype, intervals)
+      pal <- grDevices::colorRampPalette(c("#1E90FF", "#002366"))(bin_count+1)
+      mycols <-pal[subject_color_scale]
+      
+      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=mycols)
+      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=mycols)
       gds <- highcharter::list_parse(gtoplot)
       pg <- highcharter::highchart(width = 350, height = 350 )
       pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
-                                              tooltip = list(headerFormat="",
-                                                             pointFormat=paste("{point.label}","{point.z}")),
-                                              showInLegend=FALSE)
+                                       tooltip = list(headerFormat="",
+                                                      pointFormat=paste("{point.label}","{point.z}")),
+                                       showInLegend=FALSE)
       mds <- highcharter::list_parse(mtoplot)
       pm <- highcharter::highchart(width = 350, height = 350)
       pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
-                                              tooltip = list(headerFormat="",
-                                                             pointFormat=paste("{point.label}","{point.z}")),
-                                              showInLegend=FALSE)
+                                       tooltip = list(headerFormat="",
+                                                      pointFormat=paste("{point.label}","{point.z}")),
+                                       showInLegend=FALSE)
+      pm <- highcharter::hc_colorAxis(pm, min=min(mytype), max=max(mytype), 
+                                      minColor = "#1E90FF", maxColor = "#002366")
     } else {
       type1 <- inputData@analyteType1
       type2 <- inputData@analyteType2
@@ -245,17 +255,17 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
         mytype <- unique(alltype)[i]
         gds <- highcharter::list_parse(gtoplot[which(gtoplot$label==mytype),])
         pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
-                                                name=mytype,
+                                         name=mytype,
                                          color=cols[which(alltype==mytype)[1]],
                                          tooltip = list(headerFormat="",
                                                         showInLegend=TRUE))
         mds <- highcharter::list_parse(mtoplot[which(mtoplot$label==mytype),])
         pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
-                                                name=mytype,
-                                                color=cols[which(alltype==mytype)[1]],
+                                         name=mytype,
+                                         color=cols[which(alltype==mytype)[1]],
                                          tooltip = list(headerFormat="",
                                                         pointFormat=paste("{point.label}","{point.z}")),
-                                                showInLegend=TRUE)
+                                         showInLegend=TRUE)
       }
     }
   }
@@ -438,18 +448,9 @@ GetCorrClusters <- function(inputResults,treecuts=2) {
 #' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
 #' in Shiny/Knittr (F)
 #' @param treecuts number of clusters (of pairs) to cut the tree into for color-coding
-#' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
-#' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors. "Set1" is the default.
 #' @return a highcharter object
-#'@param static allows user to decide whether heatmap is interactive or static
-#'@param html.file allows user to specify file path to output heatmap onto (used for 
-#'non-static heatmaply objects)
-#'@param pdf.file allows user to specify file path to output heatmap onto (used for 
-#'static heatmap.2 objects)
 #' @export
-CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2, 
-                        palette = "Set1", static = FALSE,
-                        html.file=NA, pdf.file=NA) {
+CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2) {
   
   # Stop if not two discrete phenotypes.
   if(colnames(inputResults)[3] == "interaction_coeff"){
@@ -499,51 +500,13 @@ CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2,
     
     heat_data[,2] <- meltedtoplot[-1:-num,3]
     
-    if(static == FALSE){
-      if(is.na(pdf.file) && is.na(html.file)){
-        hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                   k_row = treecuts,#k_col = 2,
-                                   margins = c(80,5),
-                                   dendrogram = "row",
-                                   y_axis_font_size ="1px",
-                                   colors = palette,
-                                   key.title = 'Correlation \n differences')
-        hm
-      }else if(!is.na(html.file)){
-        hm.html.out <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                                            k_row = treecuts,#k_col = 2,
-                                            margins = c(80,5),
-                                            dendrogram = "row",
-                                            y_axis_font_size ="1px",
-                                            colors = palette,
-                                            key.title = 'Correlation \n differences',
-                                            file=html.file)
-      }
-    }else{
-      if(is.na(pdf.file) && is.na(html.file)){
-        hmr <- heatmaply::heatmapr(heat_data,main = "Correlation heatmap",
-                                   k_row = treecuts,#k_col = 2,
-                                   margins = c(80,5),
-                                   dendrogram = "row",
-                                   y_axis_font_size ="1px",
-                                   colors = palette,
-                                   key.title = 'Correlation \n differences' )
-        
-        row_dend = hmr$rows
-      }
-      else if(!is.na(pdf.file)){
-          grDevices::pdf(file=pdf.file, width=12, height=6.3)
-          gplots::heatmap.2(heat_data,main = "Correlation \n heatmap",
-                            dendrogram = "row",
-                            col = palette,
-                            density.info = 'none',
-                            key.title = 'Correlation \n differences',
-                            labRow = rep('',nrow(heat_data)),
-                            cexCol = 0.05 + 0.25/log10(ncol(heat_data)),
-                            trace = 'none', Rowv = row_dend)
-          grDevices::dev.off()
-      }
-    }
+    hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
+                               k_row = treecuts,#k_col = 2,
+                               margins = c(80,5),
+                               dendrogram = "row",
+                               y_axis_font_size ="1px",
+                               key.title = 'Correlation \n differences')
+    hm
   }
 }
 
