@@ -582,7 +582,6 @@ getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercent
 #' @name multi.which
 #' @param A Boolean function defined over a matrix
 #' @return vector with numeric cutoffs
-#' @export
 multi.which <- function(A){
   if ( is.vector(A) ) return(which(A))
   d <- dim(A)

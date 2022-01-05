@@ -38,25 +38,5 @@ is required: list(covar1="numeric", covar2="factor")}
 IntLimData object with input data
 }
 \description{
-The metadata associated with data files to be analyzed in IntLim is supplied
-as a CSV file with two columns and 6 rows: 
-   type,filenames
-   analyteType1,myfilename
-   analyteType2,myfilename
-   analyteType1MetaData,myfilename (optional)
-   analyteType2MetaData,myfilename (optional)
-   sampleMetaData,myfilename
-}
-\details{
-Note that all files supplied in the CSV file, and the CSV file itself should 
-be placed in the same folder.  The software assumes will automatically retrieve 
-the file path of
-the input files (based on location of CSV files).  
-Note also that the input data files should be in a specific format:
-analyteType1/2: rows are analytes, columns are samples
-analyteType1/2MetaData: rows are analytes, features are columns
-sampleMetaData: rows are samples, features are columns
-In addition, the first column of the sampleMetaData file is assumed to be the sample id, 
-and those sample ids should match the columns of analyteType1/2 (e.g. it is required
-that all sample ids in the analyteType1/2 are also in the sampleMetaData).
+Read in CSV file
 }

@@ -1,13 +1,13 @@
 
 ---
-title: "IntLIM:  Integration through Linear Modeling (Discrete)"
+title: "IntLIM:  Integration through Linear Modeling (Continuous)"
 author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone, 
 Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé, 
 Tara Eicher, Kyle Spencer"
 date: "3/29/2018"
 output: rmarkdown::html_document
 vignette: >
-  %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling (Discrete)}
+  %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling (Continuous)}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -175,25 +175,22 @@ IntLIM::PlotDistributions(inputData = inputDatafilt)
 
 Prior to running the model, the user can also perform a principal component 
 analysis of the analyte data using the __PlotPCA()__ function.  The __stype__ 
-command allows the user to select a column from the sample meta data that 
-color-codes the samples into two categories (two cancer types, tumor vs. 
-non-tumor, etc).  For the sample set, we select PBO (prostate/breast/ovarian 
-cancers) vs. the leukemia group.  
+command allows the user to select a continuous column from the sample meta data that 
+color-codes the samples For the sample set, we select drugscore, a continuous metric
+that measures the overall drug responsiveness of the cell line.  
 
 ```{r}
-IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
+IntLIM::PlotPCA(inputData = inputDatafilt,stype = "drugscore")
 ```
 
 ##Run IntLIM
 The linear models are run by the __RunIntLim()__ function.  The __stype__ command 
-allows the user to select a column from the sample meta data for the two categories 
-to be compared (two cancer types, tumor vs. non-tumor, etc).  Currently, IntLIM 
-supports continuous data and comparison of two categories (__"PBO_vs_Leukemia"__ 
-is selected). The resulting object from the analysis is an IntLimResults object 
+allows the user to select a column from the sample meta data for the continuous
+phenotype of interest. The resulting object from the analysis is an IntLimResults object 
 containing slotsfor un-adjusted and False Discovery Rate (FDR)-adjusted p-values 
 for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value implies 
-that the slope of gene-metabolite association in one phenotype is different from 
-the other. The __RunIntLim()__ function is based heavily on the MultiLinearModel 
+that the gene-metabolite association is dependent on the phenotype. The 
+__RunIntLim()__ function is based heavily on the MultiLinearModel 
 functions developed for the ClassComparison package part of oompa 
 (http://oompa.r-forge.r-project.org).
 
@@ -205,12 +202,14 @@ same type of output and independent variable type to include only the model with
 the highest p-value. e.g. if m1 ~ m2 has a higher p-value than m2 ~ m1, then the
 m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1) 
 are removed.
+- Setting `continuous` to TRUE signals to the function that a continuous phenotype
+is being used.
 
 ```{r}
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", 
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="drugscore", 
                               covar = c("cellnbr"), outcome = 1, 
                               independent.var.type = 2,
-                              save.covar.pvals = TRUE)
+                              save.covar.pvals = TRUE, continuous = TRUE)
 ```
 
 The __DistPValues()__ function allows the user to observe a histogram of the p-values.
@@ -242,9 +241,9 @@ interaction coefficients of all models, sorted in ascending order.
 IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, 
                                     interactionCoeffPercentile = 0.9)
 ```
-The __PlotPair()__ function  allows the user to plot a chosen analyte 
-association for selected groups. An example is shown below for DLG4 vs. 
-(p-Hydroxyphenyl)lactic acid.
+The __PlotPair()__ function allows the user to observe the marginal 
+effects of phenotype for a given pair of analytes. 
+An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid.
 
 Plot a pair of interest:
 ```{r}
@@ -255,20 +254,6 @@ IntLIM::PlotPair(inputData = inputDatafilt,
                  outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid", 
                  independentAnalyteOfInterest = "DLG4")
 ```
-
-The __pvalCorrVolcano()__ function allows users to observe a volcano plot comparing 
-the Spearman correlation difference between groups to the –log10(FDR-adjusted p-value).
-Note that these functions are not applicable to continuous outcome data.
-
-```{r}
-IntLIM::pvalCorrVolcano(inputResults = myres.gm, inputData = inputDatafilt, 
-                        diffcorr = 0.5, pvalcutoff = 0.05)
-```
-
-Process the results and filter pairs of analytes based on adjusted p-values and 
-differences in correlation coefficients between groups 1 and 2.  Then plot heatmap 
-of significant analyte pairs
-
 ##Filter Results
 
 The __ProcessResults()__ function allows the user to filter the results by FDR 
@@ -281,18 +266,9 @@ ___NA___ for continuous phenotypes.
 ```{r}
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
                                        inputData = inputDatafilt, 
-                                       pvalcutoff = 0.10, diffcorr = 0.5, 
-                                       rsquaredCutoff = 0.2)
+                                       pvalcutoff = 0.10, diffcorr = NA, 
+                                       rsquaredCutoff = 0.2, corrtype = NA)
 ```
-
-The __CorrHeatmap()__ produces a clustered heatmap of the analyte Spearman 
-correlations for each of these groups.  
-Note: This function is only applicable to discrete phenotypes.
-
-```{r}
-IntLIM::CorrHeatmap(inputResults = myres.gm.sig)
-```
-
 The __HistogramPairs()__ function plots the count of analyte pairs by either
 outcome or independent variable analyte.
 ```{r}
@@ -315,8 +291,10 @@ __OutputResults()__ function allows the users to output the data and results of
 the analyses into zipped CSV files.
 
 ```{r eval = FALSE}
-IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = "\\"))
+IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, 
+                                                          "FilteredDataContinuous.zip", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, 
+                                                               "MyResultsContinuous.gm.csv", sep = "\\"))
 ```
 ##Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
@@ -326,10 +304,10 @@ fold and common between folds.
 ```{r eval = FALSE}
 crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10, 
                    analyteType2perc = 0.10, analyteType2miss = 0.80,
-                   stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1), 
+                   stype="drugscore", covar = c("cellnbr"), outcome = c(1), 
                    independent.var.type = c(2), save.covar.pvals = TRUE,
-                   pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2,
-                   folds = 4)
+                   pvalcutoff = 0.10, diffcorr = NA, rsquaredCutoff = 0.2,
+                   folds = 4, corrtype = NA, continuous = TRUE)
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
 ##References

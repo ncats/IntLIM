@@ -22,7 +22,7 @@ To access, [click here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5838881/)
 
 ## IntLIM prerequisites
 
-IntLIM is an R package and can be run on version >= 3.2.0. 
+IntLIM is an R package and can be run on version >= 3.5.0. 
 
 Download (or upgrade) R here: https://cloud.r-project.org/
 

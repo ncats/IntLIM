@@ -6,7 +6,7 @@
 \usage{
 PlotPair(
   inputData,
-  stype,
+  inputResults,
   outcome,
   independentVariable,
   independentAnalyteOfInterest,
@@ -18,7 +18,7 @@ PlotPair(
 \arguments{
 \item{inputData}{IntLimObject output of ReadData() or FilterData()}
 
-\item{stype}{category to color-code by}
+\item{inputResults}{Data frame with model results (output of ProcessResults())}
 
 \item{outcome}{'1' or '2' must be set as outcome/independent variable}
 
