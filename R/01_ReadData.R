@@ -41,7 +41,7 @@
 #'
 #' @export
 ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id", 
-                     logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = "factor",
+                     logAnalyteType1=FALSE,logAnalyteType2=FALSE, class.feat = list(),
                      suppressWarnings = FALSE){
       
   # Initialize output.
@@ -289,15 +289,33 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
 
     # Extract sampleMetaData and coerce to numeric or factor.
     # Coerce sampleMetaData classes.
-    names(class.feat) <- make.names(names(class.feat))
-    covarMatrix <- pData[,names(class.feat)]
-    for(covar in names(class.feat)){
-      if(class.feat[covar] == "numeric"){
-        covarMatrix[,covar] <- as.numeric(as.character(covarMatrix[,covar]))
-      }else if(class.feat[covar] == "factor"){
-        covarMatrix[,covar] <- as.factor(as.character(covarMatrix[,covar]))
-      }else{
-        stop(paste(class.feat[covar], "is not a valid class for covariate", covar))
+    
+    # If no covariates (including the phenotype) have been provided,
+    # read in all data. Initialize to this case.
+    covarMatrix <- pData
+    
+    # If covariates have been provided, then coerce as needed.
+    if(length(class.feat)>0){
+      names(class.feat) <- make.names(names(class.feat))
+      covarMatrix <- pData[,names(class.feat)]
+      
+      # If there is only one covariate (which should be the phenotype), 
+      # then coerce it to a data frame.
+      if(length(names(class.feat))==1){
+        covarMatrix <- as.data.frame(covarMatrix)
+        colnames(covarMatrix) <- names(class.feat)
+        rownames(covarMatrix) <- rownames(pData)
+      }
+      
+      # Coerce all covariates to their specified types.
+      for(covar in names(class.feat)){
+        if(class.feat[covar] == "numeric"){
+          covarMatrix[,covar] <- as.numeric(as.character(covarMatrix[,covar]))
+        }else if(class.feat[covar] == "factor"){
+          covarMatrix[,covar] <- as.factor(as.character(covarMatrix[,covar]))
+        }else{
+          stop(paste(class.feat[covar], "is not a valid class for covariate", covar))
+        }
       }
     }
 

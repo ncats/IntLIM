@@ -10,7 +10,7 @@ ReadData(
   analyteType2id = "id",
   logAnalyteType1 = FALSE,
   logAnalyteType2 = FALSE,
-  class.feat = "factor",
+  class.feat = list(),
   suppressWarnings = FALSE
 )
 }
