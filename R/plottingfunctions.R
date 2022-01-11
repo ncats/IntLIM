@@ -541,7 +541,8 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
                                                         outcome = outcome,
                                                         independentVariable = independentVariable), 
       title = paste("Marginal Effects -", independentAnalyteOfInterest,
-                    "and", outcomeAnalyteOfInterest))
+                    "and", outcomeAnalyteOfInterest), xlab = independentAnalyteOfInterest,
+      ylab = outcomeAnalyteOfInterest)
   }else{
     # Convert names.
     name_outcomeAnalyteOfInterest <- make.names(outcomeAnalyteOfInterest)
@@ -690,9 +691,10 @@ PlotFoldOverlapUpSet<-function(inputResults){
     return(paste(inputResults[[i]][,1], inputResults[[i]][,2], sep = "_"))
   })
   sig_mat <- ComplexHeatmap::list_to_matrix(sig_list)
-  colnames(sig_mat) <- lapply(1:length(inputResults), function(i){
-    return(paste("Fold", i, sep = "_"))
-  })
+  colnames(sig_mat) <- names(inputResults)
+  #colnames(sig_mat) <- lapply(1:length(inputResults), function(i){
+  #  return(paste("Fold", i, sep = "_"))
+  #})
   comb_mat <- ComplexHeatmap::make_comb_mat(sig_mat)
   ComplexHeatmap::UpSet(comb_mat)
 }
@@ -811,7 +813,7 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnal
   forglm$Y = as.numeric(independentData)
   
   
-  if (!is.null(covariates)) {
+  if (covariates != "") {
     
     #Add all covariates to dataframe for glm()
     i=3
@@ -828,8 +830,10 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnal
 #' Creates a dataframe of the marginal effect of phenotype
 #' @param dataframe from MarginalEffectsGraphDataframe
 #' @param title for graph
+#' @param ylab outcome analyte in pair
+#' @param xlab independent analyte in pair
 #' @return values used for graphing
-MarginalEffectsGraph<-function(dataframe, title){
+MarginalEffectsGraph<-function(dataframe, title, ylab, xlab){
   form = "Y ~ g + type + g:type"
   if (ncol(dataframe) > 3) {
 
@@ -841,10 +845,10 @@ MarginalEffectsGraph<-function(dataframe, title){
   }
   model = stats::glm(formula = form, data=dataframe)
   tryCatch({
-    margins::cplot(model, "type", data = dataframe, what = "prediction", main = title)
+    margins::cplot(model, x = "type", data = dataframe, what = "prediction", 
+                   main = title)
   }, error = function(cond){
-    print("Could not plot the data. Check to see whether your outcome is continuous.
-          Only categorical outcomes are valid for this function.")
+    print(cond)
   })
   return(model)
 

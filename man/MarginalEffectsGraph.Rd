@@ -4,12 +4,16 @@
 \alias{MarginalEffectsGraph}
 \title{Creates a dataframe of the marginal effect of phenotype}
 \usage{
-MarginalEffectsGraph(dataframe, title)
+MarginalEffectsGraph(dataframe, title, ylab, xlab)
 }
 \arguments{
 \item{dataframe}{from MarginalEffectsGraphDataframe}
 
 \item{title}{for graph}
+
+\item{ylab}{outcome analyte in pair}
+
+\item{xlab}{independent analyte in pair}
 }
 \value{
 values used for graphing

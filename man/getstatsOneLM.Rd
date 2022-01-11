@@ -14,7 +14,7 @@ sample type (e.g. cancer/non-cancer)}
 
 \item{arraydata}{matrix of analyte values}
 
-\item{analytename}{name of dependent analyte in the model}
+\item{analytename}{name of independent analyte in the model}
 
 \item{suppressWarnings}{whether or not to suppress warnings}
 }

@@ -185,7 +185,7 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
 #' @param clindata data frame with 1st column: expression of one analyte; 2nd column
 #' sample type (e.g. cancer/non-cancer)
 #' @param arraydata matrix of analyte values
-#' @param analytename name of dependent analyte in the model
+#' @param analytename name of independent analyte in the model
 #' @param suppressWarnings whether or not to suppress warnings
 getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnings = FALSE) {
   #array data is one analyte type
@@ -377,7 +377,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
       clindata[2] <- lapply(clindata[2], as.numeric)
     }
 
-    # Run all models for this outcome analyte.
+    # Run all models for this independent analyte.
     mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
                           arraydata = outcomeArrayData, 
                           analytename = rownames(independentArrayData)[i],
