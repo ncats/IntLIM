@@ -1119,17 +1119,8 @@ test_that("Samples not shared are removed", {
   expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
                                                           Feat2 = "numeric",
                                                           Feat3 = "numeric")),
-				"The following samples were only included in the sample data and were removed: Barney",
-				fixed = TRUE)
-  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
-                                                          Feat2 = "numeric",
-                                                          Feat3 = "numeric")),
-				"The following samples were only included in the Analyte 1 data and were removed: Deeno",
-				fixed = TRUE)
-  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
-                                                          Feat2 = "numeric",
-                                                          Feat3 = "numeric")),
-				"The following samples were only included in the Analyte 2 data and were removed: Betty",
+				paste("The following samples were not shared in all data types and were removed:",
+				"Barney, Deeno, Betty"),
 				fixed = TRUE)
 
   # Check the characteristics of the data set (both gene and metabolite).

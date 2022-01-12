@@ -253,36 +253,29 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
     pDataOld <- pData
     type1DataOld <- type1Data
     type2DataOld <- type2Data
+    dataUnion <- rownames(pDataOld)
     myind <- rownames(pData)
     if(length(type1Data)>0){
       type1Samps <- colnames(type1Data)
+      dataUnion <- c(dataUnion, type1Samps)
       myind <- intersect(myind, type1Samps)
     }
     if(length(type2Data)>0){
       type2Samps <- colnames(type2Data)
+      dataUnion <- c(dataUnion, type2Samps)
       myind <- intersect(myind, type2Samps)
     }
     pData<-pData[myind,]
-    pDataSpecific <- setdiff(rownames(pDataOld), myind)
-    if(length(pDataSpecific) > 0 && suppressWarnings == FALSE){
-      warning(do.call(paste, list("The following samples were only included in the sample data",
-                    "and were removed:", pDataSpecific)))
+    notShared <- setdiff(dataUnion, myind)
+    if(length(notShared) > 0 && suppressWarnings == FALSE){
+      warning(paste("The following samples were not shared in all data types",
+                    "and were removed:", paste(notShared, collapse = ", ")))
     }
     if(length(type1Data)>0){
       type1Data <- type1Data[,myind]
-      type1Specific <- setdiff(colnames(type1DataOld), myind)
-      if(length(type1Specific) > 0 && suppressWarnings == FALSE){
-        warning(do.call(paste, list("The following samples were only included in the Analyte 1 data",
-                      "and were removed:", type1Specific)))
-      }
     }
     if(length(type2Data)>0){
       type2Data <- type2Data[,myind]
-      type2Specific <- setdiff(colnames(type2DataOld), myind)
-      if(length(type2Specific) > 0 && suppressWarnings == FALSE){
-        warning(do.call(paste, list("The following samples were only included in the Analyte 2 data",
-                      "and were removed:", type2Specific)))
-      }
     }
     colnames(pData) <- make.names(colnames(pData))
     rownames(pData) <- make.names(rownames(pData))
