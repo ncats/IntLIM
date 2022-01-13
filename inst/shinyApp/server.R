@@ -20,14 +20,14 @@ shinyServer(function(input, output, session) {
     if (is.null(myFile)) {
       cat("Select all files by holding down Shift key and clicking 'Browse' above")
     } else if (length(myFile$name) !=6) {
-      cat("please select upto 6 files")
+      cat("Load all required files before continuing.")
     } else {
       paste(myFile$name,"- uploaded")
     }
 
   })
 
-  output$idChooseM <- renderUI({
+  output$idChooseType1 <- renderUI({
     
     if (is.null(input$file1$datapath)) {
       
@@ -37,10 +37,10 @@ shinyServer(function(input, output, session) {
       if (indexfile == which(myFile$name == 'input.csv')) {
         file <- read.csv(myFile$datapath[indexfile])
         rownames(file) <- file$type
-        if (file["metabMetaData", "filenames"] == "") {
+        if (file["analyteType1MetaData", "filenames"] == "") {
           return()
         }
-        textInput("metabid", "Metab ID", "")
+        textInput("analtyeType1id", "Analyte Type 1 ID", "")
         
       } else {
         
@@ -51,7 +51,7 @@ shinyServer(function(input, output, session) {
     
   })
   
-  output$idChooseG <- renderUI({
+  output$idChooseType2 <- renderUI({
     
     if (is.null(input$file1)) {
       
@@ -61,10 +61,10 @@ shinyServer(function(input, output, session) {
       if (indexfile == which(myFile$name == 'input.csv')) {
         file <- read.csv(myFile$datapath[indexfile])
         rownames(file) <- file$type
-        if (file["metabMetaData", "filenames"] == "") {
+        if (file["analyteType2MetaData", "filenames"] == "") {
           return()
         }
-        textInput("geneid", "Gene ID", "")
+        textInput("analyteType2id", "Analyte Type 2 ID", "")
         
       } else {
         
@@ -81,8 +81,10 @@ shinyServer(function(input, output, session) {
     myFile <- fixUploadedFilesNames(input$file1)
     print(length(myFile))
     indexfile = which(myFile$name == 'input.csv')
+	# How do we handle passing in the parameters for which covariates to use?
+	# Maybe, by default, we can just read all of them in and "guess" the covariate type.
     IntLIM::ReadData(req(myFile$datapath[[indexfile]]),
-                     input$metabid, input$geneid)
+                     input$analyteType1id, input$analyteType2id)
   
   })
   
@@ -106,9 +108,9 @@ shinyServer(function(input, output, session) {
         }
         if(input$run2!=0){
             FmultiData<-IntLIM::FilterData(multiData(),
-		geneperc=input$geneperc,
-		metabperc=input$metabperc,
-		metabmiss=input$metabmiss)
+		analyteType1perc=input$analyteType1perc,
+		analyteType2perc=input$analyteType2perc,
+		analyteType2miss=input$analyteType2miss)
         }
         
         FmultiData
@@ -154,7 +156,7 @@ shinyServer(function(input, output, session) {
     output$choosestype <- renderUI({
         
         choice<-reactive({
-            Biobase::varLabels(FmultiData()[["expression"]])
+            return(colnames(FmultiData()@sampleMetaData))
         })
         
         selectInput("stype", "Sample Type:", 
@@ -164,7 +166,8 @@ shinyServer(function(input, output, session) {
     
     myres <- eventReactive(input$run3,{
         shinyjs::html("text", "")
-        IntLIM::RunIntLim(FmultiData(),stype=input$stype,outcome='metabolite')
+        IntLIM::RunIntLim(FmultiData(),stype=input$stype,outcome=1,
+                          independent.var.type=2)
         
     })
     diffcorr<-reactive(input$diffcorr1)
@@ -176,7 +179,7 @@ shinyServer(function(input, output, session) {
     )
     output$Pdist<-renderPlot({
         
-        IntLIM::DistPvalues(myres(),breaks = input$breaks)
+        IntLIM::DistPvalues(myres(),breaks = input$breaks, adjusted = FALSE)
         
     })
     
@@ -184,19 +187,13 @@ shinyServer(function(input, output, session) {
         
             if(!is.null(myres())){
                 
-        ("Distribution of unadjusted p-values (a peak close to zero suggests that there are significant gene:metabolite pairs that are found).")
+        ("Distribution of unadjusted p-values (a peak close to zero suggests that there are significant analyte pairs that are found).")
             }
         
     )
     
     
     #heatmap==================================================================================================
-    # observe({
-    #     if(!is.null(input$diffcorr)&&!is.null(input$pvalcutoff)){
-    #     diffcorr<-reactive(input$diffcorr)
-    #     pvalcutoff<-reactive(input$pvalcutoff)
-    #     }
-    # })
     output$numericChoice1<-renderUI(
         numericInput("pvalcutoff","cutoff of FDR-adjusted p-value for filtering(0 - 1) :",pvalcutoff(), min = 0, max = 1)
     )
@@ -265,21 +262,8 @@ shinyServer(function(input, output, session) {
     
     pairTable<-reactive({
 	mydat <- req(myres2())
-	mydat@filt.results
+	mydat
     })
-    # reset <- reactiveValues(sel = "")
-    # output$table<-DT::renderDataTable({
-    #     input$table_rows_selected
-    #     DT::datatable(as.matrix(pairTable()),selection = list(mode = 'multiple', selected = reset$sel))
-    #     observe({
-    #         if(length(input$table_rows_selected) > 2){
-    #             reset$sel <- setdiff(input$table_rows_selected, input$table_row_last_clicked)
-    #         }else{
-    #             reset$sel <- input$table_rows_selected
-    #         }
-    #     })
-    # 
-    #     })
     
     output$table<-DT::renderDataTable(
         pairTable()
@@ -287,19 +271,29 @@ shinyServer(function(input, output, session) {
     scatterrows<-eventReactive(input$run5,{
         input$table_rows_selected
     })
-    #output$temp<-renderPrint(as.matrix(scatterrows()))
     
     output$scatterplot<-renderUI({
             a<-as.matrix(scatterrows())
             pair1<-as.matrix(pairTable()[a[1,],])
-            geneName1<-pair1[,"gene"]
-            metabName1<-pair1[,"metab"]
-            splot1<-IntLIM::PlotGMPair(FmultiData(),input$stype,geneName=geneName1,metabName=metabName1) 
+            independentAnalyteOfInterest1<-pair1[,"Analyte1"]
+            outcomeAnalyteOfInterest1<-pair1[,"Analyte2"]
+            str(input$run4)
+            splot1<-IntLIM::PlotPair(FmultiData(),
+                                     myres(),
+                                     independentAnalyteOfInterest=independentAnalyteOfInterest1,
+                                     outcomeAnalyteOfInterest=outcomeAnalyteOfInterest1,
+                                     outcome = 1,
+                                     independentVariable = 2) 
             if(length(input$table_rows_selected) > 1){
                 pair2<-as.matrix(pairTable()[a[2,],])
-                geneName2<-pair2[,"gene"]
-                metabName2<-pair2[,"metab"]
-                splot2<-IntLIM::PlotGMPair(FmultiData(),input$stype,geneName=geneName2,metabName=metabName2)
+                independentAnalyteOfInterest2<-pair2[,"Analyte1"]
+                outcomeAnalyteOfInterest2<-pair2[,"Analyte2"]
+                splot2<-IntLIM::PlotPair(FmultiData(),
+                                         myres(),
+                                                 independentAnalyteOfInterest=independentAnalyteOfInterest2,
+                                                 outcomeAnalyteOfInterest=outcomeAnalyteOfInterest2,
+                                         outcome = 1,
+                                         independentVariable = 2) 
             
                 p <-htmltools::browsable(highcharter::hw_grid(splot1, splot2, ncol = 2, rowheight = 550))
             }
@@ -342,7 +336,7 @@ shinyServer(function(input, output, session) {
     })
     
     output$statusbox2 <- renderInfoBox({
-        if (input$geneperc==0&&input$metabperc==0) {
+        if (input$analyteType1perc==0&&input$analyteType2perc==0) {
             infoBox(
                 "Status",
                 "Please provide input",
@@ -429,7 +423,7 @@ shinyServer(function(input, output, session) {
         if (is.null(input$table_rows_selected)) {
             infoBox(
                 "Status",
-                "Please choose a pair of gene and metab by clicking the table",
+                "Please choose a pair of analytes by clicking the table",
                 icon = icon("flag", lib = "glyphicon"),
                 color = "aqua",
                 fill = TRUE

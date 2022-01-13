@@ -75,11 +75,11 @@ body <- shinydashboard::dashboardBody(
                         h5("This step takes all the relevant CSV files as input, including the following (See About for more details):"),
 			tags$ul(
 				tags$li("input.csv (required): contains the names of all files input (See About)"),
-				tags$li("metabData (required): rows are metabolites, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
+				tags$li("analyteType1Data (required): rows are analytes of the first type, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
 				tags$li("sampleMetaData (required): rows are samples, features are columns"),
-				tags$li("geneData (required): rows are genes, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
-				tags$li("metabMetaData (optional): rows are metabolites, features are columns"),
-    				tags$li("geneMetaData (optional): rows are genes, features are columns")
+				tags$li("analyteType2Data (required): rows are analytes of the second type, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
+				tags$li("analyteType1MetaData (optional): rows are analytes of the first type, features are columns"),
+    				tags$li("analyteType2MetaData (optional): rows are analytes of the second type, features are columns")
 			)
                         ),
                     shinydashboard::box(
@@ -89,10 +89,10 @@ body <- shinydashboard::dashboardBody(
                 ),#end of info flow
                 fluidRow(
                     shinydashboard::box(
-                      fileInput("file1", "Select all CSV Files (input, metabData, geneData, and sampleMetaData are required)", multiple = TRUE, accept = ".csv"),
+                      fileInput("file1", "Select all CSV Files (input, analyteType1Data, analyteType2Data, and sampleMetaData are required)", multiple = TRUE, accept = ".csv"),
                         verbatimTextOutput('filename'),
-                        uiOutput('idChooseM'),
-                        uiOutput('idChooseG'),
+                        uiOutput('idChooseType1'),
+                        uiOutput('idChooseType2'),
                         hr(),
                         actionButton("run", "Run"),
 
@@ -125,11 +125,11 @@ body <- shinydashboard::dashboardBody(
                         title = strong("Filter Data (optional)") ,
                         width = 8,
                         solidHeader = TRUE,
-                        h5("This step allows you to filter the metabolomics or gene expression data by a user-defined percentile cutoff."),
+                        h5("This step allows you to filter the data by a user-defined percentile cutoff."),
                         hr(),
-                        numericInput("geneperc", "percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values < cutoff):", 0, min = 0, max = 1),
-                        numericInput("metabperc", "percentile cutoff (0-1) for filtering metabolites (e.g. remove metabolites with mean values < cutoff):", 0, min = 0, max = 1),
-                        numericInput("metabmiss", "missing value percent cutoff (0-1) for filtering metabolites (e.g. metabolites with > % cutoff missing values will be removed)", 0,min=0,max=1),
+                        numericInput("analyteType1perc", "percentile cutoff (0-1) for filtering analyte type 1 (e.g. remove analytes with mean values < cutoff):", 0, min = 0, max = 1),
+                        numericInput("analyteType2perc", "percentile cutoff (0-1) for filtering analyte type 2 (e.g. remove analytes with mean values < cutoff):", 0, min = 0, max = 1),
+                        numericInput("analyteType2miss", "missing value percent cutoff (0-1) for filtering analyte type 2 (e.g. analytes with > % cutoff missing values will be removed)", 0,min=0,max=1),
                         actionButton("run2", "Run")
                     ),
                     shinydashboard::box(
@@ -172,18 +172,18 @@ body <- shinydashboard::dashboardBody(
                         width = 6,
                         height =650,
                         solidHeader = TRUE,
-                        h5("This step performs the linear models for all combinations of gene:metabolite pairs and then plots distribution of p-values."),
-			h5("The linear model performed is 'm ~ g + p + g:p' where "),
+                        h5("This step performs the linear models for all combinations of analyte pairs and then plots distribution of p-values."),
+			h5("The linear model performed is 'a_i ~ a_j + p + a_j:p' where "),
 			tags$ul(
-				tags$li("'m' is the metabolite abundance"),
-				tags$li("‘g’ is the gene expression level"),
-				tags$li("‘p’ is the phenotype (e.g. tumor vs non-tumor)"),
-				tags$li("‘g:p’ is the interaction between phenotype and gene expression")
+				tags$li("'a_i' is the outcome analyte level (may be of types 1 or 2)"),
+				tags$li("a_j is the independent analyte level (may be of types 1 or 2"),
+				tags$li("p is the phenotype (e.g. tumor vs non-tumor)"),
+				tags$li("a_j:p is the interaction between phenotype and independent analyte level")
 			),
-			h5("A statistically significant p-value of the the interaction term ‘g:p’ indicates that the gene-metabolite relationship is phenotype-specific. Please see manuscript for more details."),
+			h5("A statistically significant p-value of the the interaction term a_j:p indicates that the analyte pair relationship is phenotype-specific. Please see manuscript for more details."),
 #                        radioButtons("dataset", label = h5("Select column that has the categories that you wish to compare (e.g. tumor vs. non-tumor):"),
-#                                     choices = list("metabolite" = "metabolite", "gene" = "gene"),
-#                                     selected = "metabolite"),
+#                                     choices = list("analyteType1" = "analyteType1", "analyteType2" = "analyteType2"),
+#                                     selected = "analyteType1"),
                         hr(),
                         uiOutput('choosestype'),
                         numericInput("nrpoints", "number of points to be plotted in lowest density areas:", 10000, min = 0, max = 30000),
@@ -248,7 +248,7 @@ body <- shinydashboard::dashboardBody(
                         width = 8,
                         height = 200,
                         solidHeader = TRUE,
-                        h5("Process the results and filter pairs of genes-metabolites based on
+                        h5("Process the results and filter pairs of analytes based on
                            adjusted p-values and differences in correlation coefficients between the two groups being compared."),
                         h5("Then plot heatmap of significant gene-metabolite pairs by filling out parameters below and clicking 'Run'.")
                         ),
@@ -304,9 +304,9 @@ body <- shinydashboard::dashboardBody(
                                         title = strong("Scatter plot") ,
                                         width = 8,
                                         solidHeader = TRUE,
-                                        h5("This step present the table of gene-metabolite pairs and the absolute value of their
+                                        h5("This step present the table of analyte pairs and the absolute value of their
                                            correlation differece"),
-                                        h5("You can plot the scatter plot of prefered gene-metabolite pairs by clicking table")
+                                        h5("You can plot the scatter plot of preferred analyte pairs by clicking table")
                                         ),
                                     shinydashboard::box(
                                         width = 4,
