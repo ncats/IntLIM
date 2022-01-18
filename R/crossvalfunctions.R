@@ -38,6 +38,7 @@
 #' @param remove.duplicates boolean to indicate whether or not to remove the 
 #'  pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' @return List of IntResults object with model results (now includes correlations)
+#' @export
 RunCrossValidation <- function(inputData,
                                folds, 
                                analyteType1perc=0, 
@@ -138,6 +139,18 @@ CreateCrossValFolds <- function(inputData,folds) {
     type2MetaData <- inputData@analyteType2MetaData
     covar_train <- inputData@sampleMetaData[not_fold,]
     covar_test <- inputData@sampleMetaData[fold,]
+    # If there are no covariates other than phenotype,
+    # reformat the covariate matrices appropriately.
+    if(ncol(inputData@sampleMetaData == 1)){
+      # Training set
+      covar_train <- as.data.frame(covar_train)
+      colnames(covar_train) <- colnames(inputData@sampleMetaData)
+      rownames(covar_train) <- not_fold
+      # Testing set
+      covar_test <- as.data.frame(covar_test)
+      colnames(covar_test) <- colnames(inputData@sampleMetaData)
+      rownames(covar_test) <- fold
+    }
     type1_train <- inputData@analyteType1
     type1_test <- inputData@analyteType1
     type2_train <- inputData@analyteType2
