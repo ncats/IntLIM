@@ -1,9 +1,6 @@
 # IntLIM:  Integration through LInear Modeling
 [![Build Status](https://travis-ci.org/ncats/IntLIM.svg?branch=liz_dev)](https://travis-ci.org/ncats/IntLIM)
 
-# New!  IntLIM app is accessible via a server (no installation needed!).
-Please [click here](https://intlim.ncats.io/)).  And let us know if additional functionalities would be useful (see contact info below).
-
 ## IntLIM
 
 Interpretation of metabolomics data is very challenging.  Yet it can be eased through integration of metabolomics with other ‘omics’ data. The IntLIM package, which includes a user-friendly RShiny web app, aims to integrate multiple types of omics data.  Unlike other approaches, IntLIM is focused on understanding how specific analyte associations are affected by phenotypic features.  To this end, we develop a linear modeling approach that describes how analyte associations are affected by phenotype.  The workflow involves the following steps: 1) input analyte level (e.g., expression or abundance) data files, 2) filter data sets by analyte level and imputed values, 3) run the linear model to extract FDR-adjusted interaction p-values, 4) filter results by p-values, interaction coefficient percentile, r-squared value, and Spearman correlation differences, and 5) plot/visualize specific analyte associations. 
@@ -44,13 +41,10 @@ https://ncats.github.io/IntLIM/IntLIMVignette.html
 
 ## Formatted Data and Analysis Codes
 
-Formatted data and codes to reproduce the NCI-60 analyses can be obtained from the following GitHub repository:
+Formatted data and codes to reproduce the NCI-60 and breast cancer analyses can be obtained from the following GitHub repository:
 
-https://github.com/Mathelab/NCI60_GeneMetabolite_Data
+https://github.com/ncats/IntLIM2.0ExtraDataVignettes
 
-Formatted data and codes to reproduce the breast cancer analyses can be obtained from the following GitHub repository:
-
-https://github.com/Mathelab/BreastCancerAmbs_GeneMetabolite_Data
 
 ## Running IntLIM's user-friendly web app:
 
