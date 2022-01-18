@@ -691,10 +691,9 @@ PlotFoldOverlapUpSet<-function(inputResults){
     return(paste(inputResults[[i]][,1], inputResults[[i]][,2], sep = "_"))
   })
   sig_mat <- ComplexHeatmap::list_to_matrix(sig_list)
-  colnames(sig_mat) <- names(inputResults)
-  #colnames(sig_mat) <- lapply(1:length(inputResults), function(i){
-  #  return(paste("Fold", i, sep = "_"))
-  #})
+  colnames(sig_mat) <- lapply(1:length(inputResults), function(i){
+   return(paste("Fold", i, sep = "_"))
+  })
   comb_mat <- ComplexHeatmap::make_comb_mat(sig_mat)
   ComplexHeatmap::UpSet(comb_mat)
 }
@@ -870,12 +869,12 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
       stop('Please run ProcessResults() before inputting into HistogramPairs')
   }
   if (type == 'outcome'){
-    pairs <- data.frame(table(x$Analyte1))
+    pairs <- data.frame(table(as.character(x$Analyte1)))
     pairs.number <- as.vector(pairs$Freq)
     hist(pairs.number, breaks = breaks, main = "Number of analyte 
          pairs based on outcome analyte", xlab = 'Analyte pairs based on outcome analyte')
   }else if (type == 'independent'){
-    pairs <- data.frame(table(x$Analyte2))
+    pairs <- data.frame(table(as.character(x$Analyte2)))
     pairs.number <- as.vector(pairs$Freq)
     hist(pairs.number, main = "Number of analyte pairs based on independent
          variable analyte", 
