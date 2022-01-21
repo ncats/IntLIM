@@ -4,6 +4,13 @@ options(shiny.trace=F)
 # Called when the Shiny app is loaded
 shinyServer(function(input, output, session) {  
   
+  # Stop the app when the exit button is clicked.
+  stop<-observe({
+    if(input$sidebar == "stop") {
+      stopApp(returnValue = invisible())
+    }
+  })
+  
   # STEP 1
   
   # Function to upload the files.
@@ -150,7 +157,7 @@ shinyServer(function(input, output, session) {
     
   # Save the file.
   output$downloadFdata <- downloadHandler(
-    filename = "Filtered data.zip",
+    filename = "Filtered_data.zip",
     content = function(con) {
       IntLIM::OutputData(FmultiData(),con)
     }
@@ -215,40 +222,20 @@ shinyServer(function(input, output, session) {
   })
   
   # Download the betagraph as a PDF.
-  # output$downloadplot1 <- downloadHandler(
-  #   filename = "plot.pdf",
-  #   content = function(file) {
-  #     pdf(file, width=12, height=6.3)
-  #     IntLIM::InteractionCoefficientGraph(myres(),interactionCoeff())
-  #     dev.off()
-  #   }
-  # )
+  output$downloadplot1 <- downloadHandler(
+    filename = "plot.pdf",
+    content = function(file) {
+      pdf(file, width=12, height=6.3)
+      IntLIM::InteractionCoefficientGraph(myres(),interactionCoeff())
+      dev.off()
+    }
+  )
     
-  # # Function to generate beta graph.
-  # beta_graph <- function() {
-  #   IntLIM::InteractionCoefficientGraph(myres(),interactionCoeff())
-  # }
-  # 
-  # # Download the beta graph as an HTML file.  
-  # observeEvent({beta_graph()},{
-  #     
-  #   h<-beta_graph()
-  #   s<-tags$div(style="position: relative; width:60%;")
-  #      
-  #   # Download widget
-  #   output$downloadplot2 <- downloadHandler(
-  #     filename = function() {
-  #       a <- paste("Interaction Coefficients -", gsub(' ','_',Sys.time()), ".html", sep="")
-  #     },
-  #     content = function(file) {
-  #       libdir <- paste(tools::file_path_sans_ext(basename(file)),"_files", sep = "")
-  #       htmltools::save_html(htmltools::browsable(htmltools::tagList(h,s)),file=file,libdir = libdir)
-  #       htmlwidgets:::pandoc_self_contained_html(file, file)
-  #       unlink(libdir, recursive = TRUE)
-  #     }
-  #   )
-  # })
-  #    
+  # Function to generate beta graph.
+  beta_graph <- function() {
+    IntLIM::InteractionCoefficientGraph(myres(),interactionCoeff())
+  }
+
   # Download the results as a CSV file using the OutputResults function.
   output$downloadData <- downloadHandler(
     filename = "results.csv",

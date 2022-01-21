@@ -14,6 +14,7 @@ headerbar <- shinydashboard::dashboardHeader(
 sidebar <- shinydashboard::dashboardSidebar(
     width = 270,
     shinydashboard::sidebarMenu(
+        id="sidebar",
         shinydashboard::menuItem("About",
                  tabName = "about",
                  icon = icon("info")),
@@ -48,8 +49,10 @@ sidebar <- shinydashboard::dashboardSidebar(
             badgeLabel = "step 5"
         ),
         shinydashboard::menuItem(
-            actionButton("buttonstop", strong("Click to Exit Shiny App")),
-            icon = icon("sign-out")
+            "Exit app",
+            tabName = "stop",
+            icon = icon("sign-out"),
+            badgeLabel = "exit"
         )
     )
 )
@@ -190,7 +193,8 @@ body <- shinydashboard::dashboardBody(
                 ),
                 fluidRow(
                     shinydashboard::box(
-                        width = 8,
+                        width = 15,
+                        height = 550,
                         tags$head(tags$style(type="text/css", "
                         loadmessage {
                                          position: fixed;
@@ -265,7 +269,6 @@ body <- shinydashboard::dashboardBody(
                         conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                          tags$div("Loading...",id="loadmessage")),
                         downloadButton('downloadplot1',label='Download graph as pdf'),
-                        downloadButton('downloadplot2',label='Download graph as html'),
                         plotOutput("betagraph")
                     )
                 )
