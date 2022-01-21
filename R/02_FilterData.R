@@ -16,84 +16,157 @@
 #' inputData <- ReadData(csvfile,metabid='id',geneid='id')
 #' inputDatafilt <- FilterData(inputData,geneperc=0.5)
 #' @export
-FilterData <- function(inputData,geneperc=0,metabperc=0, metabmiss=0) {
+FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0,analyteType2miss=0,cov.cutoff=0.30) {
   
-  # Check that input is a MultiDataSet
-  if (class(inputData) != "MultiDataSet") {
-    stop("input data is not a MultiDataSet class")
+  # Check that input is a IntLimData
+  if (class(inputData) != "IntLimData") {
+    stop("input data is not a IntLimData class")
   }
-  mytypes <- names(Biobase::assayData(inputData))
-  if(!any(mytypes=="expression") || !any(mytypes=="metabolite")) {
-    stop("input data must contain assayData of type 'metabolite' and 'expression.
-	Try reading in the data with the ReadData function")
-  }	
-  
-  if(!is.null(geneperc) && geneperc > 1) {stop("geneperc parameter must be between 0 and 1")}
-  if(!is.null(metabperc) && metabperc > 1) {stop("metabperc parameter must be between 0 and 1")}
-  if(!is.null(metabmiss) && metabmiss > 1) {stop("metabmiss parameter must be between 0 and 1")}
-  
-  
-  # Check that at least one parameter is not null
-  len <- length(c(geneperc,metabperc,metabmiss))
-  if ((geneperc+metabperc+metabmiss) ==0) {
-    warning("All filtering parameters are NULL so the data remains unfiltered")
-    return(inputData)
-  }
-  else {
-    mygenes <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
-    mymetab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
-    if(geneperc > 0) {
-      if(geneperc>1) {geneperc=geneperc}
-      mymean <- as.numeric(apply(mygenes,1, function(x)
-        mean(x,na.rm=T)))
-      keepers <- which(mymean > stats::quantile(mymean,geneperc))
-      mygenes <- mygenes[keepers,]
-      pgenes <- Biobase::pData(inputData[["expression"]])
-      fgenes <- Biobase::fData(inputData[["expression"]])[keepers,]
-    } else {
-      print("No gene filtering is applied")
-      mygenes <- mygenes
-      fgenes <- Biobase::fData(inputData[["expression"]])
+  filtdata <- NULL
+  if(length(inputData@analyteType1)==0 && length(inputData@analyteType2)==0) {
+    stop("input data must contain assayData of at least one type of analyte.
+	     Try reading in the data with the ReadData function")
+  }	else if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
+    if(!is.null(analyteType1perc) && analyteType1perc > 1) {
+      stop("analyteType1perc parameter must be between 0 and 1")
     }
-    if(metabperc > 0) {
-      if(metabperc>1) {metabperc=metabperc}
-      mymean <- as.numeric(apply(mymetab,1, function(x)
-        mean(x,na.rm=T)))
-      keepers <- which(mymean > stats::quantile(mymean,metabperc))
-      mymetab <- mymetab[keepers,]
-      fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
-    } else {
-      print("No metabolite filtering by percentile is applied")
-      mymetab <- mymetab
-      fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
+    if(!is.null(analyteType2perc) && analyteType2perc > 1) {
+      stop("analyteType2perc parameter must be between 0 and 1")
     }
-    if(metabmiss > 0) {
-      missnum <- as.numeric(apply(mymetab,1,function(x) length(which(x==min(x,na.rm=T)))))-1
-      mycut <- metabmiss * ncol(mymetab)
-      keepers <- which(missnum < mycut)
-      mymetab <- mymetab[keepers,]
-      #fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
-      fmetab <- fmetab[keepers,]
-    } else {
-      print("No metabolite filtering by missing values is applied")
-      mymetab <- mymetab
-      #fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
-      fmetab <- fmetab
+    if(!is.null(analyteType2miss) && analyteType2miss > 1) {
+      stop("analyteType2miss parameter must be between 0 and 1")
     }
     
-    # Now reconstruct the multidataset object
-    gene.set <- Biobase::ExpressionSet(assayData=mygenes)
-    Biobase::fData(gene.set) <- fgenes
-    Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
+    # Check that at least one parameter is not null
+    len <- length(c(analyteType1perc,analyteType2perc,analyteType2miss))
+    if ((analyteType1perc+analyteType2perc+analyteType2miss) ==0) {
+      warning("All filtering parameters are NULL so the data remains unfiltered")
+      filtdata <- inputData
+    } else {
+      type1Data <- inputData@analyteType1
+      type2Data <- inputData@analyteType2
+      if(analyteType1perc > 0) {
+        if(analyteType1perc>1) {analyteType1perc=analyteType1perc}
+        mymean <- as.numeric(apply(type1Data,1, function(x) mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType1perc))
+        type1Data <- type1Data[keepers,]
+      } else {
+        print("No filtering by percentile is applied for analyte type 1")
+      }
+      if(analyteType2perc > 0) {
+        if(analyteType2perc>1) {analyteType2perc=analyteType2perc}
+        mymean <- as.numeric(apply(type2Data,1, function(x) mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType2perc))
+        type2Data <- type2Data[keepers,]
+      } else {
+        print("No filtering by percentile is applied for analyte type 2")
+      }
+      if(analyteType2miss > 0) {
+        missnum <- as.numeric(apply(type2Data,1,function(x) length(which(x==min(x,na.rm=T)))))-1
+        mycut <- analyteType2miss * ncol(type2Data)
+        keepers <- which(missnum < mycut)
+        type2Data <- type2Data[keepers,]
+      } else {
+        print("No filtering by missing values is applied for analyte type 2")
+      }
+      
+      # Now reconstruct the multidataset object
+      filtdata <- methods::new("IntLimData", analyteType1=type1Data,
+                               analyteType2=type2Data,
+                               analyteType1MetaData = inputData@analyteType1MetaData,
+                               analyteType2MetaData = inputData@analyteType2MetaData,
+                               sampleMetaData = inputData@sampleMetaData)
+    }
+  }else if(length(inputData@analyteType1)>0){
+    if(!is.null(analyteType1perc) && analyteType1perc > 1) {
+      stop("analyteType1perc parameter must be between 0 and 1")
+    }
     
-    metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
-                              phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
-                              featureData =  fmetab)
+    # Check that at least one parameter is not null
+    len <- length(c(analyteType1perc,analyteType2perc,analyteType2miss))
+    if (is.null(analyteType1perc)) {
+      warning("All filtering parameters are NULL so the data remains unfiltered")
+      filtdata <- inputData
+    }
+    else {
+      type1Data <- inputData@analyteType1
+      if(analyteType1perc > 0) {
+        if(analyteType1perc>1) {analyteType1perc=analyteType1perc}
+        mymean <- as.numeric(apply(type1Data,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType1perc))
+        type1Data <- type1Data[keepers,]
+      } else {
+        print("No percentile filtering is applied for analyte type 1")
+      }
+      
+      # Now reconstruct the multidataset object
+      filtdata <- methods::new("IntLimData", phenotype=inputData@phenotype,
+                               analyteType1=type1Data,
+                               analyteType2=NULL,
+                               analyteType1MetaData = inputData@analyteType1MetaData,
+                               analyteType2MetaData = NULL,
+                               sampleMetaData = inputData@sampleMetaData,
+                               stype=inputData@stype,
+                               stype.type=inputData@stype.type)
+    }
+  } else if(length(inputData@analyteType2)>0){
+    if(!is.null(analyteType2perc) && analyteType2perc > 1) {
+      stop("analyteType2perc parameter must be between 0 and 1")
+    }
+    if(!is.null(analyteType2miss) && analyteType2miss > 1) {
+      stop("analyteType2miss parameter must be between 0 and 1")
+    }
     
-    multi <- MultiDataSet::createMultiDataSet()
-    multi1 <- MultiDataSet::add_genexp(multi, gene.set)
-    filtdata <- add_metabolite(multi1, metab.set)
-    
-    return(filtdata)
+    # Check that at least one parameter is not null
+    len <- length(c(analyteType2perc,analyteType2miss))
+    if ((analyteType2perc+analyteType2miss) ==0) {
+      warning("All filtering parameters are NULL so the data remains unfiltered")
+      filtdata <- inputData
+    }
+    else {
+      type2Data <- inputData@analyteType2
+      if(analyteType2perc > 0) {
+        if(analyteType2perc>1) {analyteType2perc=analyteType2perc}
+        mymean <- as.numeric(apply(type2Data,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType2perc))
+        type2Data <- type2Data[keepers,]
+      } else {
+        print("No filtering by percentile is applied for analyte type 2")
+      }
+      if(analyteType2miss > 0) {
+        missnum <- as.numeric(apply(type2Data,1,function(x) length(which(x==min(x,na.rm=T)))))-1
+        mycut <- analyteType2miss * ncol(type2Data)
+        keepers <- which(missnum < mycut)
+        type2Data <- type2Data[keepers,]
+      } else {
+        print("No filtering by missing values is applied for analyte type 2")
+      }
+      
+      analyte1mean <- apply(type1Data, MARGIN = 1, mean)
+      analyte1sd <- apply(type1Data, MARGIN = 1, mean)
+      analyte1cov <- analyte1sd / analyte1mean
+      cov.quant <- quantile(analyte1cov, probs = cov.cutoff)
+      type1Data <- type1Data[which(analyte1cov <= cov.quant),]
+      
+      analyte2mean <- apply(type2Data, MARGIN = 1, mean)
+      analyte2sd <- apply(type2Data, MARGIN = 1, mean)
+      analyte2cov <- analyte2sd / analyte2mean
+      cov.quant <- quantile(analyte2cov, probs = cov.cutoff)
+      type2Data <- type2Data[which(analyte1cov <= cov.quant),]
+      
+      # Now reconstruct the multidataset object
+      filtdata <- methods::new("IntLimData", phenotype=inputData@phenotype,
+                               analyteType1=NULL,
+                               analyteType2=type2Data,
+                               analyteType1MetaData = NULL,
+                               analyteType2MetaData = inputData@analyteType2MetaData,
+                               sampleMetaData = inputData@sampleMetaData,
+                               stype=inputData@stype,
+                               stype.type=inputData@stype.type)
+    }
   }
+  
+  return(filtdata)
 }
