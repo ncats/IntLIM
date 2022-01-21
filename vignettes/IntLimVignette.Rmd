@@ -256,13 +256,12 @@ IntLIM::PlotPair(inputData = inputDatafilt,
                  independentAnalyteOfInterest = "DLG4")
 ```
 
-The __pvalCorrVolcano()__ function allows users to observe a volcano plot comparing 
-the Spearman correlation difference between groups to the –log10(FDR-adjusted p-value).
-Note that these functions are not applicable to continuous outcome data.
+The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing 
+the interaction coefficient to the –log10(FDR-adjusted p-value).
 
 ```{r}
-IntLIM::pvalCorrVolcano(inputResults = myres.gm, inputData = inputDatafilt, 
-                        diffcorr = 0.5, pvalcutoff = 0.05)
+IntLIM::pvalCoefVolcano(inputResults = myres.gm, inputData = inputDatafilt,
+                        pvalcutoff = 0.05)
 ```
 
 Process the results and filter pairs of analytes based on adjusted p-values and 
@@ -272,25 +271,20 @@ of significant analyte pairs
 ##Filter Results
 
 The __ProcessResults()__ function allows the user to filter the results by FDR 
-p-values (default set at 0.05) and by the absolute value difference of the analyte
-Spearman correlation (default set at 0.50) between the two groups.  The output 
-is a list of analyte pairs and analyte Spearman correlations for each of the two 
-groups. Note that the __diffcorr__ and __corrtype__ arguments must be set to 
-___NA___ for continuous phenotypes.
+p-values (default set at 0.05) between the two groups.  The output 
+is a list of significant analyte pairs.
 
 ```{r}
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
                                        inputData = inputDatafilt, 
-                                       pvalcutoff = 0.10, diffcorr = 0.5, 
-                                       rsquaredCutoff = 0.2)
+                                       pvalcutoff = 0.10, rsquaredCutoff = 0.2)
 ```
 
-The __CorrHeatmap()__ produces a clustered heatmap of the analyte Spearman 
-correlations for each of these groups.  
-Note: This function is only applicable to discrete phenotypes.
-
+The __InteractionCoefficientGraph()__ function allows the user to observe the 
+interaction coefficients of all models, sorted in ascending order.
 ```{r}
-IntLIM::CorrHeatmap(inputResults = myres.gm.sig)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, 
+                                    interactionCoeffPercentile = 0.9)
 ```
 
 The __HistogramPairs()__ function plots the count of analyte pairs by either
@@ -328,7 +322,7 @@ crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 
                    analyteType2perc = 0.10, analyteType2miss = 0.80,
                    stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1), 
                    independent.var.type = c(2), save.covar.pvals = TRUE,
-                   pvalcutoff = 0.10, diffcorr = 0.5, rsquaredCutoff = 0.2,
+                   pvalcutoff = 0.10, rsquaredCutoff = 0.2,
                    folds = 4)
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```

@@ -12,11 +12,8 @@ ProcessResults(
   inputResults,
   inputData,
   pvalcutoff = 0.05,
-  diffcorr = 0.5,
-  corrtype = "spearman",
   interactionCoeffPercentile = 0.5,
-  rsquaredCutoff = 0,
-  treecuts = 0
+  rsquaredCutoff = 0
 )
 }
 \arguments{
@@ -27,19 +24,11 @@ and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{diffcorr}{cutoff of differences in correlations for filtering (default 0.5)}
-
-\item{corrtype}{spearman or pearson or other parameters allowed by cor() function 
-(default spearman)}
-
 \item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
 (default bottom 10 percent (high negative coefficients) and top 10 percent 
 (high positive coefficients))}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
-
-\item{treecuts}{user-selected number of clusters (of pairs) 
-to cut the tree into}
 }
 \value{
 IntResults object with model results (now includes correlations)

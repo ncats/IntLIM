@@ -43,7 +43,7 @@ pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 \item{suppressWarnings}{whether or not to print warnings. If TRUE, do not print.}
 }
 \value{
-IntLimModel object with model results
+IntLimResults object with model results
 }
 \description{
 Run linear models and retrieve relevant statistics

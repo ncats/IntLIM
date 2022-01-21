@@ -101,8 +101,8 @@ test_that("Function returns all folds correctly in multi-omic case.", {
                       sampleMetaData = pData)
   
   res <- RunCrossValidation(inputData = dat, folds = 4, suppressWarnings=TRUE,
-                            independent.var.type = 2, outcome = 1, pvalcutoff = 1, 
-                            diffcorr = 0, interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
+                            independent.var.type = 2, outcome = 1, pvalcutoff = 1,
+                            interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                             stype = "Level")
   
   expect_equal(length(res$folds), 4)
@@ -137,7 +137,7 @@ test_that("Function still returns all folds when metadata is missing.", {
   
   res <- RunCrossValidation(inputData = dat, folds = 4, suppressWarnings=TRUE,
                             independent.var.type = 2, outcome = 1, pvalcutoff = 1, 
-                            diffcorr = 0, interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
+                            interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                             stype = "Level")
   
   expect_equal(length(res$folds), 4)
@@ -170,7 +170,7 @@ test_that("Single-omic data gives expected results.", {
   
   res <- RunCrossValidation(inputData = dat, folds = 4, suppressWarnings=TRUE,
                             independent.var.type = 1, outcome = 1, pvalcutoff = 1, 
-                            diffcorr = 0, interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
+                            interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                             stype = "Level")
   
   expect_equal(length(res$folds), 4)
@@ -209,7 +209,7 @@ test_that("When number of samples is not divisible by fold count, make sure the 
     
     res <- RunCrossValidation(inputData = dat, folds = 3, suppressWarnings=TRUE,
                               independent.var.type = 2, outcome = 1, pvalcutoff = 1, 
-                              diffcorr = 0, interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
+                              interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                               stype = "Level")
     
     expect_equal(length(res$folds), 3)

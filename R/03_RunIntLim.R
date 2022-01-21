@@ -20,7 +20,7 @@
 #' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 #' @param suppressWarnings whether or not to print warnings. If TRUE, do not print.
 #' 
-#' @return IntLimModel object with model results
+#' @return IntLimResults object with model results
 #' @export
 RunIntLim <- function(inputData,stype="",outcome=1, covar=c(), 
                       continuous = FALSE, 
@@ -113,6 +113,8 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
     myres@stype=stype
     myres@outcome=outcome
     myres@independent.var.type=independent.var.type
+    myres@continuous=0
+    if(continuous == TRUE){myres@continuous=1}
 
     return(myres)
 }

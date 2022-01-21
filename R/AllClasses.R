@@ -41,6 +41,7 @@ methods::setClass(
 #' @slot outcome outcome is either '1' or '2'
 #' @slot independent.var.type independent variable type (either '1 or '2')
 #' @slot covar describing additional variables and the class they form
+#' @slot continuous "1" if outcome is continuous, "0" if not
 methods::setClass(
 	Class="IntLimResults",
 	representation(interaction.pvalues="matrix",
@@ -55,5 +56,6 @@ methods::setClass(
 		stype="character",
 		outcome="numeric",
 		independent.var.type="numeric",
-		covar="character")
+		covar="character",
+		continuous="numeric")
 	)

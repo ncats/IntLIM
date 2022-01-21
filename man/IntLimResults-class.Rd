@@ -36,5 +36,7 @@ in the interaction term). Only 2 categories are currently supported.}
 \item{\code{independent.var.type}}{independent variable type (either '1 or '2')}
 
 \item{\code{covar}}{describing additional variables and the class they form}
+
+\item{\code{continuous}}{"1" if outcome is continuous, "0" if not}
 }}
 

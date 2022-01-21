@@ -22,8 +22,6 @@ RunCrossValidation(
   independent.var.type = c(1),
   remove.duplicates = FALSE,
   pvalcutoff = 0.05,
-  diffcorr = 0.5,
-  corrtype = "spearman",
   interactionCoeffPercentile = 0.5,
   rsquaredCutoff = 0,
   treecuts = 0,
@@ -66,11 +64,6 @@ must be set as independent variable
 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
-
-\item{diffcorr}{cutoff of differences in correlations for filtering (default 0.5)}
-
-\item{corrtype}{spearman or pearson or other parameters allowed by cor() function 
-(default spearman)}
 
 \item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
 (default bottom 10 percent (high negative coefficients) and top 10 percent 

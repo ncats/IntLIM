@@ -41,7 +41,7 @@ The package includes a reduced set of the original NCI-60 dataset.  The CSV inpu
 ```
 Please see the vignette at [https://github.com/ncats/IntLIM/tree/liz_dev/vignettes/IntLimVignette.Rmd) for additional information.
 
-In addition, the original datasets for the NCI-60 and the breast cancer dataset used in the manuscript can be found at [https://github.com/Mathelab/NCI60_GeneMetabolite_Data](https://github.com/Mathelab/NCI60_GeneMetabolite_Data) and [https://github.com/Mathelab/BreastCancerAmbs_GeneMetabolite_Data](https://github.com/Mathelab/BreastCancerAmbs_GeneMetabolite_Data) respectively.
+In addition, additional NCI-60 and breast cancer demo datasets can be found at [https://github.com/ncats/IntLIM2.0ExtraDataVignettes](https://github.com/ncats/IntLIM2.0ExtraDataVignettes).
 
 ## Contact
 

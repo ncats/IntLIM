@@ -362,154 +362,6 @@ DistRSquared<- function(IntLimResults,breaks=100) {
        main="Histogram of Interaction R-Squared Values")
 }
 
-#' Returns the clusters found using CorrHeatmap.
-#'
-#' @param inputResults Data frame (output of ProcessResults())
-#' @param treecuts number of clusters (of pairs) to cut the tree 
-#' into for color-coding
-#' @return A data frame including the independent and outcome analytes in each
-#' for each pair and the cluster to which that pair belongs.
-#' @export
-GetCorrClusters <- function(inputResults,treecuts=2) {
-  type <- cor <- c()
-  clusterdata <- NULL
-  
-  if(is.null(inputResults)){
-    stop('Please run ProcessResults() before inputting into HistogramPairs')
-  }
-  
-  # Stop if not two discrete phenotypes.
-  if(colnames(inputResults)[3] == "interaction_coeff"){
-    stop("GetCorrClusters requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
-  }
-  else{
-    allres <- inputResults
-    toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
-                         allres[,3:4])
-    suppressMessages(meltedtoplot <- reshape2::melt(toplot))
-    colnames(meltedtoplot) <- c("name", "type", "cor")
-    meltedtoplot$type <- as.character(meltedtoplot$type)
-
-    #all possible values of X (type) and Y (name)
-    theXAxis <- as.character(meltedtoplot[, "type"])
-    theYAxis <- as.character(meltedtoplot[, "name"])
-    
-    #unique values of X and Y
-    theUniqueY <- as.character(unique(theYAxis))
-    theUniqueX <- as.character(unique(theXAxis))
-    
-    # Substitute words with position on the meatrix
-    for (i in 1:length(theUniqueY)){
-      num <- which(theYAxis == theUniqueY[i])
-      theYAxis[num] <- i
-    }
-    for (i in 1:length(theUniqueX)) {
-      num <- which(theXAxis == theUniqueX[i])
-      theXAxis[num] <- i
-    }
-    # New package heatmaply here
-    type <- unique(meltedtoplot[,'type'])
-    num <- nrow(meltedtoplot[meltedtoplot[,'type'] == type[1],])
-    heat_data <- matrix(data = 0, nrow =num,ncol = 2)
-    row.names(heat_data) <- meltedtoplot[1:num,1]
-    colnames(heat_data) <- gsub("_cor","",c(type[1],type[2]))
-    heat_data[,1] <- meltedtoplot[1:num,3]
-    
-    heat_data[,2] <- meltedtoplot[-1:-num,3]
-    
-    # hclust is used under the hood of heatmaply.
-    dend <- stats::hclust(stats::dist(heat_data, method = "euclidean"))
-    clusters <- stats::cutree(dend, k = treecuts)
-    
-    # Split clusters.
-    analyte1 <- unlist(lapply(names(clusters), function(c){
-      return(strsplit(c, " vs ")[[1]][1])
-    }))
-    analyte2 <- unlist(lapply(names(clusters), function(c){
-      return(strsplit(c, " vs ")[[1]][2])
-    }))
-    
-    # Formulate cluster data.
-    clusterdata <- data.frame(IndependentAnalyte = analyte1, OutcomeAnalyte = analyte2,
-                           Cluster = clusters)
-    
-    # Add average correlation for each phenotype.
-    for(phen in colnames(heat_data)){
-      clusterdata[,paste0(phen, "Corr")] <- heat_data[,phen]
-    }
-  }
-  return(clusterdata)
-}
-#' Plot correlation heatmap
-#'
-#' @param inputResults Data frame (output of ProcessResults())
-#' @param top_pairs cutoff of the top pairs, sorted by adjusted p-values, to be 
-#' plotted (plotting more than 1200 can take some time) (default: 1200)
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
-#' @param treecuts number of clusters (of pairs) to cut the tree into for color-coding
-#' @return a highcharter object
-#' @export
-CorrHeatmap <- function(inputResults,viewer=T,top_pairs=1200,treecuts=2) {
-  
-  # Stop if not two discrete phenotypes.
-  if(colnames(inputResults)[3] == "interaction_coeff"){
-    stop("CorrHeatmap requires 2 discrete phenotypes. Do not run with continuous phenotypes.")
-  }
-  type <- cor <- c()
-
-	if(nrow(inputResults)==0) {
-		stop("Make sure you run ProcessResults before making the heatmap")
-	}
-  else{
-    allres <- inputResults
-    if(nrow(allres)>top_pairs) {
-      allp <- inputResults[,"FDRadjPval"]
-      allres <- allres[order(allp,decreasing=F)[1:top_pairs],]
-    }
-    toplot <- data.frame(name=paste(allres[,1],allres[,2],sep=" vs "),
-                         allres[,3:4])
-    suppressMessages(meltedtoplot <- reshape2::melt(toplot))
-    colnames(meltedtoplot) <- c("name", "type", "cor")
-    meltedtoplot$type <- as.character(meltedtoplot$type)
-    
-    #all possible values of X (type) and Y (name)
-    theXAxis <- as.character(meltedtoplot[, "type"])
-    theYAxis <- as.character(meltedtoplot[, "name"])
-    
-    #unique values of X and Y
-    theUniqueY <- as.character(unique(theYAxis))
-    theUniqueX <- as.character(unique(theXAxis))
-    
-    # Substitute words with position on the meatrix
-    for (i in 1:length(theUniqueY)){
-      num <- which(theYAxis == theUniqueY[i])
-      theYAxis[num] <- i
-    }
-    for (i in 1:length(theUniqueX)) {
-      num <- which(theXAxis == theUniqueX[i])
-      theXAxis[num] <- i
-    }
-    # New package heatmaply here
-    type <- unique(meltedtoplot[,'type'])
-    num <- nrow(meltedtoplot[meltedtoplot[,'type'] == type[1],])
-    heat_data <- matrix(data = 0, nrow =num,ncol = 2)
-    row.names(heat_data) <- meltedtoplot[1:num,1]
-    colnames(heat_data) <- gsub("_cor","",c(type[1],type[2]))
-    heat_data[,1] <- meltedtoplot[1:num,3]
-    
-    heat_data[,2] <- meltedtoplot[-1:-num,3]
-    
-    hm <- heatmaply::heatmaply(heat_data,main = "Correlation heatmap",
-                               k_row = treecuts,#k_col = 2,
-                               margins = c(80,5),
-                               dendrogram = "row",
-                               y_axis_font_size ="1px",
-                               key.title = 'Correlation \n differences')
-    hm
-  }
-}
-
 #' scatter plot of pairs (based on user selection)
 #'
 #' @param inputData IntLimObject output of ReadData() or FilterData()
@@ -657,28 +509,27 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
 #' and associated meta-data
 #' @param nrpoints number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
+#' @param coefPercentileCutoff cutoff of interaction coefficient percentile.
 #' @return a smoothScatter plot
 #' @export
-pvalCorrVolcano <- function(inputResults, inputData,nrpoints=10000,diffcorr=0.5,pvalcutoff=0.05){
+pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.05,
+                            coefPercentileCutoff=0.9){
     if(class(inputResults) != "IntLimResults") {
-	stop("input data is not a IntLim class")
+	    stop("input data is not a IntLim class")
     }
-  p <- inputData@sampleMetaData[,inputResults@stype]
-  
-  if (length(unique(p)) !=2){
-    stop(paste("pvalCorrVolcano is invalid for continuous outcomes and outcomes
-               with more than two categories."))
-  }
-    volc.results <- IntLIM::ProcessResults(inputResults,  inputData, diffcorr = 0, pvalcutoff = 1)
-    volc.table <- volc.results
-    Corrdiff <- volc.table[,4] - volc.table[,3]
+    p <- inputData@sampleMetaData[,inputResults@stype]
+    volc.table <- IntLIM::ProcessResults(inputResults,  inputData, pvalcutoff = 1)
+    interaction_coef <- volc.table$interaction_coef
     pval <- -log10(volc.table$FDRadjPval)
-    graphics::smoothScatter(x = Corrdiff, pval, xlab = 'Difference in Correlation between Phenotypes',
+    graphics::smoothScatter(x = interaction_coef, pval, xlab = 'Interaction Coefficient',
 		ylab = '-log10(FDR-adjusted p-value)', nrpoints=nrpoints,
                 main = 'Volcano Plot')
     graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
-    graphics::abline(v=c(diffcorr,-diffcorr),lty=2,col="blue")
+    lower_line = getQuantileForInteractionCoefficient(interaction_coef, 
+                                                      coefPercentileCutoff)[1]
+    upper_line = getQuantileForInteractionCoefficient(interaction_coef, 
+                                                       coefPercentileCutoff)[2]
+    graphics::abline(v=c(lower_line,upper_line),lty=2,col="blue")
 }
 
 #' Makes an UpSet plot showing the filtered pairs of analytes found in each fold.

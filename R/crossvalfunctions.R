@@ -15,9 +15,6 @@
 #' @param analyteType2miss missing value percent cutoff (0-1) for filtering analyte type 2 
 #' (analytes with > 80\% missing values will be removed) (default:0)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
-#' @param corrtype spearman or pearson or other parameters allowed by cor() function 
-#' (default spearman)
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
 #' (default bottom 10 percent (high negative coefficients) and top 10 percent 
 #' (high positive coefficients))
@@ -52,8 +49,6 @@ RunCrossValidation <- function(inputData,
                                independent.var.type=c(1), 
                                remove.duplicates = FALSE,
                                pvalcutoff=0.05,
-                               diffcorr=0.5,
-                               corrtype="spearman",
                                interactionCoeffPercentile=0.5,
                                rsquaredCutoff = 0.0,
                                treecuts = 0,
@@ -74,7 +69,6 @@ RunCrossValidation <- function(inputData,
   
   # Process all results.
   sigResults <- ProcessResultsAllFolds(inputResults, inputDataFilt, pvalcutoff,
-                                         diffcorr, corrtype,
                                          interactionCoeffPercentile,
                                          rsquaredCutoff, treecuts)
     
@@ -267,9 +261,6 @@ RunIntLimAllFolds <- function(inputData,stype="",outcome=1, covar=c(),
 #' @param inputData List of MultiDataSet objects (output of CreateCrossValFolds()) 
 #' with analyte levels and associated meta-data
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param diffcorr cutoff of differences in correlations for filtering (default 0.5)
-#' @param corrtype spearman or pearson or other parameters allowed by cor() function 
-#' (default spearman)
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
 #' (default bottom 10 percent (high negative coefficients) and top 10 percent 
 #' (high positive coefficients))
@@ -280,8 +271,6 @@ RunIntLimAllFolds <- function(inputData,stype="",outcome=1, covar=c(),
 ProcessResultsAllFolds <- function(inputResults,
                                    inputData,
                                    pvalcutoff=0.05,
-                                   diffcorr=0.5,
-                                   corrtype="spearman",
                                    interactionCoeffPercentile=0.5,
                                    rsquaredCutoff = 0.0,
                                    treecuts = 0){
@@ -290,9 +279,7 @@ ProcessResultsAllFolds <- function(inputResults,
                                               inputData = inputData[[i]]$training, 
                                               pvalcutoff = pvalcutoff, 
                                               interactionCoeffPercentile = interactionCoeffPercentile, 
-                                              rsquaredCutoff = rsquaredCutoff, 
-                                              diffcorr = diffcorr, 
-                                              corrtype = corrtype))
+                                              rsquaredCutoff = rsquaredCutoff))
     })
   return(sig)
 }

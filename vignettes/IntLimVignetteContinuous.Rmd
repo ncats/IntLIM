@@ -241,6 +241,14 @@ interaction coefficients of all models, sorted in ascending order.
 IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, 
                                     interactionCoeffPercentile = 0.9)
 ```
+The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing 
+the interaction coefficient to the –log10(FDR-adjusted p-value).
+
+```{r}
+IntLIM::pvalCoefVolcano(inputResults = myres.gm, inputData = inputDatafilt,
+                        pvalcutoff = 0.05)
+```
+
 The __PlotPair()__ function allows the user to observe the marginal 
 effects of phenotype for a given pair of analytes. 
 An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid.
@@ -266,8 +274,8 @@ ___NA___ for continuous phenotypes.
 ```{r}
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
                                        inputData = inputDatafilt, 
-                                       pvalcutoff = 0.10, diffcorr = NA, 
-                                       rsquaredCutoff = 0.2, corrtype = NA)
+                                       pvalcutoff = 0.10, 
+                                       rsquaredCutoff = 0.2)
 ```
 The __HistogramPairs()__ function plots the count of analyte pairs by either
 outcome or independent variable analyte.

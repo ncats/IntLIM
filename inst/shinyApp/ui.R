@@ -60,28 +60,27 @@ body <- shinydashboard::dashboardBody(
         shinydashboard::tabItem(tabName = "about",
                              shiny::tabPanel("About",
                                              shinydashboard::box(
-                             width = 12,
-                             includeMarkdown("README.md")
-                         )
-                )
+                                                width = 12,
+                                                includeMarkdown("README.md")
+                                              )
+                              )
         ),
         shinydashboard::tabItem(tabName = "loaddata",
                 fluidRow(
-
                     shinydashboard::box(
                         title = strong("Load Data"),
                         width = 8,
                         solidHeader = TRUE,
                         h5("This step takes all the relevant CSV files as input, including the following (See About for more details):"),
-			tags$ul(
-				tags$li("input.csv (required): contains the names of all files input (See About)"),
-				tags$li("analyteType1Data (required): rows are analytes of the first type, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
-				tags$li("sampleMetaData (required): rows are samples, features are columns"),
-				tags$li("analyteType2Data (required): rows are analytes of the second type, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
-				tags$li("analyteType1MetaData (optional): rows are analytes of the first type, features are columns"),
-    				tags$li("analyteType2MetaData (optional): rows are analytes of the second type, features are columns")
-			)
-                        ),
+                  			tags$ul(
+                  				tags$li("input.csv (required): contains the names of all files input (See About)"),
+                  				tags$li("analyteType1Data (required): rows are analytes of the first type, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
+                  				tags$li("sampleMetaData (required): rows are samples, features are columns"),
+                  				tags$li("analyteType2Data (required): rows are analytes of the second type, columns are samples; the first row is assumed to have sample ids and these ids should be unique; the first column is assumed to have feature ids and those should be unique."),
+                  				tags$li("analyteType1MetaData (optional): rows are analytes of the first type, features are columns"),
+                      				tags$li("analyteType2MetaData (optional): rows are analytes of the second type, features are columns")
+                  			)
+                    ),
                     shinydashboard::box(
                         width = 4,
                         infoBoxOutput("statusbox1", width = NULL)
@@ -95,14 +94,12 @@ body <- shinydashboard::dashboardBody(
                         uiOutput('idChooseType2'),
                         hr(),
                         actionButton("run", "Run"),
-
                         conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                          tags$div("Loading...",id="loadmessage"))
                     ),
                     shinydashboard::box(
                         tags$b("Summary Statistics"),
                         #plot.new(),
-
                         pre(dataTableOutput('stats')),
                         tags$style(type="text/css", '#stats tfoot {display:none;}')
                     )
@@ -113,12 +110,8 @@ body <- shinydashboard::dashboardBody(
                         tags$b("Distribution of Input Data"),
                         pre(htmlOutput("plot"))
                     )
-
                 )#end of plot flow
-
         ), # end tab loaddata
-
-
         shinydashboard::tabItem(tabName = "Filterdata",
                 fluidRow(
                     shinydashboard::box(
@@ -138,7 +131,7 @@ body <- shinydashboard::dashboardBody(
                         downloadButton('downloadFdata', 'Download')
 
                     )
-                    ), # end filter option flow
+                ), # end filter option flow
                 fluidRow(
                     shinydashboard::box(
                         tags$b("The statistic summary of origin data"),
@@ -161,58 +154,45 @@ body <- shinydashboard::dashboardBody(
                         uiOutput('Fplot')
                     )
                 )#end plot comparison flow
-
         ),
-
         shinydashboard::tabItem(tabName = "RunLM",
                 fluidRow(
-
                     shinydashboard::box(
                         title = strong("Run IntLIM") ,
                         width = 6,
-                        height =650,
+                        height =750,
                         solidHeader = TRUE,
                         h5("This step performs the linear models for all combinations of analyte pairs and then plots distribution of p-values."),
-			h5("The linear model performed is 'a_i ~ a_j + p + a_j:p' where "),
-			tags$ul(
-				tags$li("'a_i' is the outcome analyte level (may be of types 1 or 2)"),
-				tags$li("a_j is the independent analyte level (may be of types 1 or 2"),
-				tags$li("p is the phenotype (e.g. tumor vs non-tumor)"),
-				tags$li("a_j:p is the interaction between phenotype and independent analyte level")
-			),
-			h5("A statistically significant p-value of the the interaction term a_j:p indicates that the analyte pair relationship is phenotype-specific. Please see manuscript for more details."),
-#                        radioButtons("dataset", label = h5("Select column that has the categories that you wish to compare (e.g. tumor vs. non-tumor):"),
-#                                     choices = list("analyteType1" = "analyteType1", "analyteType2" = "analyteType2"),
-#                                     selected = "analyteType1"),
+                  			h5("The linear model performed is 'a_i ~ a_j + p + a_j:p' where "),
+                  			tags$ul(
+                  				tags$li("'a_i' is the outcome analyte level (may be of types 1 or 2)"),
+                  				tags$li("a_j is the independent analyte level (may be of types 1 or 2"),
+                  				tags$li("p is the phenotype (e.g. tumor vs non-tumor)"),
+                  				tags$li("a_j:p is the interaction between phenotype and independent analyte level")
+                  			),
+                  			h5("A statistically significant p-value of the the interaction term a_j:p indicates that the analyte pair relationship is phenotype-specific. Please see manuscript for more details."),
                         hr(),
                         uiOutput('choosestype'),
                         numericInput("nrpoints", "number of points to be plotted in lowest density areas:", 10000, min = 0, max = 30000),
                         numericInput("pvalcutoff1","cutoff of FDR-adjusted p-value for filtering(0 - 1) :", 0.05, min = 0, max = 1),
-                        numericInput("diffcorr1", "cutoff of differences in correlations for filtering (0-1):", 0.5, min = 0, max = 1),
+                        numericInput("rsquared1", "cutoff of R^2 value for filtering (0-1):", 0.5, min = 0, max = 1),
+                  		numericInput("interactionCoeff", "cutoff of interaction coefficient percentile (0-1):", 0.9, min = 0, max = 1),
                         actionButton("run3", "Run")
-
-
-
                     ),
                     shinydashboard::box(
                         width = 6,
-                        height =650,
-
-
-
+                        height =750,
                         numericInput("breaks","Breaks of histogram",100,min=10,max = 500),
                         plotOutput("Pdist"),
                         hr(),
                         textOutput("Ptext")
-
                     )
                 ),
                 fluidRow(
                     shinydashboard::box(
                         width = 8,
-
-                    tags$head(tags$style(type="text/css", "
-                     loadmessage {
+                        tags$head(tags$style(type="text/css", "
+                        loadmessage {
                                          position: fixed;
                                          top: 0px;
                                          left: 0px;
@@ -226,19 +206,15 @@ body <- shinydashboard::dashboardBody(
                                          z-index: 105;
                                          }
                                          ")),
-                    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                     tags$div("Loading...(It might take several minutes depending on the size of the dataset,please be patient!)",id="loadmessage")),
-
-                    plotOutput("volcanoPlot")
-
-
-                ),
-                shinydashboard::box(
-                    width = 4,
-                    infoBoxOutput("statusbox3", width = NULL)
-
-
-                )
+                        conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                                         tags$div("Loading...(It might take several minutes depending on the size of the dataset,please be patient!)",id="loadmessage")),
+    
+                        plotOutput("volcanoPlot")
+                    ),
+                    shinydashboard::box(
+                      width = 4,
+                      infoBoxOutput("statusbox3", width = NULL)
+                    )
                 )
         ),
         shinydashboard::tabItem(tabName = "processresult",
@@ -249,65 +225,60 @@ body <- shinydashboard::dashboardBody(
                         height = 200,
                         solidHeader = TRUE,
                         h5("Process the results and filter pairs of analytes based on
-                           adjusted p-values and differences in correlation coefficients between the two groups being compared."),
-                        h5("Then plot heatmap of significant gene-metabolite pairs by filling out parameters below and clicking 'Run'.")
-                        ),
+                           adjusted p-values, R^2 values, and interaction coefficient cutoffs between the two groups being compared."),
+                        h5("Then plot beta graph of significant gene-metabolite pairs by filling out parameters below and clicking 'Run'.")
+                    ),
                     shinydashboard::box(
                         width = 4,
                         height = 200,
                         infoBoxOutput("statusbox4", width = NULL),
                         downloadButton('downloadData', 'Download')
                     )
-                    ),#end of info floww
+                ),#end of info floww
                 fluidRow(
                     shinydashboard::box(
                         width = 4,
-                        # numericInput("pvalcutoff","cutoff of FDR-adjusted p-value for filtering(0 - 1) :",NA, min = 0, max = 1),
-                        # numericInput("diffcorr", "cutoff of differences in correlations for filtering (0-1):",NA, min = 0, max = 1),
                         uiOutput("numericChoice1"),
                         uiOutput("numericChoice2"),
-                        textInput("corrtype","spearman or pearson or other parameters allowed by cor() function","spearman"),
-                        numericInput("treecuts", "number of clusters to cut the dendrogram/tree into (reflects color-code in heatmap)",0,min=0,max=20),
+                        numericInput("pvalcutoff2","cutoff of FDR-adjusted p-value for filtering(0 - 1) :", 0.05, min = 0, max = 1),
+                        numericInput("rsquared2", "cutoff of R^2 value for filtering (0-1):", 0.5, min = 0, max = 1),
+                        numericInput("interactionCoeff2", "cutoff of interaction coefficient percentile (0-1):", 0.9, min = 0, max = 1),
                         actionButton("run4", "Run")
                     ),
-
                     shinydashboard::box(
                         width = 8,
-
-                    tags$head(tags$style(type="text/css", "
-                     loadmessage {
-                                         position: fixed;
-                                         top: 0px;
-                                         left: 0px;
-                                         width: 100%;
-                                         padding: 5px 0px 5px 0px;
-                                         text-align: center;
-                                         font-weight: bold;
-                                         font-size: 100%;
-                                         color: #000000;
-                                         background-color: #CCFF66;
-                                         z-index: 105;
-                                         }
-                                         ")),
-                    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                     tags$div("Loading...",id="loadmessage")),
-                    downloadButton('downloadplot1',label='Download heatmap as pdf'),
-                    downloadButton('downloadplot2',label='Download heatmap as html'),
-                    plotly::plotlyOutput("heatmap")
+                        tags$head(tags$style(type="text/css", "
+                          loadmessage {
+                                           position: fixed;
+                                           top: 0px;
+                                           left: 0px;
+                                           width: 100%;
+                                           padding: 5px 0px 5px 0px;
+                                           text-align: center;
+                                           font-weight: bold;
+                                           font-size: 100%;
+                                           color: #000000;
+                                           background-color: #CCFF66;
+                                           z-index: 105;
+                                           }
+                                           ")),
+                        conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                                         tags$div("Loading...",id="loadmessage")),
+                        downloadButton('downloadplot1',label='Download graph as pdf'),
+                        downloadButton('downloadplot2',label='Download graph as html'),
+                        plotOutput("betagraph")
                     )
-
                 )
-                ),
+        ),
         shinydashboard::tabItem(tabName = "scatterplot",
                                 fluidRow(
                                     shinydashboard::box(
                                         title = strong("Scatter plot") ,
                                         width = 8,
                                         solidHeader = TRUE,
-                                        h5("This step present the table of analyte pairs and the absolute value of their
-                                           correlation differece"),
+                                        h5("This step presents the table of analyte pairs that are significant."),
                                         h5("You can plot the scatter plot of preferred analyte pairs by clicking table")
-                                        ),
+                                    ),
                                     shinydashboard::box(
                                         width = 4,
                                         infoBoxOutput("statusbox5", width = NULL)
@@ -316,13 +287,10 @@ body <- shinydashboard::dashboardBody(
                                 fluidRow(
                                     shinydashboard::box(
                                         width = NULL,
-                                        tags$b("Pairs of difference of correlation "),
-                                        pre(DT::dataTableOutput('table')),
-
-                                        #pre(textOutput("temp")),
+                                        tags$b("Significant pairs"),
+                                        DT::DTOutput('table'),
                                         hr(),
                                         actionButton("run5", "Run"),
-
                                         tags$head(tags$style(type="text/css", "
                                                              loadmessage {
                                                              position: fixed;
@@ -340,31 +308,17 @@ body <- shinydashboard::dashboardBody(
                                                              ")),
                                         conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                                          tags$div("Loading...",id="loadmessage"))
-
-
                                     )
                                 ),#end of table flow
-                                    fluidRow(
+                                fluidRow(
                                     shinydashboard::box(
                                         width = NULL,
                                         pre(uiOutput("scatterplot"))
-
                                     )
-                                    )#end of scatterplot flow
-
-                                )
-
-
-
-
-
+                                )#end of scatterplot flow
         )
-                )
-
-
-
-
-
+    )
+)
 shinyUI(fluidPage(
     tags$head(includeHTML(("www/google_analytics.html"))),
     shinydashboard::dashboardPage(
@@ -372,5 +326,4 @@ shinyUI(fluidPage(
         sidebar,
         body
     )
-)
-) # end shinUI
+)) # end shinUI

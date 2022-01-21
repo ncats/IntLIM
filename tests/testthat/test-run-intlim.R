@@ -58,8 +58,9 @@ test_that("Invalid parameters cause an error.", {
                       sampleMetaData = pData)
   
   expect_error(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = "Scooby Dooby Doo",
-                                 outcome = "Where are you?"), paste("Error! independent.var.type and outcome.type must",
-                                                                    "both be either 1 or 2 in RunIntLim."), ignore.case = TRUE)
+                                 outcome = "Where are you?"), paste(
+                                   "Error! independent.var.type and outcome.type must",
+                                   "both be either 1 or 2 in RunIntLim."), ignore.case = TRUE)
 })
 
 # If the data is missing, an error should be thrown.
@@ -146,12 +147,14 @@ test_that("Fields are populated appropriately (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE)
@@ -159,7 +162,8 @@ test_that("Fields are populated appropriately (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -171,24 +175,36 @@ test_that("Fields are populated appropriately (discrete).", {
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                                                    "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                                                    "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+                                                    "interaction.coefficients",
+                                                    "model.rsquared", 
+                                                    "covariate.pvalues", 
+                                                    "covariate.coefficients", 
+                                                    "corr", "filt.results",
+                                                    "warnings", "stype", 
+                                                    "outcome", 
+                                                    "independent.var.type", 
+                                                    "covar", "interaction.pvalues",
+                                                    "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
@@ -197,12 +213,14 @@ test_that("Fields are populated appropriately (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE)
@@ -210,12 +228,14 @@ test_that("Fields are populated appropriately (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -224,12 +244,14 @@ test_that("Fields are populated appropriately (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE)
@@ -237,12 +259,14 @@ test_that("Fields are populated appropriately (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 })
 
 # Check that all fields are populated correctly with plus signs in the feature data.
@@ -282,12 +306,14 @@ test_that("Fields are populated appropriately when feature data contains plus si
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
   
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE)
@@ -298,12 +324,14 @@ test_that("Fields are populated appropriately when feature data contains plus si
                                                     "filt.results",
                                                     "warnings", "stype", "outcome", 
                                                     "independent.var.type", "covar", 
-                                                    "interaction.pvalues")))
+                                                    "interaction.pvalues",
+                                                    "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
   
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
@@ -312,12 +340,14 @@ test_that("Fields are populated appropriately when feature data contains plus si
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
   
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE)
@@ -325,12 +355,14 @@ test_that("Fields are populated appropriately when feature data contains plus si
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 0)
 })
 
 # Check that all fields are populated correctly for continuous data.
@@ -368,25 +400,31 @@ test_that("Fields are populated appropriately (continuous).", {
                                suppressWarnings = TRUE, continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues","continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -394,25 +432,36 @@ test_that("Fields are populated appropriately (continuous).", {
                                continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                                                    "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                                                    "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+                                                    "interaction.coefficients",
+                                                    "model.rsquared", 
+                                                    "covariate.pvalues", 
+                                                    "covariate.coefficients", 
+                                                    "corr", "filt.results",
+                                                    "warnings", "stype", "outcome", 
+                                                    "independent.var.type", 
+                                                    "covar", "interaction.pvalues",
+                                                    "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
@@ -421,12 +470,14 @@ test_that("Fields are populated appropriately (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, continuous = TRUE)
@@ -434,12 +485,14 @@ test_that("Fields are populated appropriately (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -449,12 +502,14 @@ test_that("Fields are populated appropriately (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE,
@@ -463,12 +518,14 @@ test_that("Fields are populated appropriately (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 })
 
 # Check that all fields are populated correctly when covariates are factors.
@@ -506,25 +563,37 @@ test_that("Fields are populated appropriately with factor covariates.", {
                                continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                                                    "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                                                    "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+                                                    "interaction.coefficients",
+                                                    "model.rsquared", 
+                                                    "covariate.pvalues", 
+                                                    "covariate.coefficients", 
+                                                    "corr", "filt.results",
+                                                    "warnings", "stype", 
+                                                    "outcome", 
+                                                    "independent.var.type", 
+                                                    "covar", "interaction.pvalues",
+                                                    "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
@@ -534,12 +603,14 @@ test_that("Fields are populated appropriately with factor covariates.", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE,
@@ -548,12 +619,14 @@ test_that("Fields are populated appropriately with factor covariates.", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 })
 
 # Check that all fields are populated correctly when some covariates are factors.
@@ -592,25 +665,38 @@ test_that("Fields are populated appropriately with a mix of numeric and factor c
                                continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                                                    "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                                                    "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+                                                    "interaction.coefficients",
+                                                    "model.rsquared", 
+                                                    "covariate.pvalues", 
+                                                    "covariate.coefficients", 
+                                                    "corr", "filt.results",
+                                                    "warnings", "stype", 
+                                                    "outcome", 
+                                                    "independent.var.type", 
+                                                    "covar", 
+                                                    "interaction.pvalues",
+                                                    "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
@@ -620,12 +706,14 @@ test_that("Fields are populated appropriately with a mix of numeric and factor c
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE,
@@ -634,12 +722,14 @@ test_that("Fields are populated appropriately with a mix of numeric and factor c
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 })
 
 # Check remove.duplicates.
@@ -683,13 +773,16 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 1, remove.duplicates = TRUE,
@@ -700,13 +793,16 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -718,13 +814,16 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, remove.duplicates = TRUE,
@@ -735,13 +834,16 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
@@ -749,8 +851,10 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                                suppressWarnings = TRUE, continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -759,14 +863,17 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 2, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -775,7 +882,7 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
-
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -783,8 +890,10 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                                suppressWarnings = TRUE, continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -793,15 +902,17 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
-
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                remove.duplicates = TRUE, independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, continuous = TRUE)
   expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
-                          "model.rsquared", "covariate.pvalues", "covariate.coefficients", "corr", "filt.results",
-                          "warnings", "stype", "outcome", "independent.var.type", "covar", "interaction.pvalues")))
+                          "model.rsquared", "covariate.pvalues", 
+                          "covariate.coefficients", "corr", "filt.results",
+                          "warnings", "stype", "outcome", "independent.var.type", 
+                          "covar", "interaction.pvalues", "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -810,6 +921,7 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  expect_equal(results@continuous, 1)
 })
 
 test_that("Duplicates are removed when appropriate (continuous).", {
@@ -854,12 +966,14 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 1, remove.duplicates = TRUE,
@@ -873,12 +987,14 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -893,12 +1009,14 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, remove.duplicates = TRUE,
@@ -912,12 +1030,14 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(length(results@covariate.pvalues), 0)
   expect_equal(length(results@covariate.coefficients), 0)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
@@ -927,7 +1047,8 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -936,6 +1057,7 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 2, remove.duplicates = TRUE,
@@ -944,7 +1066,8 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -953,7 +1076,7 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
-
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -963,7 +1086,8 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -972,7 +1096,7 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
-
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                remove.duplicates = TRUE, independent.var.type = 2, outcome = 2,
@@ -981,7 +1105,8 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
@@ -990,6 +1115,7 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
   expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
   expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  expect_equal(results@continuous, 1)
 })
 
 # Check saving covariate pvals.
@@ -1030,12 +1156,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
@@ -1043,12 +1171,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 0)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -1058,12 +1188,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1,
@@ -1072,12 +1204,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
@@ -1086,12 +1220,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
@@ -1099,12 +1235,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -1114,12 +1252,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2,
@@ -1128,12 +1268,14 @@ test_that("Covariate p-values are saved (discrete).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  expect_equal(results@continuous, 0)
 })
 
 # Check saving covariate pvals.
@@ -1174,12 +1316,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
@@ -1188,12 +1332,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -1203,12 +1349,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1,
@@ -1218,12 +1366,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
@@ -1233,12 +1383,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
@@ -1247,12 +1399,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
@@ -1263,12 +1417,14 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2,
@@ -1278,19 +1434,15 @@ test_that("Covariate p-values are saved (continuous).", {
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
-                          "independent.var.type", "covar", "interaction.pvalues")))
+                          "independent.var.type", "covar", "interaction.pvalues",
+                          "continuous")))
   expect_equal(length(results@interaction.adj.pvalues), 9)
   expect_equal(length(results@interaction.coefficients), 9)
   expect_equal(length(results@model.rsquared), 9)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
   expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  expect_equal(results@continuous, 1)
 })
-
-# TODO: Check whether a pseudoinverse is calculated for a singular matrix.
-# XtX must be singular, where X is the model matrix for an individual analyte.
-# The model matrix is formed using the formula and the clinical data. The formula is Y ~ a + type + a:type + covar.
-# The clinical data includes the outcome type, covariate matrix, and the matrix of analytes used as independent
-# variables.
 
 # Check for correlated variables.
 test_that("Check for correlated variables.", {
@@ -1426,6 +1578,7 @@ test_that("If standard deviation is zero, analytes are removed.", {
   expect_equal(length(run1@interaction.adj.pvalues), 6)
   expect_equal(length(run1@interaction.coefficients), 6)
   expect_equal(length(run1@model.rsquared), 6)
+  expect_equal(length(run1@continuous), 1)
 
   # Gene with standard deviation of 0
   run2 <- IntLIM::RunIntLim(dat2, stype = "Feat1", independent.var.type = 1,
@@ -1435,6 +1588,7 @@ test_that("If standard deviation is zero, analytes are removed.", {
   expect_equal(length(run2@interaction.adj.pvalues), 6)
   expect_equal(length(run2@interaction.coefficients), 6)
   expect_equal(length(run2@model.rsquared), 6)
+  expect_equal(length(run2@continuous), 1)
 
   # Covariates with standard deviation of 0
   run3 <- IntLIM::RunIntLim(dat3, stype = "Feat1", independent.var.type = 1,
@@ -1445,6 +1599,7 @@ test_that("If standard deviation is zero, analytes are removed.", {
   expect_equal(length(run3@interaction.coefficients), 9)
   expect_equal(length(run3@model.rsquared), 9)
   expect_equal(length(run3@covar), 1)
+  expect_equal(length(run3@continuous), 1)
 
   # Phenotype with standard deviation of 0
   expect_error(IntLIM::RunIntLim(dat4, stype = "Feat1", independent.var.type = 1,
