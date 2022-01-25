@@ -32,8 +32,7 @@ BuildDataAndLines(
 \item{palette}{choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors}
 
-\item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
-in Shiny/Knittr (F)}
+\item{stype}{Phenotype or outcome variable}
 }
 \description{
 A helper function for the PlotPair functions (i.e. the highcharter one and

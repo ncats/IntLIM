@@ -192,6 +192,103 @@ test_that("Check that output is correct when we remove metabolites with NA.", {
   expect_identical(filtdata@sampleMetaData, pData)
 })
 
+# Check coefficient of variation filtering.
+test_that("Check that metabolites are filtered properly when cov filtering is added.", {
+  
+  # Create toy data set.
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
+                         "Bambam"=c(0,0,0))
+  rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
+  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,NA,0), "Pebbles"=c(NA,0,0), 
+                          "Bambam"=c(0,0,0))
+  rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  dat <- methods::new("IntLimData", analyteType1=as.matrix(geneData),
+                      analyteType2=as.matrix(metabData),
+                      analyteType1MetaData = geneMetaData,
+                      analyteType2MetaData = metabMetaData,
+                      sampleMetaData = pData)
+  # Check filtering.
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                 analyteType2miss = 0.25, cov.cutoff = 0.3, suppressWarnings = TRUE),
+               "All analytes have been removed from your type 2 data! Change your filtering criteria.")
+  
+  # Create toy data set with only analyte 2 and check filtering.
+  dat <- methods::new("IntLimData", analyteType1=matrix(, nrow = 0, ncol = 0),
+                      analyteType2=as.matrix(metabData),
+                      analyteType1MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
+                      analyteType2MetaData = metabMetaData,
+                      sampleMetaData = pData)
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                 analyteType2miss = 0.25, cov.cutoff = 0.3,
+                                 suppressWarnings = TRUE),
+               "All analytes have been removed from your type 2 data! Change your filtering criteria.")
+})
+
+# Check that warnings are thrown when coefficient of variation is applied to log-scaled data.
+test_that("Check for warning when data is log-scaled.", {
+  
+  # Create toy data set.
+  pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
+  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  geneData <- data.frame("Fred"=c(-1,1,2), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
+                         "Bambam"=c(1,2,3))
+  rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
+  metabData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
+                          "Bambam"=c(1,2,-3))
+  rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
+  metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
+                                c("Metab1", "Metab2", "Metab3"))
+  geneMetaData <- data.frame("id"=c("Gene1", "Gene2", "Gene3"), "genename"=
+                               c("Gene1", "Gene2", "Gene3"))
+  dat <- methods::new("IntLimData", analyteType1=as.matrix(geneData),
+                      analyteType2=as.matrix(metabData),
+                      analyteType1MetaData = geneMetaData,
+                      analyteType2MetaData = metabMetaData,
+                      sampleMetaData = pData)
+  # Check filtering.
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                    analyteType2miss = 0, cov.cutoff = -1, suppressWarnings = TRUE),
+               "cov.cutoff parameter must be between 0 and 1")
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                  analyteType2miss = 0, cov.cutoff = 0.3),
+                 paste("Coefficient of variation filtering will not be applied",
+                 "to analyte type 1 because data is log-scaled"))
+  
+  # Create toy data set with only analyte 2 and check filtering.
+  dat <- methods::new("IntLimData", analyteType1=matrix(, nrow = 0, ncol = 0),
+                      analyteType2=as.matrix(metabData),
+                      analyteType1MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
+                      analyteType2MetaData = metabMetaData,
+                      sampleMetaData = pData)
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                  analyteType2miss = 0, cov.cutoff = 2, suppressWarnings = TRUE),
+               "cov.cutoff parameter must be between 0 and 1")
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                  analyteType2miss = 0, cov.cutoff = 0.3),
+               paste("Coefficient of variation filtering will not be applied",
+                     "to analyte type 2 because data is log-scaled"))
+  
+  # Create toy data set with only analyte 1 and check filtering.
+  dat <- methods::new("IntLimData", analyteType2=matrix(, nrow = 0, ncol = 0),
+                      analyteType1=as.matrix(geneData),
+                      analyteType2MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
+                      analyteType1MetaData = geneMetaData,
+                      sampleMetaData = pData)
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                  analyteType2miss = 0, cov.cutoff = 2, suppressWarnings = TRUE),
+               "cov.cutoff parameter must be between 0 and 1")
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
+                                    analyteType2miss = 0, cov.cutoff = 0.3),
+                 paste("Coefficient of variation filtering will not be applied",
+                       "to analyte type 1 because data is log-scaled"))
+})
+
 # Check that lowest percentile analytes are filtered.
 test_that("Check that output is correct when we filter the lowest percentile analytes.", {
 

@@ -368,12 +368,11 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
 #' @param outcomeAnalyteOfInterest outcome analyte in pair
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @param stype Phenotype or outcome variable
 BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable, 
                               independentAnalyteOfInterest, 
                               outcomeAnalyteOfInterest, palette = "Set1",	stype){
@@ -576,16 +575,16 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
     cols <- plotdata$cols
     
     # Plot
-    par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
+    graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
     plot(data$x, data$y, col = data$color, xlab = independentAnalyteOfInterest,
          ylab = outcomeAnalyteOfInterest, main = paste(independentAnalyteOfInterest,
                                                        "vs.", outcomeAnalyteOfInterest),
          pch = 16)
-    lines(line1, col = cols[1])
-    lines(line2, col = cols[2])
-    #text(data$x, data$y, data$z, col = data$color)
-    coord <- par("usr")
-    legend(x = coord[2] * 1.05, y = coord[4], legend=c(uniqtypes[1],uniqtypes[2]), 
+    graphics::lines(line1, col = cols[1])
+    graphics::lines(line2, col = cols[2])
+    #graphics::text(data$x, data$y, data$z, col = data$color)
+    coord <- graphics::par("usr")
+    graphics::legend(x = coord[2] * 1.05, y = coord[4], legend=c(uniqtypes[1],uniqtypes[2]), 
            col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
   }
 }

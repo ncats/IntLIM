@@ -18,8 +18,7 @@
 #' @return filtData IntLimData object with input data after filtering
 #' @export
 FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteType2miss=0,
-                       suppressWarnings = FALSE, cov.cutoff=0.30) {
-  
+                       suppressWarnings = FALSE, cov.cutoff=0) {
   # Check that input is a IntLimData
   if (class(inputData) != "IntLimData") {
     stop("input data is not a IntLimData class")
@@ -38,10 +37,13 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
     if(analyteType2miss < 0 || analyteType2miss > 1) {
       stop("analyteType2miss parameter must be between 0 and 1")
     }
-    
+    if(cov.cutoff < 0 || cov.cutoff > 1) {
+      stop("cov.cutoff parameter must be between 0 and 1")
+    }
+
     # Check that at least one parameter is not null
     len <- length(c(analyteType1perc,analyteType2perc,analyteType2miss))
-    if ((analyteType1perc+analyteType2perc+analyteType2miss) ==0) {
+    if ((analyteType1perc+analyteType2perc+analyteType2miss+cov.cutoff) ==0) {
       if(suppressWarnings == FALSE){
         warning("No filtering parameters were set so the data remains unfiltered")
       }
@@ -114,6 +116,31 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
         }
       }
       
+      #Checking for Log Scaling and Filtering the Data
+      if(length(which(!is.na(type1Data))) > 0 && min(type1Data) >= 0
+         && cov.cutoff > 0) {
+        analyte1mean <- apply(type1Data, MARGIN = 1, mean)
+        analyte1sd <- apply(type1Data, MARGIN = 1, mean)
+        analyte1cov <- analyte1sd / analyte1mean
+        cov.quant <- stats::quantile(analyte1cov, probs = cov.cutoff, na.rm = TRUE)
+        type1Data <- type1Data[which(analyte1cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type1Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 1 because data is log-scaled"))
+      }
+      
+      if(length(which(!is.na(type2Data))) > 0 && min(type2Data) >= 0
+         && cov.cutoff > 0) {
+        analyte2mean <- apply(type2Data, MARGIN = 1, mean)
+        analyte2sd <- apply(type2Data, MARGIN = 1, mean)
+        analyte2cov <- analyte2sd / analyte2mean
+        cov.quant <- stats::quantile(analyte2cov, probs = cov.cutoff, na.rm = TRUE)
+        type2Data <- type2Data[which(analyte2cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type2Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 2 because data is log-scaled"))
+      }
+      
       # Now reconstruct the multidataset object
       filtdata <- methods::new("IntLimData", analyteType1=type1Data,
                                analyteType2=type2Data,
@@ -125,31 +152,53 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
     if(analyteType1perc < 0 || analyteType1perc > 1) {
       stop("analyteType1perc parameter must be between 0 and 1")
     }
+    if(cov.cutoff < 0 || cov.cutoff > 1) {
+      stop("cov.cutoff parameter must be between 0 and 1")
+    }
     
     # Check that at least one parameter is not null
-    if (analyteType1perc ==0) {
+    if (analyteType1perc+cov.cutoff ==0) {
       if(suppressWarnings == FALSE){
         warning("No filtering parameters were set so the data remains unfiltered")
       }
       filtdata <- inputData
     }
     else {
-      # Filter
       type1Data <- inputData@analyteType1
-      mymean <- as.numeric(apply(type1Data,1, function(x)
-        mean(x,na.rm=T)))
-      keepers <- which(mymean > stats::quantile(mymean,analyteType1perc, na.rm = TRUE))
-      oldData <- type1Data
-      type1Data <- as.matrix(type1Data[keepers,])
-      # Transpose if only one column is remaining
-      if(ncol(type1Data)==1 && nrow(type1Data) == ncol(oldData)){
-        type1Data <- t(type1Data)
+      if(analyteType1perc > 0) {
+        type1Data <- inputData@analyteType1
+        mymean <- as.numeric(apply(type1Data,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType1perc, na.rm = TRUE))
+        oldData <- type1Data
+        type1Data <- as.matrix(type1Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type1Data)==1 && nrow(type1Data) == ncol(oldData)){
+          type1Data <- t(type1Data)
+        }
+        # Set rownames
+        rownames(type1Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type1Data)==0){
+          type1Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by percentile is applied for analyte type 1")
+        }
       }
-      # Set rownames
-      rownames(type1Data) <- rownames(oldData)[keepers]
-      # Create empty matrix if no columns are remaining
-      if(nrow(type1Data)==0){
-        type1Data <- matrix(, nrow = 0, ncol = 0)
+
+      #Checking for Log Scaling and Filtering the Data
+      if(length(which(!is.na(type1Data))) > 0 && min(type1Data) >= 0
+         && cov.cutoff > 0) {
+        analyte1mean <- apply(type1Data, MARGIN = 1, mean)
+        analyte1sd <- apply(type1Data, MARGIN = 1, mean)
+        analyte1cov <- analyte1sd / analyte1mean
+        cov.quant <- stats::quantile(analyte1cov, probs = cov.cutoff, na.rm = TRUE)
+        type1Data <- type1Data[which(analyte1cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type1Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 1 because data is log-scaled"))
       }
       
       # Now reconstruct the object
@@ -167,9 +216,12 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
     if(analyteType2miss < 0 || analyteType2miss > 1) {
       stop("analyteType2miss parameter must be between 0 and 1")
     }
+    if(cov.cutoff < 0 || cov.cutoff > 1) {
+      stop("cov.cutoff parameter must be between 0 and 1")
+    }
     
     # Check that at least one parameter is not null
-    if ((analyteType2perc+analyteType2miss) ==0) {
+    if ((analyteType2perc+analyteType2miss+cov.cutoff) ==0) {
       if(suppressWarnings == FALSE){
         warning("No filtering parameters were set so the data remains unfiltered")
       }
@@ -231,22 +283,21 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
       if(analyteType2miss < 0 || analyteType2miss > 1) {
         stop("analyteType2miss parameter must be between 0 and 1")
       }
-      
-      #Checking for Log Scaling and Filtering the Data
-      if(min(type1Data) <= 0) {
-        analyte1mean <- apply(type1Data, MARGIN = 1, mean)
-        analyte1sd <- apply(type1Data, MARGIN = 1, mean)
-        analyte1cov <- analyte1sd / analyte1mean
-        cov.quant <- quantile(analyte1cov, probs = cov.cutoff)
-        type1Data <- type1Data[which(analyte1cov <= cov.quant),]
+      if(cov.cutoff < 0 || cov.cutoff > 1) {
+        stop("cov.cutoff parameter must be between 0 and 1")
       }
       
-      if(min(type2Data) <= 0) {
+      #Checking for Log Scaling and Filtering the Data
+      if(length(which(!is.na(type2Data))) > 0 && min(type2Data) >= 0
+         && cov.cutoff > 0) {
         analyte2mean <- apply(type2Data, MARGIN = 1, mean)
         analyte2sd <- apply(type2Data, MARGIN = 1, mean)
         analyte2cov <- analyte2sd / analyte2mean
-        cov.quant <- quantile(analyte2cov, probs = cov.cutoff)
-        type2Data <- type2Data[which(analyte1cov <= cov.quant),]
+        cov.quant <- stats::quantile(analyte2cov, probs = cov.cutoff, na.rm = TRUE)
+        type2Data <- type2Data[which(analyte2cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type2Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 2 because data is log-scaled"))
       }
       
       # Now reconstruct the object
