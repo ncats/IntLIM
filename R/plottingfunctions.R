@@ -362,6 +362,105 @@ DistRSquared<- function(IntLimResults,breaks=100) {
        main="Histogram of Interaction R-Squared Values")
 }
 
+#' A helper function for the PlotPair functions (i.e. the highcharter one and
+#' the flat, base-R one).
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param inputResults Data frame with model results (output of ProcessResults())
+#' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
+#' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
+#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
+#' in Shiny/Knittr (F)
+#' @param outcomeAnalyteOfInterest outcome analyte in pair
+#' @param independentAnalyteOfInterest independent analyte in pair
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
+BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable, 
+                              independentAnalyteOfInterest, 
+                              outcomeAnalyteOfInterest, palette = "Set1",	stype){
+  # Convert names.
+  name_outcomeAnalyteOfInterest <- make.names(outcomeAnalyteOfInterest)
+  name_independentAnalyteOfInterest <- make.names(independentAnalyteOfInterest)
+  stype <- make.names(stype)
+  
+  if(is.null(stype)) {
+    stop("Users must define stype which defines the categories to be compared 
+       (e.g. tumor vs non-tumor).  This could be the same parameter that was 
+       used to run RunIntLim()")
+  }
+  if (length(palette) == 2) {
+    cols <- c(palette)
+  } else if (length(palette) == 1) {
+    cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
+  } else {
+    stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
+  }
+  
+  # Extract the outcome and independent data.
+  outcomeData <- NULL
+  independentData <- NULL
+  sOutcome <- NULL
+  sIndependent <- NULL
+  if(outcome == 1){
+    outcomeData <- inputData@analyteType1
+  }else if(outcome == 2){
+    outcomeData <- inputData@analyteType2
+  }
+  if(independentVariable == 1){
+    independentData <- inputData@analyteType1
+  }else if(independentVariable == 2){
+    independentData <- inputData@analyteType2
+  }
+  
+  # Check that analytes of interest are found in data.
+  if(length(which(rownames(outcomeData)==name_outcomeAnalyteOfInterest))>0) {
+    sOutcome<-as.numeric(outcomeData[name_outcomeAnalyteOfInterest,])
+  } else {
+    stop(paste0("The analyte ",outcomeAnalyteOfInterest," was not found in your data"))
+  }
+  if(length(which(rownames(independentData)==name_independentAnalyteOfInterest))>0) {
+    sIndependent<-as.numeric(independentData[name_independentAnalyteOfInterest,])
+  } else {
+    stop(paste0("The analyte ",independentAnalyteOfInterest," was not found in your data"))
+  }
+  
+  # Set up data.
+  mycols <- as.character(inputData@sampleMetaData[,stype])
+  mycols[which(inputData@sampleMetaData[,stype]==
+                 unique(inputData@sampleMetaData[,stype])[1])] <- cols[1]
+  mycols[which(inputData@sampleMetaData[,stype]==
+                 unique(inputData@sampleMetaData[,stype])[2])] <- cols[2]
+  
+  data<-data.frame(x=sIndependent,y=sOutcome,z=colnames(independentData),
+                   label=inputData@sampleMetaData[,stype],color=mycols)
+  
+  # Get points to draw the lines for each phenotype by hand
+  
+  uniqtypes=as.character(unique(inputData@sampleMetaData[,stype]))
+  
+  # Starting with phenotype 1, get min and max x values constrained to the values of y
+  # The reason we do this, is because the lines do not necessary need to go out to the 
+  # max or min of x, particularly
+  # when slopes are really steep (abline does this automatically but not highcharter)
+  mytypes <- inputData@sampleMetaData[,stype]
+  getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
+    y=data$y[which(data$label==uniqtypes[currenttype])]; 
+    x=data$x[which(data$label==uniqtypes[currenttype])]
+    min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
+    max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
+    
+    m1<-stats::glm(y ~ x)
+    line1<-data.frame(x=c(max,min),
+                      y=c(stats::predict(m1,data.frame(x=c(max,min)))))
+    return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
+  }
+  
+  line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
+  line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
+  
+  # Return everything needed.
+  return(list(data=data,uniqtypes=uniqtypes,line1=line1,line2=line2,cols=cols))
+}
+  
 #' scatter plot of pairs (based on user selection)
 #'
 #' @param inputData IntLimObject output of ReadData() or FilterData()
@@ -377,6 +476,7 @@ DistRSquared<- function(IntLimResults,breaks=100) {
 #' @export
 PlotPair<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
                     outcomeAnalyteOfInterest, palette = "Set1",	viewer=T) {
+  
   # Set type.
   stype <- inputResults@stype
   
@@ -387,94 +487,25 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
   if(length(unique_stypes) > 2){
     MarginalEffectsGraph(
       dataframe = MarginalEffectsGraphDataframe(inputResults = inputResults,
-                                                        inputData = inputData,
-                                                        outcomeAnalyteOfInterest = outcomeAnalyteOfInterest,
-                                                        independentAnalyteOfInterest = independentAnalyteOfInterest,
-                                                        outcome = outcome,
-                                                        independentVariable = independentVariable), 
+                                                inputData = inputData,
+                                                outcomeAnalyteOfInterest = outcomeAnalyteOfInterest,
+                                                independentAnalyteOfInterest = independentAnalyteOfInterest,
+                                                outcome = outcome,
+                                                independentVariable = independentVariable), 
       title = paste("Marginal Effects -", independentAnalyteOfInterest,
                     "and", outcomeAnalyteOfInterest), xlab = independentAnalyteOfInterest,
       ylab = outcomeAnalyteOfInterest)
   }else{
-    # Convert names.
-    name_outcomeAnalyteOfInterest <- make.names(outcomeAnalyteOfInterest)
-    name_independentAnalyteOfInterest <- make.names(independentAnalyteOfInterest)
-    stype <- make.names(stype)
     
-    if(is.null(stype)) {
-      stop("Users must define stype which defines the categories to be compared 
-         (e.g. tumor vs non-tumor).  This could be the same parameter that was 
-         used to run RunIntLim()")
-    }
-    if (length(palette) == 2) {
-      cols <- c(palette)
-    } else if (length(palette) == 1) {
-      cols <- RColorBrewer::brewer.pal(3, palette)[1:2]
-    } else {
-      stop("palette must either be an RColorBrewer palette or a vector of hex colors of size 2")
-    }
-    
-    # Extract the outcome and independent data.
-    outcomeData <- NULL
-    independentData <- NULL
-    sOutcome <- NULL
-    sIndependent <- NULL
-    if(outcome == 1){
-      outcomeData <- inputData@analyteType1
-    }else if(outcome == 2){
-      outcomeData <- inputData@analyteType2
-    }
-    if(independentVariable == 1){
-      independentData <- inputData@analyteType1
-    }else if(independentVariable == 2){
-      independentData <- inputData@analyteType2
-    }
-    
-    # Check that analytes of interest are found in data.
-    if(length(which(rownames(outcomeData)==name_outcomeAnalyteOfInterest))>0) {
-      sOutcome<-as.numeric(outcomeData[name_outcomeAnalyteOfInterest,])
-    } else {
-      stop(paste0("The analyte ",outcomeAnalyteOfInterest," was not found in your data"))
-    }
-    if(length(which(rownames(independentData)==name_independentAnalyteOfInterest))>0) {
-      sIndependent<-as.numeric(independentData[name_independentAnalyteOfInterest,])
-    } else {
-      stop(paste0("The analyte ",independentAnalyteOfInterest," was not found in your data"))
-    }
-    
-    # Set up data.
-    mycols <- as.character(inputData@sampleMetaData[,stype])
-    mycols[which(inputData@sampleMetaData[,stype]==
-                   unique(inputData@sampleMetaData[,stype])[1])] <- cols[1]
-    mycols[which(inputData@sampleMetaData[,stype]==
-                   unique(inputData@sampleMetaData[,stype])[2])] <- cols[2]
-    
-    data<-data.frame(x=sIndependent,y=sOutcome,z=colnames(independentData),
-                     label=inputData@sampleMetaData[,stype],color=mycols)
-    
-    # Get points to draw the lines for each phenotype by hand
-    
-    uniqtypes=as.character(unique(inputData@sampleMetaData[,stype]))
-    
-    # Starting with phenotype 1, get min and max x values constrained to the values of y
-    # The reason we do this, is because the lines do not necessary need to go out to the 
-    # max or min of x, particularly
-    # when slopes are really steep (abline does this automatically but not highcharter)
-    mytypes <- inputData@sampleMetaData[,stype]
-    getLinePoints <- function(data,mytypes, uniqtypes, currenttype) {
-      y=data$y[which(data$label==uniqtypes[currenttype])]; 
-      x=data$x[which(data$label==uniqtypes[currenttype])]
-      min <- min(data$x[which(mytypes==uniqtypes[currenttype])])
-      max <- max(data$x[which(mytypes==uniqtypes[currenttype])])
-      
-      m1<-stats::glm(y ~ x)
-      line1<-data.frame(x=c(max,min),
-                        y=c(stats::predict(m1,data.frame(x=c(max,min)))))
-      return(data.frame(x=c(max,min), y=c(stats::predict(m1,data.frame(x=c(max,min))))))
-    }
-    
-    line1 <- getLinePoints(data,mytypes,uniqtypes,currenttype=1)
-    line2 <- getLinePoints(data,mytypes, uniqtypes, currenttype=2)
+    # Get data.
+    plotdata <- BuildDataAndLines(inputData,inputResults,outcome,independentVariable, 
+                                  independentAnalyteOfInterest, 
+                                  outcomeAnalyteOfInterest, palette,stype)
+    data <- plotdata$data
+    uniqtypes <- plotdata$uniqtypes
+    line1 <- plotdata$line1
+    line2 <- plotdata$line2
+    cols <- plotdata$cols
     
     ds <- highcharter::list_parse(data)
     
@@ -496,6 +527,66 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
                                      data=line2,type='line',#name=sprintf("regression line %s",type2),
                                      color = cols[2],enableMouseTracking=FALSE,marker=FALSE)
     hc
+  }
+}
+
+#' scatter plot of pairs (based on user selection). This version does not use
+#' highcharter and instead plots a base R plot.
+#'
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param inputResults Data frame with model results (output of ProcessResults())
+#' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
+#' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
+#' @param outcomeAnalyteOfInterest outcome analyte in pair
+#' @param independentAnalyteOfInterest independent analyte in pair
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @export
+PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
+                    outcomeAnalyteOfInterest, palette = "Set1") {
+    
+  # Set type.
+  stype <- inputResults@stype
+  
+  # Check whether continuous or discrete.
+  unique_stypes <- unique(inputData@sampleMetaData[,stype])
+  
+  # For continuous data, plot the marginal effects graph.
+  if(length(unique_stypes) > 2){
+    MarginalEffectsGraph(
+      dataframe = MarginalEffectsGraphDataframe(inputResults = inputResults,
+                                                inputData = inputData,
+                                                outcomeAnalyteOfInterest = outcomeAnalyteOfInterest,
+                                                independentAnalyteOfInterest = independentAnalyteOfInterest,
+                                                outcome = outcome,
+                                                independentVariable = independentVariable), 
+      title = paste("Marginal Effects -", independentAnalyteOfInterest,
+                    "and", outcomeAnalyteOfInterest), xlab = independentAnalyteOfInterest,
+      ylab = outcomeAnalyteOfInterest)
+  }else{  
+    
+    # Get data.
+    plotdata <- BuildDataAndLines(inputData,inputResults,outcome,independentVariable, 
+                                  independentAnalyteOfInterest, 
+                                  outcomeAnalyteOfInterest, palette,stype)
+    data <- plotdata$data
+    uniqtypes <- plotdata$uniqtypes
+    line1 <- plotdata$line1
+    line2 <- plotdata$line2
+    cols <- plotdata$cols
+    
+    # Plot
+    par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
+    plot(data$x, data$y, col = data$color, xlab = independentAnalyteOfInterest,
+         ylab = outcomeAnalyteOfInterest, main = paste(independentAnalyteOfInterest,
+                                                       "vs.", outcomeAnalyteOfInterest),
+         pch = 16)
+    lines(line1, col = cols[1])
+    lines(line2, col = cols[2])
+    #text(data$x, data$y, data$z, col = data$color)
+    coord <- par("usr")
+    legend(x = coord[2] * 1.05, y = coord[4], legend=c(uniqtypes[1],uniqtypes[2]), 
+           col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
   }
 }
 

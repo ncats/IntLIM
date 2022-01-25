@@ -163,7 +163,7 @@ body <- shinydashboard::dashboardBody(
                     shinydashboard::box(
                         title = strong("Run IntLIM") ,
                         width = 6,
-                        height =750,
+                        height =800,
                         solidHeader = TRUE,
                         h5("This step performs the linear models for all combinations of analyte pairs and then plots distribution of p-values."),
                   			h5("The linear model performed is 'a_i ~ a_j + p + a_j:p' where "),
@@ -180,7 +180,8 @@ body <- shinydashboard::dashboardBody(
                         numericInput("pvalcutoff1","cutoff of FDR-adjusted p-value for filtering(0 - 1) :", 0.05, min = 0, max = 1),
                         numericInput("rsquared1", "cutoff of R^2 value for filtering (0-1):", 0.5, min = 0, max = 1),
                   		numericInput("interactionCoeff", "cutoff of interaction coefficient percentile (0-1):", 0.9, min = 0, max = 1),
-                        actionButton("run3", "Run")
+                  		checkboxInput("continuous", "stype is continuous", value = FALSE, width = NULL),
+                  		actionButton("run3", "Run")
                     ),
                     shinydashboard::box(
                         width = 6,
@@ -315,8 +316,8 @@ body <- shinydashboard::dashboardBody(
                                 ),#end of table flow
                                 fluidRow(
                                     shinydashboard::box(
-                                        width = NULL,
-                                        pre(uiOutput("scatterplot"))
+                                        width = 12,
+                                        pre(plotOutput("scatterplot")),
                                     )
                                 )#end of scatterplot flow
         )
