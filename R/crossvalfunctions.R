@@ -14,6 +14,7 @@
 #' (default: no filtering of analytes) (default:0)
 #' @param analyteType2miss missing value percent cutoff (0-1) for filtering analyte type 2 
 #' (analytes with > 80\% missing values will be removed) (default:0)
+#' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
 #' (default bottom 10 percent (high negative coefficients) and top 10 percent 
@@ -41,6 +42,7 @@ RunCrossValidation <- function(inputData,
                                analyteType1perc=0, 
                                analyteType2perc=0,
                                analyteType2miss=0,
+                               cov.cutoff=0,
                                stype="",
                                outcome=c(1), 
                                covar=c(), 
@@ -60,6 +62,7 @@ RunCrossValidation <- function(inputData,
   # Filter the folds.
   inputDataFilt <- FilterDataFolds(inputDataFolds,analyteType1perc,
                                 analyteType2perc, analyteType2miss,
+                                cov.cutoff,
                                 suppressWarnings = suppressWarnings)
   
   # Run IntLIM with the types specified.
@@ -197,9 +200,11 @@ CreateCrossValFolds <- function(inputData,folds) {
 #' @param analyteType2miss missing value percent cutoff (0-1) for filtering analyte type 2 
 #' (analytes with > 80\% missing values will be removed) (default:0)
 #' @param suppressWarnings whether to suppress warnings
+#' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
 #' @return filtData IntLimData object with input data after filtering
 FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
                             analyteType2perc=0, analyteType2miss=0,
+                            cov.cutoff=0,
                             suppressWarnings=FALSE) {
   
   # Now, filter each fold so that the analytes in the set match the analytes.
@@ -210,6 +215,7 @@ FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
                                                analyteType1perc=analyteType1perc,
                                                analyteType2perc=analyteType2perc, 
                                                analyteType2miss=analyteType2miss,
+                                               cov.cutoff=cov.cutoff,
                                                suppressWarnings=suppressWarnings)
     inputDataFolds[[i]]$testing <- inputDataFolds[[i]]$testing
   }
