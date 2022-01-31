@@ -43,19 +43,19 @@ test_that("Inputting out-of-bounds parameters causes early termination.", {
                                sampleMetaData = pData) 
 							   
   # Check for errors.
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = -1, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = -1, analyteType2perc = 0, analyteMiss = 0), 
                "analyteType1perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 100, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 100, analyteType2perc = 0, analyteMiss = 0), 
                "analyteType1perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = -1, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = -1, analyteMiss = 0), 
                "analyteType2perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 100, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 100, analyteMiss = 0), 
                "analyteType2perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = -1), 
-               "analyteType2miss parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 100), 
-               "analyteType2miss parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = -1), 
+               "analyteMiss parameter must be between 0 and 1", ignore.case = TRUE)
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 100), 
+               "analyteMiss parameter must be between 0 and 1", ignore.case = TRUE)
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 0), 
                "No filtering parameters were set so the data remains unfiltered", 
                ignore.case = TRUE)
 			   
@@ -65,11 +65,11 @@ test_that("Inputting out-of-bounds parameters causes early termination.", {
                                analyteType1MetaData = geneMetaData,
                                analyteType2MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
                                sampleMetaData = pData) 
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = -1, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = -1, analyteType2perc = 0, analyteMiss = 0), 
                "analyteType1perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 100, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 100, analyteType2perc = 0, analyteMiss = 0), 
                "analyteType1perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 0), 
                "No filtering parameters were set so the data remains unfiltered", 
                ignore.case = TRUE)
 			   
@@ -79,15 +79,15 @@ test_that("Inputting out-of-bounds parameters causes early termination.", {
                                analyteType1MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
                                analyteType2MetaData = metabMetaData,
                                sampleMetaData = pData) 
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = -1, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = -1, analyteMiss = 0), 
                "analyteType2perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 100, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 100, analyteMiss = 0), 
                "analyteType2perc parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = -1), 
-               "analyteType2miss parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 100), 
-               "analyteType2miss parameter must be between 0 and 1", ignore.case = TRUE)
-  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 0), 
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = -1), 
+               "analyteMiss parameter must be between 0 and 1", ignore.case = TRUE)
+  expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 100), 
+               "analyteMiss parameter must be between 0 and 1", ignore.case = TRUE)
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 0), 
                "No filtering parameters were set so the data remains unfiltered", 
                ignore.case = TRUE)
 })
@@ -116,11 +116,11 @@ test_that("Check that output is correct without filtering.", {
                                sampleMetaData = pData)
 
   # Check for warning.
-  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 0),
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 0),
                "No filtering parameters were set so the data remains unfiltered",
                ignore.case = TRUE)
   expect_identical(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                      analyteType2miss = 0, suppressWarnings = TRUE),dat)
+                                      analyteMiss = 0, suppressWarnings = TRUE),dat)
 
   # Create single-omic toy data and check for warning.
   dat <- methods::new("IntLimData", analyteType1=matrix(, nrow = 0, ncol = 0),
@@ -128,11 +128,11 @@ test_that("Check that output is correct without filtering.", {
                                analyteType1MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
                                analyteType2MetaData = geneMetaData,
                                sampleMetaData = pData)
-  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 0),
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 0),
                "No filtering parameters were set so the data remains unfiltered",
                ignore.case = TRUE)
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                 analyteType2miss = 0, suppressWarnings = TRUE)
+                                 analyteMiss = 0, suppressWarnings = TRUE)
   expect_identical(filtdata,dat)
 
   # Create single-omic toy data and check for warning.
@@ -141,11 +141,11 @@ test_that("Check that output is correct without filtering.", {
                                analyteType1MetaData = metabData,
                                analyteType2MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
                                sampleMetaData = pData)
-  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteType2miss = 0),
+  expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, analyteMiss = 0),
                "No filtering parameters were set so the data remains unfiltered",
                ignore.case = TRUE)
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                 analyteType2miss = 0, suppressWarnings = TRUE)
+                                 analyteMiss = 0, suppressWarnings = TRUE)
   expect_identical(filtdata,dat)
 })
 
@@ -172,7 +172,7 @@ test_that("Check that output is correct when we remove metabolites with NA.", {
                                sampleMetaData = pData)
   # Check filtering.
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                 analyteType2miss = 0.25, suppressWarnings = TRUE)
+                                 analyteMiss = 0.25, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(filtdata@analyteType1, as.matrix(geneData))
   expect_identical(rownames(filtdata@analyteType2), "Metab3")
@@ -185,7 +185,7 @@ test_that("Check that output is correct when we remove metabolites with NA.", {
                                analyteType2MetaData = metabMetaData,
                                sampleMetaData = pData)
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                 analyteType2miss = 0.25, suppressWarnings = TRUE)
+                                 analyteMiss = 0.25, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(filtdata@analyteType1, matrix(, nrow = 0, ncol = 0))
   expect_identical(rownames(filtdata@analyteType2), "Metab3")
@@ -215,7 +215,7 @@ test_that("Check that metabolites are filtered properly when cov filtering is ad
                       sampleMetaData = pData)
   # Check filtering.
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                 analyteType2miss = 0.25, cov.cutoff = 0.3, suppressWarnings = TRUE),
+                                 analyteMiss = 0.25, cov.cutoff = 0.3, suppressWarnings = TRUE),
                "All analytes have been removed from your type 2 data! Change your filtering criteria.")
   
   # Create toy data set with only analyte 2 and check filtering.
@@ -225,7 +225,7 @@ test_that("Check that metabolites are filtered properly when cov filtering is ad
                       analyteType2MetaData = metabMetaData,
                       sampleMetaData = pData)
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                 analyteType2miss = 0.25, cov.cutoff = 0.3,
+                                 analyteMiss = 0.25, cov.cutoff = 0.3,
                                  suppressWarnings = TRUE),
                "All analytes have been removed from your type 2 data! Change your filtering criteria.")
 })
@@ -253,10 +253,10 @@ test_that("Check for warning when data is log-scaled.", {
                       sampleMetaData = pData)
   # Check filtering.
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                    analyteType2miss = 0, cov.cutoff = -1, suppressWarnings = TRUE),
+                                    analyteMiss = 0, cov.cutoff = -1, suppressWarnings = TRUE),
                "cov.cutoff parameter must be between 0 and 1")
   expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                  analyteType2miss = 0, cov.cutoff = 0.3),
+                                  analyteMiss = 0, cov.cutoff = 0.3),
                  paste("Coefficient of variation filtering will not be applied",
                  "to analyte type 1 because data is log-scaled"))
   
@@ -267,10 +267,10 @@ test_that("Check for warning when data is log-scaled.", {
                       analyteType2MetaData = metabMetaData,
                       sampleMetaData = pData)
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                  analyteType2miss = 0, cov.cutoff = 2, suppressWarnings = TRUE),
+                                  analyteMiss = 0, cov.cutoff = 2, suppressWarnings = TRUE),
                "cov.cutoff parameter must be between 0 and 1")
   expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                  analyteType2miss = 0, cov.cutoff = 0.3),
+                                  analyteMiss = 0, cov.cutoff = 0.3),
                paste("Coefficient of variation filtering will not be applied",
                      "to analyte type 2 because data is log-scaled"))
   
@@ -281,10 +281,10 @@ test_that("Check for warning when data is log-scaled.", {
                       analyteType1MetaData = geneMetaData,
                       sampleMetaData = pData)
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                  analyteType2miss = 0, cov.cutoff = 2, suppressWarnings = TRUE),
+                                  analyteMiss = 0, cov.cutoff = 2, suppressWarnings = TRUE),
                "cov.cutoff parameter must be between 0 and 1")
   expect_warning(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0, 
-                                    analyteType2miss = 0, cov.cutoff = 0.3),
+                                    analyteMiss = 0, cov.cutoff = 0.3),
                  paste("Coefficient of variation filtering will not be applied",
                        "to analyte type 1 because data is log-scaled"))
 })
@@ -313,7 +313,7 @@ test_that("Check that output is correct when we filter the lowest percentile ana
 
   # Check filtering.
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0.4, analyteType2perc = 0.4, 
-                                 analyteType2miss = 0, suppressWarnings = TRUE)
+                                 analyteMiss = 0, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(rownames(filtdata@analyteType1), c("Gene2", "Gene3"))
   expect_identical(rownames(filtdata@analyteType2), c("Metab2", "Metab3"))
@@ -326,7 +326,7 @@ test_that("Check that output is correct when we filter the lowest percentile ana
                                analyteType2MetaData = metabMetaData,
                                sampleMetaData = pData)
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0.4, 
-                                 analyteType2miss = 0, suppressWarnings = TRUE)
+                                 analyteMiss = 0, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(filtdata@analyteType1, matrix(, nrow = 0, ncol = 0))
   expect_identical(rownames(filtdata@analyteType2), c("Metab2", "Metab3"))
@@ -339,7 +339,7 @@ test_that("Check that output is correct when we filter the lowest percentile ana
                                analyteType2MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
                                sampleMetaData = pData)
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0.4, analyteType2perc = 0, 
-                                 analyteType2miss = 0, suppressWarnings = TRUE)
+                                 analyteMiss = 0, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(filtdata@analyteType2, matrix(, nrow = 0, ncol = 0))
   expect_identical(rownames(filtdata@analyteType1), c("Gene2", "Gene3"))
@@ -370,7 +370,7 @@ test_that("Check that output is correct when we filter the lowest percentile ana
 
   # Check filtering.
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0.4, analyteType2perc = 0.4, 
-                                 analyteType2miss = 0.25, suppressWarnings = TRUE)
+                                 analyteMiss = 0.25, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(rownames(filtdata@analyteType1), c("Gene2", "Gene3"))
   expect_identical(rownames(filtdata@analyteType2), "Metab3")
@@ -383,7 +383,7 @@ test_that("Check that output is correct when we filter the lowest percentile ana
                                analyteType2MetaData = metabMetaData,
                                sampleMetaData = pData)
   filtdata <- IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0.4, 
-                                 analyteType2miss = 0.25, suppressWarnings = TRUE)
+                                 analyteMiss = 0.25, suppressWarnings = TRUE)
   expect_identical(slotNames(filtdata), slotNames(dat))
   expect_identical(filtdata@analyteType1, matrix(, nrow = 0, ncol = 0))
   expect_identical(rownames(filtdata@analyteType2), "Metab3")
@@ -414,7 +414,7 @@ test_that("Check that an error is given if all data is filtered out.", {
 
   # Check filtering.
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0.4, 
-                                    analyteType2miss = 0.25, suppressWarnings = TRUE),
+                                    analyteMiss = 0.25, suppressWarnings = TRUE),
                  "All analytes have been removed from your type 2 data! Change your filtering criteria.")
 
   # Create single-omic toy dataset and check filtering.
@@ -424,6 +424,6 @@ test_that("Check that an error is given if all data is filtered out.", {
                                analyteType2MetaData = metabMetaData,
                                sampleMetaData = pData)
   expect_error(IntLIM::FilterData(dat, analyteType1perc = 0, analyteType2perc = 0.4, 
-                                  analyteType2miss = 0.25, suppressWarnings = TRUE),
+                                  analyteMiss = 0.25, suppressWarnings = TRUE),
 	"All analytes have been removed from your type 2 data! Change your filtering criteria.")
 })

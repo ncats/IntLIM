@@ -10,14 +10,14 @@
 #' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
 #' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
 #' (default: no filtering of analytes) (default:0)
-#' @param analyteType2miss missing value percent cutoff (0-1) for filtering analyte type 2 
+#' @param analyteMiss missing value percent cutoff (0-1) for filtering both analyte types 
 #' (analytes with > 80\% missing values will be removed) (default:0)
 #' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
 #' @param suppressWarnings whether or not to print warnings. If TRUE, warnings will
 #' not be printed.
 #' @return filtData IntLimData object with input data after filtering
 #' @export
-FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteType2miss=0,
+FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteMiss=0,
                        suppressWarnings = FALSE, cov.cutoff=0) {
   # Check that input is a IntLimData
   if (class(inputData) != "IntLimData") {
@@ -34,16 +34,15 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
     if(analyteType2perc < 0 || analyteType2perc > 1) {
       stop("analyteType2perc parameter must be between 0 and 1")
     }
-    if(analyteType2miss < 0 || analyteType2miss > 1) {
-      stop("analyteType2miss parameter must be between 0 and 1")
+    if(analyteMiss < 0 || analyteMiss > 1) {
+      stop("analyteMiss parameter must be between 0 and 1")
     }
     if(cov.cutoff < 0 || cov.cutoff > 1) {
       stop("cov.cutoff parameter must be between 0 and 1")
     }
 
     # Check that at least one parameter is not null
-    len <- length(c(analyteType1perc,analyteType2perc,analyteType2miss))
-    if ((analyteType1perc+analyteType2perc+analyteType2miss+cov.cutoff) ==0) {
+    if ((analyteType1perc+analyteType2perc+analyteMiss+cov.cutoff) ==0) {
       if(suppressWarnings == FALSE){
         warning("No filtering parameters were set so the data remains unfiltered")
       }
@@ -93,10 +92,10 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
           warning("No filtering by percentile is applied for analyte type 2")
         }
       }
-      if(analyteType2miss > 0) {
+      if(analyteMiss > 0) {
         # Filter
         missnum <- as.numeric(apply(type2Data,1,function(x) length(which(is.na(x)))))
-        mycut <- analyteType2miss * ncol(type2Data)
+        mycut <- analyteMiss * ncol(type2Data)
         keepers <- which(missnum < mycut)
         oldData <- type2Data
         type2Data <- as.matrix(type2Data[keepers,])
@@ -152,12 +151,15 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
     if(analyteType1perc < 0 || analyteType1perc > 1) {
       stop("analyteType1perc parameter must be between 0 and 1")
     }
+    if(analyteMiss < 0 || analyteMiss > 1){
+      stop("analyteMiss parameter must be between 0 and 1")
+    }
     if(cov.cutoff < 0 || cov.cutoff > 1) {
       stop("cov.cutoff parameter must be between 0 and 1")
     }
     
     # Check that at least one parameter is not null
-    if (analyteType1perc+cov.cutoff ==0) {
+    if (analyteType1perc+cov.cutoff+analyteMiss ==0) {
       if(suppressWarnings == FALSE){
         warning("No filtering parameters were set so the data remains unfiltered")
       }
@@ -187,6 +189,28 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
           warning("No filtering by percentile is applied for analyte type 1")
         }
       }
+      if(analyteMiss > 0) {
+        # Filter
+        missnum <- as.numeric(apply(type1Data,1,function(x) length(which(is.na(x)))))
+        mycut <- analyteMiss * ncol(type1Data)
+        keepers <- which(missnum < mycut)
+        oldData <- type1Data
+        type1Data <- as.matrix(type1Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type1Data)==1 && nrow(type1Data) == ncol(oldData)){
+          type1Data <- t(type1Data)
+        }
+        # Set rownames
+        rownames(type1Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type1Data)==0){
+          type1Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by missing values is applied for analyte type 1")
+        }
+      }
 
       #Checking for Log Scaling and Filtering the Data
       if(length(which(!is.na(type1Data))) > 0 && min(type1Data) >= 0
@@ -213,15 +237,15 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
     if(analyteType2perc < 0 || analyteType2perc > 1) {
       stop("analyteType2perc parameter must be between 0 and 1")
     }
-    if(analyteType2miss < 0 || analyteType2miss > 1) {
-      stop("analyteType2miss parameter must be between 0 and 1")
+    if(analyteMiss < 0 || analyteMiss > 1) {
+      stop("analyteMiss parameter must be between 0 and 1")
     }
     if(cov.cutoff < 0 || cov.cutoff > 1) {
       stop("cov.cutoff parameter must be between 0 and 1")
     }
     
     # Check that at least one parameter is not null
-    if ((analyteType2perc+analyteType2miss+cov.cutoff) ==0) {
+    if ((analyteType2perc+analyteMiss+cov.cutoff) ==0) {
       if(suppressWarnings == FALSE){
         warning("No filtering parameters were set so the data remains unfiltered")
       }
@@ -251,10 +275,10 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
           warning("No filtering by percentile is applied for analyte type 2")
         }
       }
-      if(analyteType2miss > 0) {
+      if(analyteMiss > 0) {
         # Filter
         missnum <- as.numeric(apply(type2Data,1,function(x) length(which(is.na(x)))))
-        mycut <- analyteType2miss * ncol(type2Data)
+        mycut <- analyteMiss * ncol(type2Data)
         keepers <- which(missnum < mycut)
         oldData <- type2Data
         type2Data <- as.matrix(type2Data[keepers,])
@@ -280,8 +304,8 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteT
       if(analyteType2perc < 0 || analyteType2perc > 1) {
         stop("analyteType2perc parameter must be between 0 and 1")
       }
-      if(analyteType2miss < 0 || analyteType2miss > 1) {
-        stop("analyteType2miss parameter must be between 0 and 1")
+      if(analyteMiss < 0 || analyteMiss > 1) {
+        stop("analyteMiss parameter must be between 0 and 1")
       }
       if(cov.cutoff < 0 || cov.cutoff > 1) {
         stop("cov.cutoff parameter must be between 0 and 1")

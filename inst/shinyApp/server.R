@@ -120,7 +120,7 @@ shinyServer(function(input, output, session) {
       FmultiData<-IntLIM::FilterData(multiData(),
                                      analyteType1perc=input$analyteType1perc,
                                      analyteType2perc=input$analyteType2perc,
-                                     analyteType2miss=input$analyteType2miss,
+                                     analyteMiss=input$analyteMiss,
                                      cov.cutoff=input$cov.cutoff)
     }
     FmultiData

@@ -125,7 +125,7 @@ body <- shinydashboard::dashboardBody(
                         hr(),
                         numericInput("analyteType1perc", "percentile cutoff (0-1) for filtering analyte type 1 (e.g. remove analytes with mean values < cutoff):", 0, min = 0, max = 1),
                         numericInput("analyteType2perc", "percentile cutoff (0-1) for filtering analyte type 2 (e.g. remove analytes with mean values < cutoff):", 0, min = 0, max = 1),
-                        numericInput("analyteType2miss", "missing value percent cutoff (0-1) for filtering analyte type 2 (e.g. analytes with > % cutoff missing values will be removed)", 0,min=0,max=1),
+                        numericInput("analyteMiss", "missing value percent cutoff (0-1) for filtering analytes (e.g. analytes with > % cutoff missing values will be removed)", 0,min=0,max=1),
                         numericInput("cov.cutoff", "coefficient of variation percentile cutoff for filtering analytes (e.g. analytes with cov > cutoff)", 0,min=0,max=1),
                         actionButton("run2", "Run")
                     ),

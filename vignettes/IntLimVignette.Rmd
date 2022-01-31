@@ -163,7 +163,7 @@ covariates to the given classes.
 ```{r}
 inputDatafilt <- IntLIM::FilterData(inputData,
                                     analyteType1perc = 0.10, analyteType2perc = 0.10,
-                                    analyteType2miss = 0.80)
+                                    analyteMiss = 0.80)
 ```
 
 The __PlotDistribution()__ function allows users to produce a boxplot of the 
@@ -319,7 +319,7 @@ __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within e
 fold and common between folds.
 ```{r eval = FALSE}
 crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10, 
-                   analyteType2perc = 0.10, analyteType2miss = 0.80,
+                   analyteType2perc = 0.10, analyteMiss = 0.80,
                    stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1), 
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, rsquaredCutoff = 0.2,

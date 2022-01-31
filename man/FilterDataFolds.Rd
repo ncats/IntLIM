@@ -9,7 +9,7 @@ FilterDataFolds(
   inputDataFolds,
   analyteType1perc = 0,
   analyteType2perc = 0,
-  analyteType2miss = 0,
+  analyteMiss = 0,
   cov.cutoff = 0,
   suppressWarnings = FALSE
 )
@@ -24,7 +24,7 @@ remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}
 \item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 
 (default: no filtering of analytes) (default:0)}
 
-\item{analyteType2miss}{missing value percent cutoff (0-1) for filtering analyte type 2 
+\item{analyteMiss}{missing value percent cutoff (0-1) for filtering analytes 
 (analytes with > 80\% missing values will be removed) (default:0)}
 
 \item{cov.cutoff}{percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)}

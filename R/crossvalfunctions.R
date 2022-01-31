@@ -12,7 +12,7 @@
 #' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
 #' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
 #' (default: no filtering of analytes) (default:0)
-#' @param analyteType2miss missing value percent cutoff (0-1) for filtering analyte type 2 
+#' @param analyteMiss missing value percent cutoff (0-1) for filtering analytes 
 #' (analytes with > 80\% missing values will be removed) (default:0)
 #' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
@@ -41,7 +41,7 @@ RunCrossValidation <- function(inputData,
                                folds, 
                                analyteType1perc=0, 
                                analyteType2perc=0,
-                               analyteType2miss=0,
+                               analyteMiss=0,
                                cov.cutoff=0,
                                stype="",
                                outcome=c(1), 
@@ -61,7 +61,7 @@ RunCrossValidation <- function(inputData,
   
   # Filter the folds.
   inputDataFilt <- FilterDataFolds(inputDataFolds,analyteType1perc,
-                                analyteType2perc, analyteType2miss,
+                                analyteType2perc, analyteMiss,
                                 cov.cutoff,
                                 suppressWarnings = suppressWarnings)
   
@@ -197,13 +197,13 @@ CreateCrossValFolds <- function(inputData,folds) {
 #' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
 #' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
 #' (default: no filtering of analytes) (default:0)
-#' @param analyteType2miss missing value percent cutoff (0-1) for filtering analyte type 2 
+#' @param analyteMiss missing value percent cutoff (0-1) for filtering analytes 
 #' (analytes with > 80\% missing values will be removed) (default:0)
 #' @param suppressWarnings whether to suppress warnings
 #' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
 #' @return filtData IntLimData object with input data after filtering
 FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
-                            analyteType2perc=0, analyteType2miss=0,
+                            analyteType2perc=0, analyteMiss=0,
                             cov.cutoff=0,
                             suppressWarnings=FALSE) {
   
@@ -214,7 +214,7 @@ FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
     inputDataFolds[[i]]$training <- FilterData(inputDataFolds[[i]]$training,
                                                analyteType1perc=analyteType1perc,
                                                analyteType2perc=analyteType2perc, 
-                                               analyteType2miss=analyteType2miss,
+                                               analyteMiss=analyteMiss,
                                                cov.cutoff=cov.cutoff,
                                                suppressWarnings=suppressWarnings)
     inputDataFolds[[i]]$testing <- inputDataFolds[[i]]$testing
