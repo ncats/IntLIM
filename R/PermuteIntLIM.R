@@ -4,7 +4,7 @@
 #' that any pairs being deemed significant by IntIM are not being suggested due to random chance, as is 
 #' sometimes a problem in correlative associations.
 #'
-#' @param inputData IntLimData object (output of ReadData()) with analylte levels and
+#' @param data IntLimData object (output of ReadData()) with analylte levels and
 #'  associated sample meta-data
 #' @param stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.
@@ -36,7 +36,7 @@
 #'                                  num.permutations = 100)
 #' }
 #' @export
-PermuteIntLIM <- function(data = inputData, 
+PermuteIntLIM <- function(data, 
                           stype, 
                           outcome, 
                           independent.var.type,
@@ -94,11 +94,11 @@ PermuteIntLIM <- function(data = inputData,
     rownames(analyte2) <- New_Analytes_2
     
     #Filtering for Low Variance
-    analyte2.var <- apply(analyte2, MARGIN = 1, FUN = var)
-    analyte1.var <- apply(analyte1, MARGIN = 1, FUN = var)
+    analyte2.var <- apply(analyte2, MARGIN = 1, FUN = stats::var)
+    analyte1.var <- apply(analyte1, MARGIN = 1, FUN = stats::var)
     
-    analyte2.cutoff <- quantile(analyte2.var, probs = filter.cutoff)
-    analyte1.cutoff <- quantile(analyte1.var, probs = filter.cutoff)
+    analyte2.cutoff <- stats::quantile(analyte2.var, probs = filter.cutoff)
+    analyte1.cutoff <- stats::quantile(analyte1.var, probs = filter.cutoff)
     
     analyte2.index <- which(analyte2.var <= analyte2.cutoff)
     analyte1.index <- which(analyte1.var <= analyte1.cutoff)
