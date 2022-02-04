@@ -43,7 +43,7 @@ https://ncats.github.io/IntLIM/IntLIMVignette.html
 
 Formatted data and codes to reproduce the NCI-60 and breast cancer analyses can be obtained from the following GitHub repository:
 
-https://github.com/ncats/IntLIM2.0ExtraDataVignettes
+https://github.com/ncats/IntLIMVignettes
 
 
 ## Running IntLIM's user-friendly web app:
