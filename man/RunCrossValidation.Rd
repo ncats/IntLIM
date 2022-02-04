@@ -23,7 +23,7 @@ RunCrossValidation(
   independent.var.type = c(1),
   remove.duplicates = FALSE,
   pvalcutoff = 0.05,
-  interactionCoeffPercentile = 0.5,
+  interactionCoeffPercentile = 0,
   rsquaredCutoff = 0,
   treecuts = 0,
   suppressWarnings = FALSE
@@ -68,9 +68,7 @@ pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
-(default bottom 10 percent (high negative coefficients) and top 10 percent 
-(high positive coefficients))}
+\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
 

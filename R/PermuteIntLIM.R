@@ -16,12 +16,10 @@
 #' @param independent.var.type '1' or '2' must be set as independent variable
 #' (default is '1')
 #' @param continuous boolean to indicate whether the data is continuous or discrete
-#' @param analyte.metadata boolean value to indicate whether the user has included analyte 
-#' metadata in the analysis
-#' @param pval.cutoff FDR adjusted p-value cutoff for number of significant multi-omic 
+#' @param pvalcutoff FDR adjusted p-value cutoff for number of significant multi-omic 
 #' pairs (default = 0.20)
-#' @param interactionCoeff.cutoff Interaction coefficient cutoff for the IntLIM linear model (default = 0.10)
-#' @param rsquared.cutoff Cutoff for the R-squared values for the models as a quality control (default = 0.50)
+#' @param interactionCoeffPercentile Interaction coefficient cutoff for the IntLIM linear model (default = 0.10)
+#' @param rsquaredCutoff Cutoff for the R-squared values for the models as a quality control (default = 0.50)
 #' @param num.permutations Number of permutations to be ran (default = 1)
 #' @param seed set.seed paramter allowing for custom random number generation seeds 
 #' @return List object with 1st slot populated with dataframe containing the R^2 values of the models, 
@@ -35,17 +33,16 @@
 #'                                  num.permutations = 100)
 #' }
 #' @export
-PermuteIntLIM <- function(data = inputData, 
-                          stype, 
-                          outcome, 
-                          independent.var.type,
-                          analyte.metadata,
-                          covar = NULL, 
-                          save.covar.pvals = TRUE, 
-                          continuous = TRUE,
-                          pval.cutoff = 0.20,
-                          interactionCoeff.cutoff = 0.10,
-                          rsquared.cutoff = 0.5,
+PermuteIntLIM <- function(data, 
+                          stype="", 
+                          outcome=1, 
+                          independent.var.type=1,
+                          covar = c(), 
+                          save.covar.pvals = FALSE, 
+                          continuous = FALSE,
+                          pvalcutoff = 0.05,
+                          interactionCoeffPercentile = 0,
+                          rsquaredCutoff = 0,
                           num.permutations = 1,
                           seed = 1) {
   
@@ -74,47 +71,45 @@ PermuteIntLIM <- function(data = inputData,
     sample.meta <- data.frame(data@sampleMetaData, check.names = FALSE)
     
     #Randomizing Analyte1 and Analyte2 Data
-    New_Analytes_1 <- sample(rownames(analyte1), size = nrow(analyte1), replace = FALSE)
-    rownames(analyte1) <- New_Analytes_1
-    
-    New_Analytes_2 <- sample(rownames(analyte2), size = nrow(analyte2), replace = FALSE)
-    rownames(analyte2) <- New_Analytes_2
+    New_Samples <- sample(rownames(sample.meta), size = nrow(sample.meta), replace = FALSE)
+    stype_perm <- sample.meta[New_Samples,stype]
+    sample.meta[,stype] <- stype_perm
     
     #Recompiling the InputData
     data@analyteType1 <- as.matrix(analyte1)
     data@analyteType2 <- as.matrix(analyte2)
     data@sampleMetaData <- as.data.frame(sample.meta)
-    
+
     #Running IntLIM
-    IntLIMResults <- IntLIM::RunIntLim(inputData = data, stype=stype, 
-                                       covar = covar, outcome = outcome, 
+    IntLIMResults <- IntLIM::RunIntLim(inputData = data, stype=stype,
+                                       covar = covar, outcome = outcome,
                                        independent.var.type = independent.var.type,
-                                       save.covar.pvals = save.covar.pvals, 
+                                       save.covar.pvals = save.covar.pvals,
                                        continuous = continuous)
-    
-    ProcessedResults <- IntLIM::ProcessResults(inputData = data, inputResults = IntLIMResults, 
-                                               pvalcutoff = pval.cutoff, 
-                                               interactionCoeffPercentile = interactionCoeff.cutoff, 
-                                               rsquaredCutoff = rsquared.cutoff)
-    
+
+    ProcessedResults <- IntLIM::ProcessResults(inputData = data, inputResults = IntLIMResults,
+                                               pvalcutoff = pvalcutoff,
+                                               interactionCoeffPercentile = interactionCoeffPercentile,
+                                               rsquaredCutoff = rsquaredCutoff)
+
     #Compiling Results
     r.squared <- mean(IntLIMResults@model.rsquared)
-    
+
     model.p.values <- ProcessedResults$FDRadjPval
-    num.unadj.sig <- length(which(model.p.values <= pval.cutoff)) 
-    
+    num.unadj.sig <- length(which(model.p.values <= pvalcutoff))
+
     avg.r2.vals <- c(avg.r2.vals, r.squared)
     sig.pairs <- c(sig.pairs, num.unadj.sig)
-    
-    pair.index <- which(model.p.values <= pval.cutoff)
-    
+
+    pair.index <- which(model.p.values <= pvalcutoff)
+
     sig.pairs.ids <- c()
     for(j in 1:length(pair.index)) {
-      current.id <- paste0(ProcessedResults$Analyte1[pair.index[j]], "__V__", 
+      current.id <- paste0(ProcessedResults$Analyte1[pair.index[j]], "__V__",
                            ProcessedResults$Analyte2[pair.index[j]])
       sig.pairs.ids <- c(sig.pairs.ids, current.id)
     }
-    
+
     sig.list[[i]] <- as.vector(sig.pairs.ids)
   }
   

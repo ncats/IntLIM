@@ -12,7 +12,7 @@ ProcessResults(
   inputResults,
   inputData,
   pvalcutoff = 0.05,
-  interactionCoeffPercentile = 0.5,
+  interactionCoeffPercentile = 0,
   rsquaredCutoff = 0
 )
 }

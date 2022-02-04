@@ -16,9 +16,7 @@
 #' (analytes with > 80\% missing values will be removed) (default:0)
 #' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
-#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
-#' (high positive coefficients))
+#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient
 #' @param treecuts user-selected number of clusters (of pairs) 
 #' to cut the tree into
 #' @param rsquaredCutoff cutoff for lowest r-squared value
@@ -51,29 +49,39 @@ RunCrossValidation <- function(inputData,
                                independent.var.type=c(1), 
                                remove.duplicates = FALSE,
                                pvalcutoff=0.05,
-                               interactionCoeffPercentile=0.5,
+                               interactionCoeffPercentile=0,
                                rsquaredCutoff = 0.0,
                                treecuts = 0,
                                suppressWarnings=FALSE) {
 
   # Create the folds.
-  inputDataFolds <- CreateCrossValFolds(inputData,folds)
+  inputDataFolds <- CreateCrossValFolds(inputData=inputData,
+                                        folds=folds)
   
   # Filter the folds.
-  inputDataFilt <- FilterDataFolds(inputDataFolds,analyteType1perc,
-                                analyteType2perc, analyteMiss,
-                                cov.cutoff,
-                                suppressWarnings = suppressWarnings)
+  inputDataFilt <- FilterDataFolds(inputData=inputDataFolds,
+                                   analyteType1perc=analyteType1perc,
+                                   analyteType2perc=analyteType2perc, 
+                                   analyteMiss=analyteMiss,
+                                   cov.cutoff=cov.cutoff,
+                                   suppressWarnings = suppressWarnings)
   
   # Run IntLIM with the types specified.
-  inputResults <- RunIntLimAllFolds(inputDataFilt,stype,outcome, covar, 
-                                  continuous, save.covar.pvals, independent.var.type, 
-                                  remove.duplicates)
+  inputResults <- RunIntLimAllFolds(inputData=inputDataFilt,
+                                    stype=stype,
+                                    outcome=outcome, 
+                                    covar=covar,
+                                    continuous=continuous, 
+                                    save.covar.pvals=save.covar.pvals, 
+                                    independent.var.type=independent.var.type,
+                                    remove.duplicates=remove.duplicates)
   
   # Process all results.
-  sigResults <- ProcessResultsAllFolds(inputResults, inputDataFilt, pvalcutoff,
-                                         interactionCoeffPercentile,
-                                         rsquaredCutoff, treecuts)
+  sigResults <- ProcessResultsAllFolds(inputResults=inputResults, 
+                                       inputData=inputDataFilt, 
+                                       pvalcutoff=pvalcutoff,
+                                       interactionCoeffPercentile=interactionCoeffPercentile,
+                                       rsquaredCutoff=rsquaredCutoff)
     
   # Return everything.
   return(list(folds = inputDataFolds, filtered = inputDataFilt, results = inputResults,
@@ -211,7 +219,7 @@ FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
   for(i in 1:length(inputDataFolds)){
     
     # Filter training and testing data.
-    inputDataFolds[[i]]$training <- FilterData(inputDataFolds[[i]]$training,
+    inputDataFolds[[i]]$training <- FilterData(inputData=inputDataFolds[[i]]$training,
                                                analyteType1perc=analyteType1perc,
                                                analyteType2perc=analyteType2perc, 
                                                analyteMiss=analyteMiss,
@@ -246,7 +254,7 @@ RunIntLimAllFolds <- function(inputData,stype="",outcome=1, covar=c(),
                               continuous = FALSE, save.covar.pvals=FALSE, independent.var.type=1, 
                               remove.duplicates = FALSE, suppressWarnings = FALSE){
   myres <- lapply(1:length(inputData), function(i){
-    res<-IntLIM::RunIntLim(inputData[[i]]$training,
+    res<-IntLIM::RunIntLim(inputData=inputData[[i]]$training,
                            stype=stype, 
                            save.covar.pvals = save.covar.pvals, 
                            outcome = outcome, 

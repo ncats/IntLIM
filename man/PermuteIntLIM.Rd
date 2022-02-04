@@ -6,16 +6,15 @@
 \usage{
 PermuteIntLIM(
   data,
-  stype,
-  outcome,
-  independent.var.type,
-  analyte.metadata,
-  covar = NULL,
-  save.covar.pvals = TRUE,
-  continuous = TRUE,
-  filter.cutoff = 0.2,
-  pval.cutoff = 0.05,
-  adj.pval.cutoff = 0.2,
+  stype = "",
+  outcome = 1,
+  independent.var.type = 1,
+  covar = c(),
+  save.covar.pvals = FALSE,
+  continuous = FALSE,
+  pvalcutoff = 0.05,
+  interactionCoeffPercentile = 0,
+  rsquaredCutoff = 0,
   num.permutations = 1,
   seed = 1
 )
@@ -33,9 +32,6 @@ in the interaction term). Only 2 categories are currently supported.}
 \item{independent.var.type}{'1' or '2' must be set as independent variable
 (default is '1')}
 
-\item{analyte.metadata}{boolean value to indicate whether the user has included analyte 
-metadata in the analysis}
-
 \item{covar}{Additional variables from the phenotypic data that be integrated into linear model}
 
 \item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
@@ -43,13 +39,12 @@ which can be analyzed later but will also lengthen computation time. The default
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
 
-\item{filter.cutoff}{percentile cutoff based on variance for both analytes to remove lowest variances in
-dataset (default = 0.20)}
-
-\item{pval.cutoff}{unadjusted p-value cutoff for number of significant multi-omic pairs (default = 0.05)}
-
-\item{adj.pval.cutoff}{FDR adjusted p-value cutoff for number of significant multi-omic 
+\item{pvalcutoff}{FDR adjusted p-value cutoff for number of significant multi-omic 
 pairs (default = 0.20)}
+
+\item{interactionCoeffPercentile}{Interaction coefficient cutoff for the IntLIM linear model (default = 0.10)}
+
+\item{rsquaredCutoff}{Cutoff for the R-squared values for the models as a quality control (default = 0.50)}
 
 \item{num.permutations}{Number of permutations to be ran (default = 1)}
 

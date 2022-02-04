@@ -19,8 +19,8 @@
 ProcessResults <- function(inputResults,
 				inputData,
 				pvalcutoff=0.05,
-				interactionCoeffPercentile=0.5,
-				rsquaredCutoff = 0.0){
+				interactionCoeffPercentile=0,
+				rsquaredCutoff = 0){
   
   # Check input types.
   if(class(inputResults) != "IntLimResults"){
