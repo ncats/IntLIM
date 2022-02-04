@@ -275,7 +275,8 @@ ___NA___ for continuous phenotypes.
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
                                        inputData = inputDatafilt, 
                                        pvalcutoff = 0.10, 
-                                       rsquaredCutoff = 0.2)
+                                       rsquaredCutoff = 0.2,
+                                       interactionCoeffPercentile = 0.5)
 ```
 The __HistogramPairs()__ function plots the count of analyte pairs by either
 outcome or independent variable analyte.
@@ -315,8 +316,23 @@ crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 
                    stype="drugscore", covar = c("cellnbr"), outcome = c(1), 
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, diffcorr = NA, rsquaredCutoff = 0.2,
-                   folds = 4, corrtype = NA, continuous = TRUE)
+                   folds = 4, corrtype = NA, continuous = TRUE,
+                   interactionCoeffPercentile = 0.5)
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
+```
+
+##Run Permutation
+You can also choose to run end-to-end permutation. This combines the steps of
+permuting, running IntLIM, and processing results for multiple permutations.
+__PermutationSummary__ returns a summary of the permutation results and
+(optionally) a violin plot of the number of significant pairs and analytes.
+```{r eval = FALSE}
+perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "drugscore", outcome = 1,
+                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5, 
+                   rsquaredCutoff = 0.2, covar = c("cellnbr"),
+                   num.permutations = 5, continuous = TRUE)
+summary <- PermutationSummary(permResults = perm.res, inputResults = myres.sig,
+                              plot = TRUE)
 ```
 ##References
 

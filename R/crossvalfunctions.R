@@ -59,7 +59,7 @@ RunCrossValidation <- function(inputData,
                                         folds=folds)
   
   # Filter the folds.
-  inputDataFilt <- FilterDataFolds(inputData=inputDataFolds,
+  inputDataFilt <- FilterDataFolds(inputDataFolds=inputDataFolds,
                                    analyteType1perc=analyteType1perc,
                                    analyteType2perc=analyteType2perc, 
                                    analyteMiss=analyteMiss,

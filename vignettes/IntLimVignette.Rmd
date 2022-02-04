@@ -277,7 +277,8 @@ is a list of significant analyte pairs.
 ```{r}
 myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
                                        inputData = inputDatafilt, 
-                                       pvalcutoff = 0.10, rsquaredCutoff = 0.2)
+                                       pvalcutoff = 0.10, rsquaredCutoff = 0.2,
+                                       interactionCoeffPercentile = 0.5)
 ```
 
 The __InteractionCoefficientGraph()__ function allows the user to observe the 
@@ -322,10 +323,25 @@ crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 
                    analyteType2perc = 0.10, analyteMiss = 0.80,
                    stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1), 
                    independent.var.type = c(2), save.covar.pvals = TRUE,
-                   pvalcutoff = 0.10, rsquaredCutoff = 0.2,
+                   pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5
                    folds = 4)
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
+
+##Run Permutation
+You can also choose to run end-to-end permutation. This combines the steps of
+permuting, running IntLIM, and processing results for multiple permutations.
+__PermutationSummary__ returns a summary of the permutation results and
+(optionally) a violin plot of the number of significant pairs and analytes.
+```{r eval = FALSE}
+perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "PBO_vs_Leukemia", outcome = 1,
+                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5, 
+                   rsquaredCutoff = 0.2, covar = c("cellnbr"),
+                   num.permutations = 5, continuous = TRUE)
+summary <- PermutationSummary(permResults = perm.res, inputResults = myres.sig,
+                              plot = TRUE)
+```
+
 ##References
 
 Siddiqui JK, Baskin E, Liu M, Cantemir-Stone CZ, Zhang B, Bonneville R, McElroy JP, 

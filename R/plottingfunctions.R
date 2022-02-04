@@ -824,3 +824,88 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
       stop("Only two valid types:  outcome or independent.  Invalid type entered")
   }
 }
+
+#' Return the number of significant analytes / pairs per permutation and the number 
+#' of permutations in which each analyte is significant.
+#' If plot = TRUE, show a box plot of number of significant analytes over permutations, 
+#' overlaid with the number of significant analytes in the original data.
+#'
+#' @param inputResults Data frame with model results (output of ProcessResults())
+#' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
+#' @param plot Whether or not to show the boxplot. Default is TRUE.
+#' @export
+PermutationSummary <- function(inputResults, permResults, plot){
+  
+  # Prevent "visible binding for global variable" notes.
+  Count <- Type <- NULL
+  
+  # Compute pair significance counts.
+  allSignificantPairs <- do.call(c, permResults[[2]])
+  pairSignificanceCounts <- table(allSignificantPairs)
+  pairSignificanceCounts <- as.data.frame(pairSignificanceCounts[order(-pairSignificanceCounts)])
+  
+  # Compute summary.
+  pairCountDistrib <- permResults[[1]]$Num_Significant_Pairs
+  analyte1 <- lapply(1:length(permResults[[2]]), function(i){
+    return(unlist(lapply(permResults[[2]][[i]], function(string){
+      return(strsplit(string, split="__V__")[[1]][1])
+    })))
+  })
+  analyte2 <- lapply(1:length(permResults[[2]]), function(i){
+    return(unlist(lapply(permResults[[2]][[i]], function(string){
+      return(strsplit(string, split="__V__")[[1]][2])
+    })))
+  })
+  analyte1CountDistrib <- unlist(lapply(1:length(analyte1), function(i){
+    return(length(unique(analyte1[[i]])))
+  }))
+  analyte2CountDistrib <- unlist(lapply(1:length(analyte2), function(i){
+    return(length(unique(analyte2[[i]])))
+  }))
+  countDistribs <- data.frame(Pairs = pairCountDistrib, 
+                              Independent = analyte1CountDistrib,
+                              Outcome = analyte2CountDistrib)
+
+  # Set up data for input.
+  significantCounts <- data.frame(Count=c(countDistribs$Pairs, 
+                                          countDistribs$Independent,
+                                          countDistribs$Outcome),
+                                  Type=c(rep("Pair", nrow(permResults[[1]])),
+                                         rep("Independent.Variable", nrow(permResults[[1]])),
+                                         rep("Outcome", nrow(permResults[[1]]))))
+  
+  # Compute the same for the original data.
+  PairCount <- nrow(inputResults)
+  inputIndependentCount <- length(unique(inputResults$Analyte1))
+  inputOutcomeCount <- length(unique(inputResults$Analyte2))
+
+  # Make plot.
+  cols <- c("Original.Data"="red")
+  fills <- c("Permuted.Data"="black")
+  if(plot == TRUE){
+    plt <- ggplot2::ggplot(significantCounts, ggplot2::aes(x=Type, y=Count)) + 
+      ggplot2::geom_violin(ggplot2::aes(fill = "Permuted.Data")) + 
+      ggplot2::theme_bw() +
+      ggplot2::theme(axis.title.x=ggplot2::element_blank(), 
+                     panel.border = ggplot2::element_blank(),
+                     panel.grid.major = ggplot2::element_blank(),
+                     panel.grid.minor = ggplot2::element_blank(),
+                     axis.line = ggplot2::element_line(colour = "black")) + 
+      ggplot2::annotation_logticks(sides = "l", scaled = TRUE) + 
+      ggplot2::scale_y_log10() + 
+      ggplot2::geom_boxplot(width=0.05, fill = "white") + 
+      ggplot2::geom_segment(ggplot2::aes(x = 0.6, xend = 1.4, y = inputIndependentCount, 
+                                         yend = inputIndependentCount, color = "Original.Data")) + 
+      ggplot2::geom_segment(ggplot2::aes(x = 1.6, xend = 2.4, y = inputOutcomeCount, 
+                                         yend = inputOutcomeCount, color = "Original.Data")) +
+      ggplot2::geom_segment(ggplot2::aes(x = 2.6, xend = 3.4, y = PairCount, 
+                                         yend = PairCount, color = "Original.Data")) +
+      ggplot2::scale_colour_manual(name = "", values=cols) +
+      ggplot2::scale_fill_manual(name = "", values=fills)
+    print(plt)
+  }
+  
+  # Return summary.
+  return(list(SignificanceCountTable = pairSignificanceCounts,
+              CountDistributions = countDistribs))
+}
