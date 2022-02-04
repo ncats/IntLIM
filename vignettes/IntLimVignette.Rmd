@@ -17,7 +17,7 @@ result_dir <- "~\\IntLIM_vignette_results"
 dir.create(result_dir)
 ```
 
-##Introduction
+## Introduction
 
 Interpretation of multi-omics data is very challenging.  The IntLIM package aims 
 to integrate multiple types of omics data.  Unlike other approaches, IntLIM is 
@@ -32,7 +32,7 @@ can be found on <a href="https://bmcbioinformatics.biomedcentral.com/articles/10
 interaction coefficient percentiles, and r-squared values.
 5) plot/visualize specific analyte associations. 
 
-##Installation
+## Installation
 
 IntLIM is an R package and can be run on version >= 3.2.0. 
 
@@ -58,7 +58,7 @@ IntLIM can be loaded using the library function
 library(IntLIM)
 ```
 
-##Inputting Analyte Level Data
+## Inputting Analyte Level Data
 
 The first step is importing in the multi-omic data.  To this end we have provided 
 a sample data file for users wishing to use IntLIM.  
@@ -146,7 +146,7 @@ metabolites.
 IntLIM::ShowStats(IntLimObject = inputData)
 ```
 
-##Filtering and Observing Data
+## Filtering and Observing Data
 
 Optionally, the __FilterData()__ function allows the user to filter out the 
 features (analytes) based on their mean values. Users should input a percentile 
@@ -184,7 +184,7 @@ cancers) vs. the leukemia group.
 IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
 ```
 
-##Run IntLIM
+## Run IntLIM
 The linear models are run by the __RunIntLim()__ function.  The __stype__ command 
 allows the user to select a column from the sample meta data for the two categories 
 to be compared (two cancer types, tumor vs. non-tumor, etc).  Currently, IntLIM 
@@ -268,7 +268,7 @@ Process the results and filter pairs of analytes based on adjusted p-values and
 differences in correlation coefficients between groups 1 and 2.  Then plot heatmap 
 of significant analyte pairs
 
-##Filter Results
+## Filter Results
 
 The __ProcessResults()__ function allows the user to filter the results by FDR 
 p-values (default set at 0.05) between the two groups.  The output 
@@ -313,7 +313,7 @@ the analyses into zipped CSV files.
 IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
 IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = "\\"))
 ```
-##Run Cross-Validation
+## Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
 reading, filtering, running IntLIM, and processing the results for multiple folds.
 __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within each
@@ -328,7 +328,7 @@ crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
 
-##Run Permutation
+## Run Permutation
 You can also choose to run end-to-end permutation. This combines the steps of
 permuting, running IntLIM, and processing results for multiple permutations.
 __PermutationSummary__ returns a summary of the permutation results and
@@ -342,7 +342,7 @@ summary <- PermutationSummary(permResults = perm.res, inputResults = myres.sig,
                               plot = TRUE)
 ```
 
-##References
+## References
 
 Siddiqui JK, Baskin E, Liu M, Cantemir-Stone CZ, Zhang B, Bonneville R, McElroy JP, 
 Coombes KR, Mathé EA. IntLIM: integration using linear models of metabolomics and 
