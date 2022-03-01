@@ -1,429 +1,598 @@
-#' Generic function to create constructor of MultiDataSet gene object
-#'
-#' @include MetaboliteSet_addMetabolite.R
-#' @include AllClasses.R 
-#'
-#' @param genefdata gene meta data
-#' @param metabfdata metabolite meta data
-#' @param pdata sample meta data
-#' @param geneid name of column from metabolite meta data to be used as id 
-#'	(required if a gene meta data file is present, must match gene expression matrix))
-#' @param metabid name of column from gene meta data to be used as id
-#'      (required if a metabolite meta data file is present, must match metabolite abundances matrix))
-#' @param metabdata metabolite abundances (samples are in columns)
-#' @param genedata gene expression (samples are in columns)
-#' @param logmetab T/F 
-#' @param loggene T/F
-CreateIntLimObject <- function(genefdata, metabfdata, pdata, geneid, metabid, 
-	metabdata, genedata, logmetab=FALSE,loggene=FALSE) {
-
-	# Check that feature data and abundance data metabolites corresponds
-        if (!is.null(metabfdata)) {
-        if(length(which(colnames(metabfdata)=='id'))!=1) {
-                stop(paste("metabid provided",metabid,"does not exist in metabolite meta data file"))} else if 
-	(length(intersect(rownames(metabdata),as.character(metabfdata[,metabid])))<nrow(metabdata)){
-                stop("Metabolites in abundance data file and metabolite meta data file are not equal")} else {
-                myind <- as.numeric(lapply(rownames(metabdata),function(x) {
-                        which(as.character(metabfdata[,'id'])==x)[1]}))
-                        metabpdata<-pdata[myind,,drop=FALSE]}
-
-	rownames(metabfdata)=as.character(metabfdata[,'id'])
-        }
-
-        # Check that samples data and abundance data samples correspond
-        if(length(intersect(colnames(metabdata),rownames(pdata)))<ncol(metabdata)){
-                stop("All samples in abundance data file must be in metabolite meta data file")
-        } else {
-                myind <- as.numeric(lapply(colnames(metabdata),function(x) {
-                        which(rownames(pdata)==x)[1]}))
-                        metabpdata<-pdata[myind,,drop=FALSE]
-        }
-
-	#new data frames are set for phenoData and featureData
-    
-
-	metabpdata$id=rownames(metabpdata)
-
-	metabphenoData <- Biobase::AnnotatedDataFrame(data = metabpdata)
-
-	if (logmetab == TRUE){
-		metabdata <- log2(metabdata)
-	}
-	
-	if(is.null(metabfdata)) {
-		metabfdata <- data.frame(id = rownames(metabdata),stringsAsFactors=FALSE)
-                rownames(metabfdata) <- metabfdata[,1]
-	}
-	# Make sure order of feature data is the same as the data matrix:
-	myind=as.numeric(lapply(rownames(metabdata),function(x) which(metabfdata[,"id"]==x)))
-        metabfdata <- data.frame(metabfdata[myind,],stringsAsFactors=FALSE)
-	rownames(metabfdata) <- metabfdata[,1]
-	metabfeatureData <- Biobase::AnnotatedDataFrame(data = metabfdata)
-	metab.set <- methods::new("MetaboliteSet",metabData = metabdata, 
-		phenoData = metabphenoData, featureData = metabfeatureData)
-	
-
-	#####  Now the genes
-	# Check that feature data and gene expression data corresponds
-       if(!is.null(genefdata)) {
-       if(length(which(colnames(genefdata)=="id"))!=1) {
-                stop(paste("geneid provided",geneid,"does not exist in gene meta data file"))
-        } else if(length(intersect(rownames(genedata),as.character(genefdata[,'id']))) < nrow(genedata)){
-                stop("Genes in expression data file and gene meta data file are not equal")
-        } else {
-                myind <- as.numeric(lapply(rownames(genedata),function(x) {
-                        which(as.character(genefdata[,'id'])==x)[1]}))
-                        genepdata<-pdata[myind,,drop=FALSE]
-        }
-
-        rownames(genefdata)=as.character(genefdata[,'id'])
-        }
-        # Check that samples data and abundance data samples correspond
-        if(length(intersect(colnames(genedata),rownames(pdata)))<ncol(genedata)){ 
-                stop("Samples in expression data file and sample meta data file are not equal")
-        } else {
-		myind <- as.numeric(lapply(colnames(genedata),function(x) {
-			which(rownames(pdata)==x)[1]}))
-			genepdata<-pdata[myind,,drop=FALSE]
-	}
-
-        #new data frames are set for phenoData and featureData
-        if (loggene == TRUE){
-                genedata <- log2(genedata)
-        }
-
-        gene.set <- Biobase::ExpressionSet(assayData=as.matrix(genedata))
-	if(is.null(genefdata)) {
-		genefdata <- data.frame(id = rownames(genedata))
-		rownames(genefdata) <- genefdata[,1]
-        }
-	if(length(which(colnames(genefdata)=="chromosome"))==0) {
-		genefdata$chromosome <- rep("chr",nrow(genefdata))}
-	if(length(which(colnames(genefdata)=="start"))==0) {
-	        genefdata$start <- rep(0,nrow(genefdata))}
-	if(length(which(colnames(genefdata)=="end"))==0) {
-	        genefdata$end <- rep(0,nrow(genefdata))}
-	# Make sure that the order of genefdata is the same as the input data
-	myind=as.numeric(lapply(rownames(genedata),function(x) which(genefdata$id==x)))
-	genefdata <- genefdata[myind,]
-	Biobase::fData(gene.set) <- data.frame(genefdata,stringAsFactors=FALSE)
-	genepdata$id=rownames(genepdata)
-	Biobase::pData(gene.set) <- genepdata
-	
-
-	multi <- MultiDataSet::createMultiDataSet()
-	multi1 <- MultiDataSet::add_genexp(multi, gene.set)
-	multi2 <- add_metabolite(multi1, metab.set)
-	return(multi2)
-}
-
-
-#' Function that returns a list of all data for samples in common between metabolite and gene datasets
-#'
-##' @include AllClasses.R
-#'
-#' @import MultiDataSet
-#' @param inputData MultiDataSet object (output of ReadData())
-#' @param stype category to color-code by (can be more than two categories)
-#' @param covar vector of additional variables to be incorporated into model
-#' @param class.covar class of additional variables
-getCommon <- function(inputData,stype=NULL, covar = NULL, class.covar = NULL) {
-   incommon<-MultiDataSet::commonSamples(inputData)
-   mp <- Biobase::pData(incommon[["metabolite"]])
-   gp <- Biobase::pData(incommon[["expression"]])
-
-   if(all.equal(mp[,stype],gp[,stype])[1] != TRUE) {
-        stop(paste("The column", stype,"for the samples in common between the metabolite and gene datasets are not equal.  Please check your input."))
+#' @name RemovePlusInCovars
+#' @title RemovePlusInCovars
+# If there is a '+' in the covariate names, this will cause a problem
+# because the covariates will be collapsed using '+'. For example, if
+# covariate names are 'age', 'sex', and 'stage3+4', the formula will
+# become 'f ~ a + type + a:type + age + sex + stage3 + 4'. We fix
+# this problem by changing all '+' to 'plus'.
+#' @param covar vector of additional vectors to consider
+#' @param sampleDataColnames vector of column names, which is a superset
+#' of the covar vector.
+#' @return list containing two elements: new covariates and new column names.
+RemovePlusInCovars <- function(covar=c(), sampleDataColnames){
+  # Find which covariates have plus signs.
+  which_plus <- which(grepl("+", covar, fixed = TRUE) == TRUE)
+  oldCovars <- covar
+  
+  # Replace each plus sign with "plus".
+  covar <- unlist(lapply(1:length(covar), function(i){
+    retval <- covar[i]
+    if(i %in% which_plus){
+      splitOnPlus <- strsplit(covar[i], "+", fixed = TRUE)
+      retval <- paste(splitOnPlus[[1]], collapse = "plus")
     }
-
-
-   gene <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
-   metab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
-
-   # Force the order to be the same, in case it isn't
-   p <- mp[rownames(gp),]
-   p.0 <- p
-   metab <- metab[,colnames(gene)]
-
-   if(!is.null(stype)) {
-	p <- p[,stype]
-        uniqp <- unique(p)
-
-	uniqtypes <- unique(p)
-        # Deal with missing values or ""
-        if(length(which(p==""))>0) {
-                new.p <- p[which(p!="")]
-		metab <- metab[,which(p!="")]
-		gene <- gene[,which(p!="")]
-		p <- new.p
-        }
-        if(length(which(is.na(p)))>0) {
-                new.p <- p[which(!is.na(p))]
-                metab <- metab[,which(!is.na(p))]
-                gene <- gene[,which(!is.na(p))]
-		p <- new.p
-        }
-   }
-   
-   if(!is.null(covar)){
-       
-       if (length(covar %in% colnames(p.0)) != sum(covar %in% colnames(p.0))){
-           stop("Additional variable names not in pData")
-       }
-       covar_matrix <- p.0[colnames(gene),covar, drop = FALSE]
-       na.covar <- which(is.na(covar_matrix) | covar_matrix == '',arr.ind = TRUE)
-       na.covar.list <- unique(rownames(na.covar))
-       new.overall.list <- setdiff(colnames(gene), na.covar.list)
-       
-       covar_matrix <- covar_matrix[new.overall.list,,drop = FALSE]
-       
-       class.var <- apply(covar_matrix,2,class)
-       
-       gene <- gene[,new.overall.list]
-       metab <- metab[,new.overall.list]
-       p <- p.0[new.overall.list,stype]
-       
-       if(!(is.null(class.covar))){
-           
-           if(length(class.covar) != length(covar)){
-               stop("lengths of covar and class.covar not the same")
-           }
-           len.covar <- length(covar)
-           for(i in 1:len.covar){
-               if(class.covar[i] == 'numeric'){
-                   
-                   covar_matrix[,i] <- as.numeric(covar_matrix[,i])
-                   
-               }else{
-                   
-                   covar_matrix[,i] <- as.factor(as.character(covar_matrix[,i]))
-                   
-               }
-           }
-       }
-       
-   }else{
-       covar_matrix <- NULL
-   }
-
-   # Check that everything is in right order
-   if(!all.equal(rownames(mp),rownames(gp)) || !all.equal(colnames(metab),colnames(gene))){ 
-	stop("Something went wrong with the merging!  Sample names of input files may not match.")
-   } else {
-   out <- list(p=as.factor(as.character(p)),gene=gene,metab=metab, covar_matrix=covar_matrix)
-   }
-   return(out)
+    return(retval)
+  }))
+  
+  # Replace the plus signs in the sampleMetaData column names as well.
+  sampleDataColnames <- unlist(lapply(1:length(sampleDataColnames),
+                                                     function(i){
+                                                       retval <- sampleDataColnames[i]
+                                                       if(retval %in% oldCovars){
+                                                         whichMatch <- which(oldCovars == retval)
+                                                         retval <- covar[whichMatch]
+                                                       }
+                                                       return(retval)
+                                                     }))
+  # Return new values.
+  return(list(covar = covar, sampleDataColnames = sampleDataColnames))
 }
 
 #' Function that runs linear models and returns interaction p-values.
 #'
-#' @include MetaboliteSet_addMetabolite.R
 #' @include AllClasses.R
 #'
-#' @param incommon MultiDataSet object (output of ReadData()) with gene
-#' @param outcome 'metabolite' or 'gene' must be set as outcome/independent variable 
-#' (default is 'metabolite')
+#' @param incommon Named list (output of 
+#' FilterData()) with analyte levels, 
+#' and associated meta-data
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' (default is '1')
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
 #' @param type vector of sample type (by default, it will be used in the interaction term).
 #' Only 2 categories are currently supported.
 #' @param covar vector of additional vectors to consider
-RunLM <- function(incommon, outcome="metabolite", type=NULL, covar=NULL) { 
-
-    gene <- incommon$gene
-    metab <- incommon$metab
- 
-    uniqtypes <- unique(type)
-    if(length(uniqtypes)!=2) {
-	stop("The number of unique categores is not 2.")
+#' @param continuous boolean to indicate whether the data is continuous or discrete
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
+#' (rather than interaction terms).
+#' @param keep.highest.pval boolean to indicate whether or not to remove the 
+#' pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param suppressWarnings whether or not to suppress warnings.
+RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c(), 
+                  continuous=FALSE, save.covar.pvals = FALSE, keep.highest.pval = FALSE,
+                  suppressWarnings = FALSE) {
+  
+  # Initialize types 1 and 2 and warning list.
+  type1 <- incommon@analyteType1
+  type2 <- incommon@analyteType2
+  
+  # Initialize covariate matrix, type, and messages.
+  covarMatrix <- as.matrix(incommon@sampleMetaData[,covar])
+  stype <- type
+  mymessage<-list()
+  if(length(covar)>0){
+    # If one of the covariate names contains a plus sign, change it because this
+    # will cause problems when constructing the formula.
+    adjNames <- RemovePlusInCovars(covar, colnames(incommon@sampleMetaData))
+    covar <- adjNames$covar
+    colnames(incommon@sampleMetaData) <- adjNames$sampleDataColnames
+    
+    # Convert covariates to matrix. Ensure that matrix is one-hot encoded.
+    f <- paste('~ 0 + ', paste(covar, collapse = ' + '))
+    dat <- incommon@sampleMetaData[,covar]
+    if(length(covar) == 1){
+      dat <- data.frame(V1 = incommon@sampleMetaData[,covar])
+      colnames(dat) <- covar[1]
     }
+    covarMatrix <- stats::model.matrix(stats::as.formula(f), data = dat)
+    covar <- colnames(covarMatrix)
+    
+    # Since names will be changed now, we need to remove plus signs again. For example,
+    # if we have a variable 'treatment' that has values 'med1', 'med2', and 'med1+med2',
+    # the column names will now include 'treatmentmed1' and 'treatmentmed1+med2'.
+    adjNames <- RemovePlusInCovars(covar, colnames(covarMatrix))
+    covar <- adjNames$covar
+    colnames(covarMatrix) <- adjNames$sampleDataColnames
+  }
 
-    genesd1 <- as.numeric(apply(gene[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
-    metabsd1 <- as.numeric(apply(metab[,which(type==uniqtypes[1])],1,function(x) stats::sd(x,na.rm=T)))
-    genesd2 <- as.numeric(apply(gene[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
-    metabsd2 <- as.numeric(apply(metab[,which(type==uniqtypes[2])],1,function(x) stats::sd(x,na.rm=T)))
+  # Find all standard deviations.
+  type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
+  type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
+  covarsd <- as.numeric(apply(covarMatrix,2,function(x){
+    return(stats::sd(x,na.rm=T))}))
+  if(class(stype) == "character"){
+    stype <- as.numeric(as.factor(stype))
+  }else if(class(stype) == "factor"){
+    stype <- as.numeric(stype)
+  }
+  stypesd <- stats::sd(stype,na.rm=T)
 
-    mymessage=""
-    if(length(which(genesd1==0))>0 || length(which(genesd2==0))>0) {
-	toremove <- c(which(genesd1==0),which(genesd2==0))
-	gene <- gene[-toremove,]
-	mymessage <- c(mymessage,paste("Removed",length(toremove),"genes that had a standard deviation of 0:"))
-	mymessage <- c(mymessage,rownames(gene)[toremove])
+  # If the standard deviation of the phenotype is zero, then stop.
+  if(stypesd == 0){
+    stop("stype variable has a standard deviation of zero. Cannot run.")
+  }
+  # If the standard deviation of analyte type 1 is zero, then remove and add a warning.
+  if(length(which(type1sd==0))>0) {
+    toremove <- c(which(type1sd==0))
+    namestoremove <- rownames(type1)[toremove]
+    type1 <- type1[-toremove,]
+    mymessage[[length(mymessage)+1]] <- paste("Removed",length(toremove),"analytes of",
+                                              "type 1 that had",
+                                              "a standard deviation of 0:",
+                                              namestoremove)
+  }
+  # If the standard deviation of analyte type 2 is zero, then remove and add a warning.
+  if(length(which(type2sd==0))>0) {
+    toremove <- c(which(type2sd==0))
+    namestoremove <- rownames(type2)[toremove]
+    type2 <- type2[-toremove,]
+    mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),"analytes of",
+                                             "type 2 that had",
+                                             "a standard deviation of 0:",
+                                             namestoremove)
+  }
+  # If the standard deviation of a covariate is zero, then remove and add a warning.
+  if(length(which(covarsd==0))>0) {
+    toremove <- c(which(covarsd==0))
+    namestoremove <- colnames(covarMatrix)[toremove]
+    namestokeep <- colnames(covarMatrix)[-toremove]
+    rows <- rownames(covarMatrix)
+    covarMatrix <- as.matrix(covarMatrix[,-toremove])
+    colnames(covarMatrix) <- namestokeep
+    rownames(covarMatrix) <- rows
+    covar <- namestokeep
+    mymessage[[length(mymessage)+1]] <-paste("Removed",length(toremove),
+                                             "covariates that had",
+                                             "a standard deviation of 0:",
+                                             namestoremove)
+  }
+  mat.list <- getStatsAllLM(outcome = outcome, independentVariable = independentVariable,
+                            type1 = type1, type2 = type2, type =
+                              type, covar = covar, covarMatrix = covarMatrix,
+                            continuous = continuous, save.covar.pvals = save.covar.pvals,
+                            remove.tri = keep.highest.pval, suppressWarnings = suppressWarnings)
+  if(length(mat.list[["warnings"]])>0){
+    for(i in 1:length(mat.list[["warnings"]])){
+      mymessage[[length(mymessage)+1]] <- mat.list[["warnings"]][[i]]
     }
-    if(length(which(metabsd1==0))>0 || length(which(metabsd2==0))>0) {
-        toremove <- c(which(metabsd1==0),which(metabsd2==0))
-        metab <- metab[-toremove,]
-        mymessage <- c(mymessage,paste("Removed",length(toremove),"metabolites that had a standard deviation of 0:"))
-        mymessage <- c(mymessage,rownames(metab)[toremove])
-    }
+  }
+  mat.list <- mat.list[["list"]]
 
-    if (outcome == "metabolite") {
-        arraydata <- data.frame(metab)
-        #form <- stats::formula(m ~ g + type + g:type)
-        # Retrieve pvalues by iterating through each gene
-        numgenes <- nrow(gene)
-	numprog <- round(numgenes*0.1)
-	form.add <- "Y ~ g + type + g:type"
-	    if (!(is.null(covar))){
-	        form.add <- "Y ~ g + type + g:type"
-	        
-	        len.covar <- length(covar)
-	        for (i in 1:len.covar){
-	            form.add <- paste(form.add, '+', covar[i])
-	        }
-	    }
-	
-	
-        list.pvals <- lapply(1:numgenes, function(x) {
-                #print(x)
-                g <- as.numeric(gene[x,])
-                
-                if(is.null(covar)){
-                clindata <- data.frame(g, type)
-                }else{
-                    clindata <- data.frame(g, type, incommon$covar_matrix)
-                }
-                
-                mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
-                        arraydata = arraydata)
-                term.pvals <- rownames(mlin$p.value.coeff)
-                index.interac <- grep('g:type', term.pvals)
-                
-                p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-                
-                
-                #p.val.vector <- as.vector(mlin@p.value.coeff[4,])
-                # Print out progress every 1000 genes
-        	if (numprog != 0){
-	        if (x %% numprog == 0){
-                    progX <- round(x/numgenes*100)
-                    print(paste(progX,"% complete"))
-                }
-	}	
-                return(p.val.vector)
-        })
-    mat.pvals <- do.call(rbind, list.pvals)
-    # adjust p-values
-    row.pvt <- dim(mat.pvals)[1]
-    col.pvt <- dim(mat.pvals)[2]
-    myps <- as.vector(mat.pvals)
-    mypsadj <- stats::p.adjust(myps, method = 'fdr')
-    mat.pvalsadj <- matrix(mypsadj, row.pvt, col.pvt)
+  # Add covariates.
+  intLimResultsCovar <- ""
+  if(!is.null(covar)){
+    intLimResultsCovar <- covar
+  }
 
-    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(gene)
-    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(metab)
-    } else if (outcome == "gene") {
-        arraydata <- data.frame(gene)
-        #form <- stats::formula(g ~ m + type + m:type)
+  # Create object to return.
+  myres <- methods::new('IntLimResults',
+                        interaction.pvalues=mat.list$mat.pvals,
+                        interaction.adj.pvalues = mat.list$mat.pvalsadj,
+                        interaction.coefficients=mat.list$mat.coefficients,
+                        model.rsquared = mat.list$mat.rsquared,
+                        covariate.pvalues = mat.list$covariate.pvals,
+                        covariate.coefficients = mat.list$covariate.coefficients,
+                        warnings=mymessage, covar = intLimResultsCovar)
 
-        # Retrieve pvalues by iterating through each gene
-        nummetab <- nrow(metab)
-	numprog <- round(nummetab*0.1)
-	
-	form.add <- "Y ~ m + type + m:type"
-	if (!(is.null(covar))){
-	    form.add <- "Y ~ m + type + m:type"
-	    
-	    len.covar <- length(covar)
-	    for (i in 1:len.covar){
-	        form.add <- paste(form.add, '+', covar[i])
-	    }
-	}
-        list.pvals <- lapply(1:nummetab, function(x) {
-                #print(x)
-                m <- as.numeric(metab[x,])
-                
-                if(is.null(covar)){
-                    clindata <- data.frame(m, type)
-                }else{
-                    clindata <- data.frame(m, type, incommon$covar_matrix)
-                }
-               
-                mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
-                        arraydata = arraydata)
-                
-                term.pvals <- rownames(mlin$p.value.coeff)
-                index.interac <- grep('m:type', term.pvals)
-                p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
-                #p.val.vector <- as.vector(mlin@p.value.coeff[4,])
-                # Print out progress every 1000 genes
-         if (numprog != 0){       
-	 if (x %% numprog == 0){
-                    progX <- round(x/nummetab*100)
-                    print(paste(progX,"% complete"))
-                }
-	}	
-                return(p.val.vector)
-        })
-    mat.pvals <- do.call(rbind, list.pvals)
-    # adjust p-values
-    row.pvt <- dim(mat.pvals)[1]
-    col.pvt <- dim(mat.pvals)[2]
-    myps <- as.vector(mat.pvals)
-    mypsadj <- stats::p.adjust(myps, method = 'fdr')
-    mat.pvalsadj <- matrix(mypsadj, row.pvt, col.pvt)
-
-    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(metab)
-    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(gene)
-
-    #mat.pvals <- t(mat.pvals)
-    } else {
-        stop("outcome must be either 'metabolite' or 'gene'")
-    }
-
-    myres <- methods::new('IntLimResults', interaction.pvalues=mat.pvals,
-		interaction.adj.pvalues = mat.pvalsadj,
-		warnings=mymessage)
-    return(myres)
+  return(myres)
 }
 
-#' Function that runs linear models for one gene vs all metabolites
+#' Function that runs linear models for analyte vs. all analytes of the other type
 #'
 #' @include AllClasses.R
 #'
 #' @param form LM formulat (typically m~g+t+g:t)
 #' @param clindata data frame with 1st column: expression of one analyte; 2nd column
 #' sample type (e.g. cancer/non-cancer)
-#' @param arraydata matrix of metabolite values
-    getstatsOneLM <- function(form, clindata, arraydata) {
-	call=match.call()
-        YY <- t(arraydata)                      # the data matrix
-        EY <- apply(YY, 2, mean)                # its mean vector
-        SYY <- apply(YY, 2, function(y) {sum(y^2)}) - nrow(YY)*EY^2     # sum of squares after centering
-        clindata <- data.frame(y=YY[,1], clindata)
-        dimnames(clindata)[[2]][1] <- 'Y'
-        X <- stats::model.matrix(form, clindata)       # contrasts matrix
-        N = dim(X)[1]
-        p <- dim(X)[2]
-        XtX <- t(X) %*% X
-        ixtx <- solve(XtX)
-        bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
-        yhat <- X %*% bhat                      # Figure out what is predicted by the model
-        # Now we partition the sum-of-square errors
-        rdf <- ncol(X)-1                        # number of parameters in the model
-        edf <- nrow(YY)-rdf-1                   # additional degrees of freedom
-        errors <- YY - yhat                     # difference between observed and model predictions
-        sse <- apply(errors^2, 2, sum)  # sum of squared errors over the samples
-        mse <- sse/edf                  # mean squared error
-        ssr <- SYY - sse                        # regression error
-        msr <- ssr/rdf                  # mean regression error
-        fval <- msr/mse                 # f-test for the overall regression
-        pfval <- 1-stats::pf(fval, rdf, edf)           # f-test p-values
+#' @param arraydata matrix of analyte values
+#' @param analytename name of independent analyte in the model
+#' @param suppressWarnings whether or not to suppress warnings
+getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnings = FALSE) {
+  #array data is one analyte type
+  #clindata is the other analyte type
+  call=match.call()
+  YY <- t(arraydata)                      # the data matrix
+  #mean of analytes across all samples
+  EY <- apply(YY, 2, mean)                # its mean vector
+  #sum of squares after centering
+  SYY <- apply(YY, 2, function(y) {sum(y^2)}) - nrow(YY)*EY^2     # sum of squares after centering
+  # The first "Y" column is added as a "dummy" Y-value. This is needed
+  # for stats::model.matrix to generate a design matrix.
+  clindata <- data.frame(y=YY[,1], clindata)
+  dimnames(clindata)[[2]][1] <- 'Y'
+  # design matrix
+  X <- stats::model.matrix(form, clindata)
+  N = dim(X)[1]
+  p <- dim(X)[2]
+  # Create a contrast matrix.
+  XtX <- t(X) %*% X
+  ixtx <- MASS::ginv(XtX)
+  # Use the pseudoinverse if the inverse cannot be found.
+  # Print out correlated covariates in this case.
+  
+  # Initialize warnings. We will later remove if needed.
+  pinv_message <- paste("Using pseudoinverse for", analytename)
+  cutoff = 0.9
+  covariate_msg1 <- paste("The following covariates have correlation >", cutoff, ":")
+  covariate_msg2 <- paste("The following covariates have correlation <", -1 * cutoff, ":")
+  cormat <- stats::cor(X[,which(colnames(X) != "(Intercept)")])
+  cormat[lower.tri(cormat, diag = TRUE)] <- 0
+  if(length(which(cormat > cutoff)) > 0){
+    which_greater <- multi.which(cormat > cutoff)
+    for(i in 1:nrow(which_greater)){
+      if(i == 1){
+        covariate_msg1 <- paste(covariate_msg1, paste0("(",colnames(cormat)[which_greater[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_greater[i,2]], 
+                                                       ")"))
+      }else{
+        covariate_msg1 <- paste(covariate_msg1, paste0("(",colnames(cormat)[which_greater[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_greater[i,2]], 
+                                                       ")"), sep = ", ")
+      }
+    }
+  }
+  if(length(which(cormat < -1 * cutoff)) > 0){
+    which_less <- multi.which(cormat < -1 * cutoff)
+    for(i in 1:nrow(which_less)){
+      if(i == 1){
+        covariate_msg2 <- paste(covariate_msg2, paste0("(",colnames(cormat)[which_less[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_less[i,2]], 
+                                                       ")"))
+      }else{
+        covariate_msg2 <- paste(covariate_msg2, paste0("(",colnames(cormat)[which_less[i,1]],
+                                                       ", ", 
+                                                       colnames(cormat)[which_less[i,2]], 
+                                                       ")"), sep = ", ")
+      }
+    }
+  }
+  warnings <- c(pinv_message, covariate_msg1, covariate_msg2)
+  
+  tryCatch({
+    ixtx <- solve(XtX)
+    warnings <- list()
+  }, error=function(e){
+    if(suppressWarnings == FALSE){
+      print(pinv_message)
+    }
+    if(length(which(cormat > cutoff)) > 0 && suppressWarnings == FALSE){
+      print(covariate_msg1)
+    }
+    if(length(which(cormat < -1 * cutoff)) > 0 && suppressWarnings == FALSE){
+      print(covariate_msg2)
+    }
+  })
+  bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
+  yhat <- X %*% bhat                      # Figure out what is predicted by the model
+  # Now we partition the sum-of-square errors
+  rdf <- ncol(X)-1                        # number of parameters in the model
+  edf <- nrow(YY)-rdf-1                   # additional degrees of freedom
+  errors <- YY - yhat                     # difference between observed and model predictions
+  sse <- apply(errors^2, 2, sum)  # sum of squared errors over the samples
+  mse <- sse/edf                  # mean squared error
+  ssr <- SYY - sse                        # regression error
+  msr <- ssr/rdf                  # mean regression error
+  fval <- msr/mse                 # f-test for the overall regression
+  pfval <- 1-stats::pf(fval, rdf, edf)           # f-test p-values
+  
+  stderror.coeff <- sapply(mse,function(x){sqrt(diag(ixtx)*x)})
+  t.coeff <- bhat/stderror.coeff
+  p.val.coeff <- 2*stats::pt(-abs(t.coeff),df = (N-p))
+  y.dev <- lapply(1:(dim(YY)[2]), function(i){
+    return(YY[,i]-EY[i])
+  })
+  var.y <- unlist(lapply(y.dev, function(i){
+    return(sum(i^2))
+  }))
+  r.squared <- 1 - (sse / var.y)
+  rownames(bhat) <- colnames(X)
+  rownames(p.val.coeff) <- colnames(X)
+  return(list("mlin" = list(coefficients=bhat,
+              p.value.coeff = p.val.coeff, # interaction p-value
+              r.squared.val = r.squared),# r-squared value
+              "warnings" = warnings))
+}
 
-        stderror.coeff <- sapply(mse,function(x){sqrt(diag(ixtx)*x)})
-        t.coeff <- bhat/stderror.coeff
-        p.val.coeff <- 2*stats::pt(-abs(t.coeff),df = (N-p))
-        #methods::new('IntLimModel', call=call, model=form,
-         list(# call=call, model=form,
-                #coefficients=bhat,
-                # predictions=yhat,
-                #df=c(rdf, edf),
-                #sse=sse,
-                #ssr=ssr,
-                #F.statistics=fval,
-                #F.p.values=pfval
-                #std.error.coeff = stderror.coeff,
-                #t.value.coeff = t.coeff,
-                p.value.coeff = p.val.coeff # interaction p-value
-         )
+#' Function that runs Linear Models for all analytes
+#' @include AllClasses.R
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @param type1 Analyte type 1 dataset
+#' @param type2 Analyte type 2 dataset
+#' @param type vector of sample type (by default, it will be used in the interaction term).
+#' Only 2 categories are currently supported.
+#' @param covar vector of additional vectors to consider
+#' @param covarMatrix covariate matrix
+#' @param continuous indicate whether data is discrete (FALSE) or continuous (TRUE)
+#' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
+#' which can be analyzed later but will also lengthen computation time.
+#' @param remove.tri boolean to indicate whether or not to remove the 1-1
+#' or 2-2 pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
+#' @param suppressWarnings whether or not to suppress warnings
+#' @return list of matrices (interaction.pvalues, interaction.adj.pvalues, interaction.coefficients)
+getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, covar, covarMatrix, 
+                          continuous, save.covar.pvals, remove.tri = FALSE,
+                          suppressWarnings = FALSE) {
+  outcomeArrayData <- NULL
+  independentArrayData <- NULL
+  num <- NULL
+  
+  # Get array data based on outcome.
+  if (outcome==1) {
+    outcomeArrayData <- data.frame(type1)
+  } else if (outcome == 2){
+    outcomeArrayData <- data.frame(type2)
+  }
+  
+  # Get array data based on independent variable type.
+  if (independentVariable==1) {
+    independentArrayData <- data.frame(type1)
+    num <- nrow(type1)
+  } else if (independentVariable == 2){
+    num <- nrow(type2)
+    independentArrayData <- data.frame(type2)
+  }
+
+  # Set up formula and interaction term.
+  form.add <- "Y ~ a + type + a:type"
+  interactionTerm <- "a:type"
+  
+  # Set numprog.
+  numprog <- round(num*0.1)
+  
+  # Add covariates to the formula.
+  if (length(covar)>0) {
+    len.covar <- length(covar)
+    for (i in 1:len.covar) {
+      form.add <- paste(form.add, '+', covar[i])
+    }
+  }
+  
+  # Initialize stats to collect.
+  list.pvals <- list()
+  list.coefficients <- list()
+  list.rsquared <- list()
+  list.covariate.pvals <- list()
+  list.covariate.coefficients <- list()
+  
+  # Run each model.
+  warnings <- list()
+  for (i in 1:num) {
+    
+    # Set up clinical data.
+    a <- as.numeric(independentArrayData[i, ])
+    if (is.null(covar)) {
+      clindata <- data.frame(a, type)
+    } else {
+      clindata <- data.frame(a, type, covarMatrix)
+      colnames(clindata)[3:ncol(clindata)] <- covar
+    }
+    
+    # Change type for continuous data (factor to numeric)
+    if(continuous){
+      clindata[2] <- lapply(clindata[2], as.character)
+      clindata[2] <- lapply(clindata[2], as.numeric)
+    }
+
+    # Run all models for this independent analyte.
+    mlin <- getstatsOneLM(stats::as.formula(form.add), clindata = clindata,
+                          arraydata = outcomeArrayData, 
+                          analytename = rownames(independentArrayData)[i],
+                          suppressWarnings = suppressWarnings)
+    warnings <- c(warnings, mlin[["warnings"]])
+    mlin <- mlin[["mlin"]]
+    term.pvals <- rownames(mlin$p.value.coeff)
+    
+    # Return the primary p-values and coefficients.
+    index.interac <- grep(interactionTerm, term.pvals)
+    term.coefficient <- rownames(mlin$coefficients)
+    index.coefficient <-  grep(interactionTerm, term.coefficient)
+    p.val.vector <- as.vector(mlin$p.value.coeff[index.interac,])
+    coefficient.vector <- as.vector(mlin$coefficients[index.coefficient,])
+    
+    term.rsquared <- rownames(mlin$r.squared.val)
+    r.squared.vector <- as.vector(mlin$r.squared.val)
+    
+    if (numprog != 0){
+      if (i %% numprog == 0) {
+        progX <- round(i/num*100)
+        print(paste(progX,"% complete"))
+      }
+    }
+    list.pvals[[i]] <-  p.val.vector
+    list.coefficients[[i]] <- coefficient.vector
+    list.rsquared[[i]] <- r.squared.vector
+    
+    if(save.covar.pvals == TRUE){
+      # Save covariate p-values.
+      covariate.pvals <- lapply(term.pvals, function(covariate){
+        return(mlin$p.value.coeff[covariate,])
+      })
+      covariate.pvals.df <- do.call("cbind", covariate.pvals)
+      rownames(covariate.pvals.df) <- paste(rownames(independentArrayData)[i], 
+                                            rownames(covariate.pvals.df),
+                                            sep="__")
+      colnames(covariate.pvals.df) <- term.pvals
+      list.covariate.pvals[[i]] <- covariate.pvals.df
+      
+      # Save covariate coefficients.
+      covariate.coefficients <- lapply(term.coefficient, function(covariate){
+        return(mlin$coefficients[covariate,])
+      })
+      covariate.coefficients.df <- do.call("cbind", covariate.coefficients)
+      rownames(covariate.coefficients.df) <- paste(rownames(independentArrayData)[i],
+                                                   rownames(covariate.coefficients.df), 
+                                                   sep="__")
+      colnames(covariate.coefficients.df) <- term.pvals
+      list.covariate.coefficients[[i]] <- covariate.coefficients.df
+    }
+  }
+  
+  # Convert the stats into matrix form.
+  mat.pvals <- do.call(rbind, list.pvals)
+  mat.coefficients <- do.call(rbind, list.coefficients)
+  mat.rsquared <- do.call(rbind, list.rsquared)
+  covariate.pvals <- do.call(rbind, list.covariate.pvals)
+  covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
+  
+  # Adjust p-values.
+  row.pvt <- dim(mat.pvals)[1]
+  col.pvt <- dim(mat.pvals)[2]
+  myps <- as.vector(mat.pvals)
+  mypsadj <- stats::p.adjust(myps, method = 'fdr')
+  mat.pvalsadj <- matrix(mypsadj, row.pvt, col.pvt)
+  
+  # Assign names to results.
+  if (outcome==1) {
+    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(type1)
+    colnames(mat.coefficients) <- rownames(type1)
+    colnames(mat.rsquared) <- rownames(type1)
+  } else if (outcome==2) {
+    colnames(mat.pvals) <- colnames(mat.pvalsadj) <- rownames(type2)
+    colnames(mat.coefficients) <- rownames(type2)
+    colnames(mat.rsquared) <- rownames(type2)
+  }
+  if(independentVariable == 1){
+    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(type1)
+    rownames(mat.coefficients) <- rownames(type1)
+    rownames(mat.rsquared) <- rownames(type1)
+  }else if (independentVariable == 2){
+    rownames(mat.pvals) <- rownames(mat.pvalsadj) <- rownames(type2)
+    rownames(mat.coefficients) <- rownames(type2)
+    rownames(mat.rsquared) <- rownames(type2)
+  }
+  
+  # Remove the triangular matrix if applicable.
+  if(remove.tri == TRUE && outcome != independentVariable){
+    warning("Cannot remove triangular matrix if the independent and outcome variables are",
+            "different analyte types. Not removing.")
+    remove.tri = FALSE
+  }
+  if(remove.tri == TRUE)
+  {
+    # Find locations where the upper triangular value is higher than the lower triangular.
+    mat.pvals.t <- t(mat.pvals)
+    mat.pvalsadj.t <- t(mat.pvalsadj)
+    mat.coefficients.t <- t(mat.coefficients)
+    mat.rsquared.t <- t(mat.rsquared)
+    where_upper_triangular_higher <- which(mat.pvals > t(mat.pvals))
+    
+    # Replace those locations with values from the lower triangular.
+    mat.pvals[where_upper_triangular_higher] <- mat.pvals.t[where_upper_triangular_higher]
+    mat.pvalsadj[where_upper_triangular_higher] <- mat.pvalsadj.t[where_upper_triangular_higher]
+    mat.coefficients[where_upper_triangular_higher] <- mat.coefficients.t[where_upper_triangular_higher]
+    mat.rsquared[where_upper_triangular_higher] <- mat.rsquared.t[where_upper_triangular_higher]
+    covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
+    
+    # Remove the highest p-values and store the result in the upper triangular if required.
+    # Otherwise, remove the diagonal if applicable.
+    should_remove = unlist(lapply(rownames(covariate.pvals), function(name){
+      ret_val = FALSE
+      pieces = strsplit(name, "__")[[1]]
+      a_type = colnames(covariate.pvals)[which(grepl("a:", colnames(covariate.pvals), 
+                                                     fixed = TRUE) == TRUE)]
+      pval_1 = covariate.pvals[name, a_type]
+      pval_2 = covariate.pvals[paste(pieces[2], pieces[1], sep = "__"),a_type]
+      if(pieces[1] == pieces[2]){
+        ret_val = TRUE
+      }
+      else if(pval_2 < pval_1){
+        ret_val = TRUE
+      }
+      else if(pval_2 == pval_1){
+        pos_pval_1 = which(rownames(covariate.pvals)[1] == name)
+        pos_pval_2 = which(rownames(covariate.pvals)[1] == paste(pieces[2], 
+                                                                 pieces[1], 
+                                                                 sep = "__"))
+        if(pos_pval_1 > pos_pval_2){
+          ret_val = TRUE
         }
+      }
+      return(ret_val)
+    }))
+    
+    if(save.covar.pvals == TRUE){
+      for(i in 1:length(colnames(covariate.pvals))){
+        covariate.pvals[which(should_remove == TRUE),i] <- NA
+        covariate.coefficients[which(should_remove == TRUE),i] <- NA
+      }
+    }
+    mat.pvals[lower.tri(mat.pvals,diag=TRUE)] <- NA
+    mat.pvalsadj[lower.tri(mat.pvalsadj,diag=TRUE)] <- NA
+    mat.coefficients[lower.tri(mat.coefficients,diag=TRUE)] <- NA
+    mat.rsquared[lower.tri(mat.rsquared,diag=TRUE)] <- NA
+  }
+  else if (outcome == independentVariable){
+    # Only remove the diagonal.
+    diag(mat.pvals) <- NA
+    diag(mat.pvalsadj) <- NA
+    diag(mat.coefficients) <- NA
+    diag(mat.rsquared) <- NA
+    if(save.covar.pvals == TRUE){
+      pieces_list = lapply(rownames(covariate.pvals), function(name){
+        split = strsplit(name, "__")[[1]]
+        return(data.frame(from = split[1], to = split[2]))
+      })
+      pieces = do.call(rbind, pieces_list)
+      for(i in 1:length(colnames(covariate.pvals))){
+        covariate.pvals[which(pieces$from == pieces$to),i] <- NA
+        covariate.coefficients[which(pieces$from == pieces$to),i] <- NA
+      }
+    }
+  }
+  
+  # Add the matrices to a final list.
+  list.mat <- list()
+  list.final <- list()
+  list.mat[["mat.pvals"]] <- as.matrix(mat.pvals)
+  list.mat[["mat.pvalsadj"]] <- as.matrix(mat.pvalsadj)
+  list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
+  list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
+  list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
+  list.mat[["covariate.coefficients"]] <- as.data.frame(covariate.coefficients)
+  list.final[["list"]] <- list.mat
+  list.final[["warnings"]] <- warnings
+  return(list.final)
+}
 
+#' Function that gets numeric cutoffs from percentile
+#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
+#' @param tofilter dataframe for percentile filtering
+#' @return vector with numeric cutoffs
+getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercentile){
+  
+  if(interactionCoeffPercentile > 1 || interactionCoeffPercentile < 0) {
+    stop("interactionCoeffPercentile parameter must be between 0 and 1")
+  }
+  
+  #get top and bottom cutoffs (need highest positive and highest negative coeffs)
+  tofilter_abs = abs(tofilter)
+  abs_cutoff = as.numeric(stats::quantile(tofilter_abs, interactionCoeffPercentile, na.rm = TRUE))
+  
+  return(c(0 - abs_cutoff, abs_cutoff))
+  
+}
 
+#' A which for multidimensional arrays.
+#' Mark van der Loo 16.09.2011
+#' 
+#' @name multi.which
+#' @param A Boolean function defined over a matrix
+#' @return vector with numeric cutoffs
+multi.which <- function(A){
+  if ( is.vector(A) ) return(which(A))
+  d <- dim(A)
+  T.mat <- which(A) - 1
+  nd <- length(d)
+  t( sapply(T.mat, function(t){
+    I <- integer(nd)
+    I[1] <- t %% d[1]
+    sapply(2:nd, function(j){
+      I[j] <<- (t %/% prod(d[1:(j-1)])) %% d[j]
+    })
+    I
+  }) + 1 )
+ }

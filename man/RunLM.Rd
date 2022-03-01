@@ -4,18 +4,43 @@
 \alias{RunLM}
 \title{Function that runs linear models and returns interaction p-values.}
 \usage{
-RunLM(incommon, outcome = "metabolite", type = NULL, covar = NULL)
+RunLM(
+  incommon,
+  outcome = 1,
+  independentVariable = 2,
+  type = "",
+  covar = c(),
+  continuous = FALSE,
+  save.covar.pvals = FALSE,
+  keep.highest.pval = FALSE,
+  suppressWarnings = FALSE
+)
 }
 \arguments{
-\item{incommon}{MultiDataSet object (output of ReadData()) with gene}
+\item{incommon}{Named list (output of 
+FilterData()) with analyte levels, 
+and associated meta-data}
 
-\item{outcome}{'metabolite' or 'gene' must be set as outcome/independent variable 
-(default is 'metabolite')}
+\item{outcome}{'1' or '2' must be set as outcome/independent variable
+(default is '1')}
+
+\item{independentVariable}{'1' or '2' must be set as outcome/independent variable}
 
 \item{type}{vector of sample type (by default, it will be used in the interaction term).
 Only 2 categories are currently supported.}
 
 \item{covar}{vector of additional vectors to consider}
+
+\item{continuous}{boolean to indicate whether the data is continuous or discrete}
+
+\item{save.covar.pvals}{boolean to indicate whether or not to save the p-values of all covariates,
+which can be analyzed later but will also lengthen computation time.
+(rather than interaction terms).}
+
+\item{keep.highest.pval}{boolean to indicate whether or not to remove the 
+pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)}
+
+\item{suppressWarnings}{whether or not to suppress warnings.}
 }
 \description{
 Function that runs linear models and returns interaction p-values.

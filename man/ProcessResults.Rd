@@ -2,8 +2,8 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResults}
 \alias{ProcessResults}
-\title{Retrieve significant gene-metabolite pairs, based on adjusted p-values.
-For each gene-metabolite pair that is statistically significant, calculate the
+\title{Retrieve significant pairs, based on adjusted p-values.
+For each pair that is statistically significant, calculate the
 correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
 non-cancer).  Users can then remove pairs with a difference in correlations between
 groups 1 and 2 less than a user-defined threshold.}
@@ -12,42 +12,31 @@ ProcessResults(
   inputResults,
   inputData,
   pvalcutoff = 0.05,
-  diffcorr = 0.5,
-  corrtype = "spearman",
-  treecuts = 0
+  interactionCoeffPercentile = 0,
+  rsquaredCutoff = 0
 )
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression,
-metabolite abundances, and associated meta-data}
+\item{inputData}{MultiDataSet object (output of ReadData()) with analyte levels
+and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{diffcorr}{cutoff of differences in correlations for filtering (default 0.5)}
+\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
+(default bottom 10 percent (high negative coefficients) and top 10 percent 
+(high positive coefficients))}
 
-\item{corrtype}{spearman or pearson or other parameters allowed by cor() function (default
-spearman)}
-
-\item{treecuts}{user-selected number of clusters (of gene-metabolite pairs) to cut the tree into}
+\item{rsquaredCutoff}{cutoff for lowest r-squared value}
 }
 \value{
 IntResults object with model results (now includes correlations)
 }
 \description{
-Retrieve significant gene-metabolite pairs, based on adjusted p-values.
-For each gene-metabolite pair that is statistically significant, calculate the
+Retrieve significant pairs, based on adjusted p-values.
+For each pair that is statistically significant, calculate the
 correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
 non-cancer).  Users can then remove pairs with a difference in correlations between
 groups 1 and 2 less than a user-defined threshold.
-}
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-myres <- ProcessResults(myres,mydata,treecuts=2)
-}
 }

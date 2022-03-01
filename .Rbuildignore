@@ -1,5 +1,10 @@
 ^.*\.Rproj$
 ^\.travis\.yml$
+^\.appveyor.yml$
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
+^Dockerfile
+^Jenkinsfile
+^install-intlim.R
+^shiny-server.conf

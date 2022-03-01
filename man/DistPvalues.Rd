@@ -4,22 +4,16 @@
 \alias{DistPvalues}
 \title{Visualize the distribution of unadjusted p-values from linear models}
 \usage{
-DistPvalues(IntLimResults, breaks = 100)
+DistPvalues(IntLimResults, breaks = 100, adjusted = TRUE)
 }
 \arguments{
 \item{IntLimResults}{output of RunIntLim()}
 
 \item{breaks}{the number of breaks to use in histogram (see hist() documentation for more details)}
+
+\item{adjusted}{Whether or not to plot adjusted p-values. If TRUE (default),
+adjusted p-values are plotted. If FALSE, unadjusted p-values are plotted.}
 }
 \description{
 Visualize the distribution of unadjusted p-values from linear models
-}
-\examples{
-\dontrun{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-mydata <- ReadData(csvfile,metabid='id',geneid='id')
-myres <- RunIntLim(mydata,stype="PBO_vs_Leukemia")
-DistPvalues(myres)
-}
 }

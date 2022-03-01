@@ -2,30 +2,40 @@
 % Please edit documentation in R/02_FilterData.R
 \name{FilterData}
 \alias{FilterData}
-\title{Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).}
+\title{Filter input data by abundance values and number of missing values.}
 \usage{
-FilterData(inputData, geneperc = 0, metabperc = 0, metabmiss = 0)
+FilterData(
+  inputData,
+  analyteType1perc = 0,
+  analyteType2perc = 0,
+  analyteMiss = 0,
+  suppressWarnings = FALSE,
+  cov.cutoff = 0
+)
 }
 \arguments{
-\item{inputData}{MultiDataSet object (output of ReadData()) with gene expression, 
-metabolite abundances, and associated meta-data}
+\item{inputData}{IntLimData object (output of ReadData()) with analylte levels and
+associated meta-data}
 
-\item{geneperc}{percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 
-< 'geneperc' percentile) (default: 0)}
+\item{analyteType1perc}{percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
+remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}
 
-\item{metabperc}{percentile cutoff (0-1) for filtering metabolites (default: no filtering of metabolites) (default:0)}
+\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 
+(default: no filtering of analytes) (default:0)}
 
-\item{metabmiss}{missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)}
+\item{analyteMiss}{missing value percent cutoff (0-1) for filtering both analyte types 
+(analytes with > 80\% missing values will be removed) (default:0)}
+
+\item{suppressWarnings}{whether or not to print warnings. If TRUE, warnings will
+not be printed.}
+
+\item{cov.cutoff}{percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)}
 }
 \value{
-filtData MultiDataSet object with input data after filtering
+filtData IntLimData object with input data after filtering
 }
 \description{
-Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
-}
-\examples{
-dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-csvfile <- file.path(dir, "NCItestinput.csv")
-inputData <- ReadData(csvfile,metabid='id',geneid='id')
-inputDatafilt <- FilterData(inputData,geneperc=0.5)
+Filter data by abundance (with user-input percentile cutoff) of missing values 
+(with user-input percent cutoff). Missing values are commonly found in metabolomics 
+data.
 }

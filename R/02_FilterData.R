@@ -1,100 +1,342 @@
-#' Filter input data by abundance values (gene and metabolite data) and number of missing values (metabolite data only).
+#' Filter input data by abundance values and number of missing values.
 #'
-#' Filter data by abundance (with user-input percentile cutoff) of missing values (with user-input percent cutoff). Missing values are commonly found in metabolomics data so the parameter currently only applies to metabolomics data.
+#' Filter data by abundance (with user-input percentile cutoff) of missing values 
+#' (with user-input percent cutoff). Missing values are commonly found in metabolomics 
+#' data.
 #'
-#' @param inputData MultiDataSet object (output of ReadData()) with gene expression, 
-#' metabolite abundances, and associated meta-data
-#' @param geneperc percentile cutoff (0-1) for filtering genes (e.g. remove genes with mean values 
-#' < 'geneperc' percentile) (default: 0)
-#' @param metabperc percentile cutoff (0-1) for filtering metabolites (default: no filtering of metabolites) (default:0)
-#' @param metabmiss missing value percent cutoff (0-1) for filtering metabolites (metabolites with > 80\% missing values will be removed) (default:0)
-#' @return filtData MultiDataSet object with input data after filtering
-#'
-#' @examples
-#' dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
-#' csvfile <- file.path(dir, "NCItestinput.csv")
-#' inputData <- ReadData(csvfile,metabid='id',geneid='id')
-#' inputDatafilt <- FilterData(inputData,geneperc=0.5)
+#' @param inputData IntLimData object (output of ReadData()) with analylte levels and
+#'  associated meta-data
+#' @param analyteType1perc percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
+#' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
+#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
+#' (default: no filtering of analytes) (default:0)
+#' @param analyteMiss missing value percent cutoff (0-1) for filtering both analyte types 
+#' (analytes with > 80\% missing values will be removed) (default:0)
+#' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
+#' @param suppressWarnings whether or not to print warnings. If TRUE, warnings will
+#' not be printed.
+#' @return filtData IntLimData object with input data after filtering
 #' @export
-FilterData <- function(inputData,geneperc=0,metabperc=0, metabmiss=0) {
-
-    # Check that input is a MultiDataSet
-    if (class(inputData) != "MultiDataSet") {
-	stop("input data is not a MultiDataSet class")
+FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteMiss=0,
+                       suppressWarnings = FALSE, cov.cutoff=0) {
+  # Check that input is a IntLimData
+  if (class(inputData) != "IntLimData") {
+    stop("input data is not a IntLimData class")
+  }
+  filtdata <- NULL
+  if(length(inputData@analyteType1)==0 && length(inputData@analyteType2)==0) {
+    stop("input data must contain assayData of at least one type of analyte.
+	     Try reading in the data with the ReadData function")
+  }	else if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
+    if(analyteType1perc < 0 || analyteType1perc > 1) {
+      stop("analyteType1perc parameter must be between 0 and 1")
     }
-    mytypes <- names(Biobase::assayData(inputData))
-    if(!any(mytypes=="expression") || !any(mytypes=="metabolite")) {
-	stop("input data must contain assayData of type 'metabolite' and 'expression.
-	Try reading in the data with the ReadData function")
-    }	
-
-    if(!is.null(geneperc) && geneperc > 1) {stop("geneperc parameter must be between 0 and 1")}
-    if(!is.null(metabperc) && metabperc > 1) {stop("metabperc parameter must be between 0 and 1")}
-    if(!is.null(metabmiss) && metabmiss > 1) {stop("metabmiss parameter must be between 0 and 1")}
-
+    if(analyteType2perc < 0 || analyteType2perc > 1) {
+      stop("analyteType2perc parameter must be between 0 and 1")
+    }
+    if(analyteMiss < 0 || analyteMiss > 1) {
+      stop("analyteMiss parameter must be between 0 and 1")
+    }
+    if(cov.cutoff < 0 || cov.cutoff > 1) {
+      stop("cov.cutoff parameter must be between 0 and 1")
+    }
 
     # Check that at least one parameter is not null
-    len <- length(c(geneperc,metabperc,metabmiss))
-    if ((geneperc+metabperc+metabmiss) ==0) {
-        warning("All filtering parameters are NULL so the data remains unfiltered")
-	return(inputData)
+    if ((analyteType1perc+analyteType2perc+analyteMiss+cov.cutoff) ==0) {
+      if(suppressWarnings == FALSE){
+        warning("No filtering parameters were set so the data remains unfiltered")
+      }
+      filtdata <- inputData
+    } else {
+      type1Data <- inputData@analyteType1
+      type2Data <- inputData@analyteType2
+      if(analyteType1perc > 0) {
+        # Filter
+        mymean <- as.numeric(apply(type1Data,1, function(x) mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType1perc, na.rm = TRUE))
+        oldData <- type1Data
+        type1Data <- as.matrix(type1Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type1Data)==1 && nrow(type1Data) == ncol(oldData)){
+          type1Data <- t(type1Data)
+        }
+        # Set rownames
+        rownames(type1Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type1Data)==0){
+          type1Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by percentile is applied for analyte type 1")
+        }
+      }
+      if(analyteType2perc > 0) {
+        # Filter
+        mymean <- as.numeric(apply(type2Data,1, function(x) mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType2perc, na.rm = TRUE))
+        oldData <- type2Data
+        type2Data <- as.matrix(type2Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type2Data)==1 && nrow(type2Data) == ncol(oldData)){
+          type2Data <- t(type2Data)
+        }
+        # Set rownames
+        rownames(type2Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type2Data)==0){
+          type2Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by percentile is applied for analyte type 2")
+        }
+      }
+      if(analyteMiss > 0) {
+        # Filter
+        missnum <- as.numeric(apply(type2Data,1,function(x) length(which(is.na(x)))))
+        mycut <- analyteMiss * ncol(type2Data)
+        keepers <- which(missnum < mycut)
+        oldData <- type2Data
+        type2Data <- as.matrix(type2Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type2Data)==1 && nrow(type2Data) == ncol(oldData)){
+          type2Data <- t(type2Data)
+        }
+        # Set rownames
+        rownames(type2Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type2Data)==0){
+          type2Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by missing values is applied for analyte type 2")
+        }
+      }
+      
+      #Checking for Log Scaling and Filtering the Data
+      if(length(which(!is.na(type1Data))) > 0 && min(type1Data) >= 0
+         && cov.cutoff > 0) {
+        analyte1mean <- apply(type1Data, MARGIN = 1, mean)
+        analyte1sd <- apply(type1Data, MARGIN = 1, mean)
+        analyte1cov <- analyte1sd / analyte1mean
+        cov.quant <- stats::quantile(analyte1cov, probs = cov.cutoff, na.rm = TRUE)
+        type1Data <- type1Data[which(analyte1cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type1Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 1 because data is log-scaled"))
+      }
+      
+      if(length(which(!is.na(type2Data))) > 0 && min(type2Data) >= 0
+         && cov.cutoff > 0) {
+        analyte2mean <- apply(type2Data, MARGIN = 1, mean)
+        analyte2sd <- apply(type2Data, MARGIN = 1, mean)
+        analyte2cov <- analyte2sd / analyte2mean
+        cov.quant <- stats::quantile(analyte2cov, probs = cov.cutoff, na.rm = TRUE)
+        type2Data <- type2Data[which(analyte2cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type2Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 2 because data is log-scaled"))
+      }
+      
+      # Now reconstruct the multidataset object
+      filtdata <- methods::new("IntLimData", analyteType1=type1Data,
+                               analyteType2=type2Data,
+                               analyteType1MetaData = inputData@analyteType1MetaData,
+                               analyteType2MetaData = inputData@analyteType2MetaData,
+                               sampleMetaData = inputData@sampleMetaData)
+    }
+  }else if(length(inputData@analyteType1)>0){
+    if(analyteType1perc < 0 || analyteType1perc > 1) {
+      stop("analyteType1perc parameter must be between 0 and 1")
+    }
+    if(analyteMiss < 0 || analyteMiss > 1){
+      stop("analyteMiss parameter must be between 0 and 1")
+    }
+    if(cov.cutoff < 0 || cov.cutoff > 1) {
+      stop("cov.cutoff parameter must be between 0 and 1")
+    }
+    
+    # Check that at least one parameter is not null
+    if (analyteType1perc+cov.cutoff+analyteMiss ==0) {
+      if(suppressWarnings == FALSE){
+        warning("No filtering parameters were set so the data remains unfiltered")
+      }
+      filtdata <- inputData
     }
     else {
-	mygenes <- Biobase::assayDataElement(inputData[["expression"]], 'exprs')
-	mymetab <- Biobase::assayDataElement(inputData[["metabolite"]], 'metabData')
-	if(geneperc > 0) {
-		if(geneperc>1) {geneperc=geneperc}
-		mymean <- as.numeric(apply(mygenes,1, function(x)
-			mean(x,na.rm=T)))
-		keepers <- which(mymean > stats::quantile(mymean,geneperc))
-		mygenes <- mygenes[keepers,]
-		pgenes <- Biobase::pData(inputData[["expression"]])
-		fgenes <- Biobase::fData(inputData[["expression"]])[keepers,]
-	} else {
-                print("No gene filtering is applied")
-		mygenes <- mygenes
-                fgenes <- Biobase::fData(inputData[["expression"]])
-	}
-	if(metabperc > 0) {
-		if(metabperc>1) {metabperc=metabperc}
-                mymean <- as.numeric(apply(mymetab,1, function(x)
-                        mean(x,na.rm=T)))
-                keepers <- which(mymean > stats::quantile(mymean,metabperc))
-                mymetab <- mymetab[keepers,]
-		fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
-        } else {
-                print("No metabolite filtering by percentile is applied")
-		mymetab <- mymetab
-		fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
-	}
-	if(metabmiss > 0) {
-		missnum <- as.numeric(apply(mymetab,1,function(x) length(which(x==min(x,na.rm=T)))))-1
-		mycut <- metabmiss * ncol(mymetab)
-		keepers <- which(missnum < mycut)
-		mymetab <- mymetab[keepers,]
-		#fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))[keepers,]
-		fmetab <- fmetab[keepers,]
-	} else {
-		print("No metabolite filtering by missing values is applied")
-		mymetab <- mymetab
-		#fmetab <- Biobase::AnnotatedDataFrame(data = Biobase::fData(inputData[["metabolite"]]))
-		fmetab <- fmetab
-	}
+      type1Data <- inputData@analyteType1
+      if(analyteType1perc > 0) {
+        type1Data <- inputData@analyteType1
+        mymean <- as.numeric(apply(type1Data,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType1perc, na.rm = TRUE))
+        oldData <- type1Data
+        type1Data <- as.matrix(type1Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type1Data)==1 && nrow(type1Data) == ncol(oldData)){
+          type1Data <- t(type1Data)
+        }
+        # Set rownames
+        rownames(type1Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type1Data)==0){
+          type1Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by percentile is applied for analyte type 1")
+        }
+      }
+      if(analyteMiss > 0) {
+        # Filter
+        missnum <- as.numeric(apply(type1Data,1,function(x) length(which(is.na(x)))))
+        mycut <- analyteMiss * ncol(type1Data)
+        keepers <- which(missnum < mycut)
+        oldData <- type1Data
+        type1Data <- as.matrix(type1Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type1Data)==1 && nrow(type1Data) == ncol(oldData)){
+          type1Data <- t(type1Data)
+        }
+        # Set rownames
+        rownames(type1Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type1Data)==0){
+          type1Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by missing values is applied for analyte type 1")
+        }
+      }
 
-	# Now reconstruct the multidataset object
-	gene.set <- Biobase::ExpressionSet(assayData=mygenes)
-        Biobase::fData(gene.set) <- fgenes
-        Biobase::pData(gene.set) <- Biobase::pData(inputData[["expression"]])
-        
-	metab.set <- methods::new("MetaboliteSet",metabData = mymetab,
-                phenoData =  Biobase::AnnotatedDataFrame(data = Biobase::pData(inputData[["metabolite"]])), 
-		featureData =  fmetab)
-
-	multi <- MultiDataSet::createMultiDataSet()
-        multi1 <- MultiDataSet::add_genexp(multi, gene.set)
-        filtdata <- add_metabolite(multi1, metab.set)
-
-	return(filtdata)
+      #Checking for Log Scaling and Filtering the Data
+      if(length(which(!is.na(type1Data))) > 0 && min(type1Data) >= 0
+         && cov.cutoff > 0) {
+        analyte1mean <- apply(type1Data, MARGIN = 1, mean)
+        analyte1sd <- apply(type1Data, MARGIN = 1, mean)
+        analyte1cov <- analyte1sd / analyte1mean
+        cov.quant <- stats::quantile(analyte1cov, probs = cov.cutoff, na.rm = TRUE)
+        type1Data <- type1Data[which(analyte1cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type1Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 1 because data is log-scaled"))
+      }
+      
+      # Now reconstruct the object
+      filtdata <- methods::new("IntLimData", analyteType1=type1Data,
+                               analyteType2=matrix(, nrow = 0, ncol = 0),
+                               analyteType1MetaData = inputData@analyteType1MetaData,
+                               analyteType2MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
+                               sampleMetaData = inputData@sampleMetaData)
+      
     }
+  } else if(length(inputData@analyteType2)>0){
+    if(analyteType2perc < 0 || analyteType2perc > 1) {
+      stop("analyteType2perc parameter must be between 0 and 1")
+    }
+    if(analyteMiss < 0 || analyteMiss > 1) {
+      stop("analyteMiss parameter must be between 0 and 1")
+    }
+    if(cov.cutoff < 0 || cov.cutoff > 1) {
+      stop("cov.cutoff parameter must be between 0 and 1")
+    }
+    
+    # Check that at least one parameter is not null
+    if ((analyteType2perc+analyteMiss+cov.cutoff) ==0) {
+      if(suppressWarnings == FALSE){
+        warning("No filtering parameters were set so the data remains unfiltered")
+      }
+      filtdata <- inputData
+    }
+    else {
+      type2Data <- inputData@analyteType2
+      if(analyteType2perc > 0) {
+        # Filter
+        mymean <- as.numeric(apply(type2Data,1, function(x)
+          mean(x,na.rm=T)))
+        keepers <- which(mymean > stats::quantile(mymean,analyteType2perc, na.rm = TRUE))
+        oldData <- type2Data
+        # Transpose if only one column is remaining
+        type2Data <- as.matrix(type2Data[keepers,])
+        if(ncol(type2Data)==1 && nrow(type2Data) == ncol(oldData)){
+          type2Data <- t(type2Data)
+        }
+        # Set rownames
+        rownames(type2Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type2Data)==0){
+          type2Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by percentile is applied for analyte type 2")
+        }
+      }
+      if(analyteMiss > 0) {
+        # Filter
+        missnum <- as.numeric(apply(type2Data,1,function(x) length(which(is.na(x)))))
+        mycut <- analyteMiss * ncol(type2Data)
+        keepers <- which(missnum < mycut)
+        oldData <- type2Data
+        type2Data <- as.matrix(type2Data[keepers,])
+        # Transpose if only one column is remaining
+        if(ncol(type2Data)==1 && nrow(type2Data) == ncol(oldData)){
+          type2Data <- t(type2Data)
+        }
+        # Set rownames
+        rownames(type2Data) <- rownames(oldData)[keepers]
+        # Create empty matrix if no columns are remaining
+        if(nrow(type2Data)==0){
+          type2Data <- matrix(, nrow = 0, ncol = 0)
+        }
+      } else {
+        if(suppressWarnings == FALSE){
+          warning("No filtering by missing values is applied for analyte type 2")
+        }
+      }
+      
+      if(analyteType1perc < 0 || analyteType1perc > 1) {
+        stop("analyteType1perc parameter must be between 0 and 1")
+      }
+      if(analyteType2perc < 0 || analyteType2perc > 1) {
+        stop("analyteType2perc parameter must be between 0 and 1")
+      }
+      if(analyteMiss < 0 || analyteMiss > 1) {
+        stop("analyteMiss parameter must be between 0 and 1")
+      }
+      if(cov.cutoff < 0 || cov.cutoff > 1) {
+        stop("cov.cutoff parameter must be between 0 and 1")
+      }
+      
+      #Checking for Log Scaling and Filtering the Data
+      if(length(which(!is.na(type2Data))) > 0 && min(type2Data) >= 0
+         && cov.cutoff > 0) {
+        analyte2mean <- apply(type2Data, MARGIN = 1, mean)
+        analyte2sd <- apply(type2Data, MARGIN = 1, mean)
+        analyte2cov <- analyte2sd / analyte2mean
+        cov.quant <- stats::quantile(analyte2cov, probs = cov.cutoff, na.rm = TRUE)
+        type2Data <- type2Data[which(analyte2cov <= cov.quant),]
+      }else if(suppressWarnings == FALSE && min(type2Data) < 0 && cov.cutoff > 0){
+        warning(paste("Coefficient of variation filtering will not be applied",
+                "to analyte type 2 because data is log-scaled"))
+      }
+      
+      # Now reconstruct the object
+      filtdata <- methods::new("IntLimData", analyteType1=matrix(, nrow = 0, ncol = 0),
+                               analyteType2=type2Data,
+                               analyteType1MetaData = as.data.frame(matrix(, nrow = 0, ncol = 0)),
+                               analyteType2MetaData = inputData@analyteType2MetaData,
+                               sampleMetaData = inputData@sampleMetaData)
+    }
+  }
+  if(length(filtdata@analyteType2) == 0 && length(inputData@analyteType2) > 0){
+    stop(paste("All analytes have been removed from your type 2 data! Change your filtering criteria."))
+  }
+  if(length(filtdata@analyteType1) == 0 && length(inputData@analyteType1) > 0){
+    stop(paste("All analytes have been removed from your type 1 data! Change your filtering criteria."))
+  }
+  return(filtdata)
 }
-

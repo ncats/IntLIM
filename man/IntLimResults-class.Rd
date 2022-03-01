@@ -14,15 +14,29 @@ IntLimResults class
 
 \item{\code{interaction.adj.pvalues}}{matrix of adjusted interaction pvalues}
 
+\item{\code{interaction.coefficients}}{matrix of interaction coefficients}
+
+\item{\code{covariate.coefficients}}{data frame of coefficients for each covariate}
+
+\item{\code{covariate.pvalues}}{data frame of p-values for each covariate}
+
+\item{\code{model.rsquared}}{matrix of r-squared values}
+
 \item{\code{corr}}{matrix of correlations in group 1 and 2}
 
-\item{\code{warnings}}{a message of whether genes and metabolites have 0 standard deviation}
+\item{\code{filt.results}}{data frame of filtered results}
+
+\item{\code{warnings}}{a message of whether analytes have 0 standard deviation}
 
 \item{\code{stype}}{column name that represents sample type (by default, it will be used
 in the interaction term). Only 2 categories are currently supported.}
 
-\item{\code{outcome}}{outcome is either 'metabolite' or 'gene'}
+\item{\code{outcome}}{outcome is either '1' or '2'}
+
+\item{\code{independent.var.type}}{independent variable type (either '1 or '2')}
 
 \item{\code{covar}}{describing additional variables and the class they form}
+
+\item{\code{continuous}}{"1" if outcome is continuous, "0" if not}
 }}
 

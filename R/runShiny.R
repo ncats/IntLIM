@@ -1,6 +1,6 @@
 #' run shiny app
-#' @export
 #' @param port set port
+#' @export
 runIntLIMApp <- function(port="127.0.0.1") {
     appDir <- system.file("shinyApp", package = "IntLIM")
     if (appDir == "") {
