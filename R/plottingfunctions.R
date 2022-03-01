@@ -825,7 +825,7 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
   }
 }
 
-#' Return the number of significant analytes / pairs per permutation and the number 
+#' Return the number of significant analytes and the number 
 #' of permutations in which each analyte is significant.
 #' If plot = TRUE, show a box plot of number of significant analytes over permutations, 
 #' overlaid with the number of significant analytes in the original data.
@@ -834,25 +834,20 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
 #' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
 #' @param plot Whether or not to show the boxplot. Default is TRUE.
 #' @export
-PermutationSummary <- function(inputResults, permResults, plot){
+PermutationCountSummary <- function(inputResults, permResults, plot){
   
   # Prevent "visible binding for global variable" notes.
   Count <- Type <- NULL
   
-  # Compute pair significance counts.
-  allSignificantPairs <- do.call(c, permResults[[2]])
-  pairSignificanceCounts <- table(allSignificantPairs)
-  pairSignificanceCounts <- as.data.frame(pairSignificanceCounts[order(-pairSignificanceCounts)])
-  
   # Compute summary.
-  pairCountDistrib <- permResults[[1]]$Num_Significant_Pairs
-  analyte1 <- lapply(1:length(permResults[[2]]), function(i){
-    return(unlist(lapply(permResults[[2]][[i]], function(string){
+  pairCountDistrib <- permResults$numSigPairs$Num_Significant_Pairs
+  analyte1 <- lapply(1:length(permResults$listOfSigPairs), function(i){
+    return(unlist(lapply(permResults$listOfSigPairs[[i]], function(string){
       return(strsplit(string, split="__V__")[[1]][1])
     })))
   })
-  analyte2 <- lapply(1:length(permResults[[2]]), function(i){
-    return(unlist(lapply(permResults[[2]][[i]], function(string){
+  analyte2 <- lapply(1:length(permResults$listOfSigPairs), function(i){
+    return(unlist(lapply(permResults$listOfSigPairs[[i]], function(string){
       return(strsplit(string, split="__V__")[[1]][2])
     })))
   })
@@ -870,9 +865,9 @@ PermutationSummary <- function(inputResults, permResults, plot){
   significantCounts <- data.frame(Count=c(countDistribs$Pairs, 
                                           countDistribs$Independent,
                                           countDistribs$Outcome),
-                                  Type=c(rep("Pair", nrow(permResults[[1]])),
-                                         rep("Independent.Variable", nrow(permResults[[1]])),
-                                         rep("Outcome", nrow(permResults[[1]]))))
+                                  Type=c(rep("Pair", nrow(permResults$numSigPairs)),
+                                         rep("Independent.Variable", nrow(permResults$numSigPairs)),
+                                         rep("Outcome", nrow(permResults$numSigPairs))))
   
   # Compute the same for the original data.
   PairCount <- nrow(inputResults)
@@ -906,6 +901,53 @@ PermutationSummary <- function(inputResults, permResults, plot){
   }
   
   # Return summary.
-  return(list(SignificanceCountTable = pairSignificanceCounts,
-              CountDistributions = countDistribs))
+  return(countDistribs)
+}
+
+#' Return the number of significant analytes / pairs per permutation and the number 
+#' of permutations in which each analyte is significant.
+#' If plot = TRUE, show a box plot of number of significant analytes over permutations, 
+#' overlaid with the number of significant analytes in the original data.
+#'
+#' @param inputResults Data frame with model results (output of ProcessResults())
+#' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
+#' @param plot Whether or not to show the boxplot. Default is TRUE.
+#' @export
+PermutationPairSummary <- function(inputResults, permResults, plot){
+  
+  # Prevent "visible binding for global variable" notes.
+  Count <- Type <- NULL
+  
+  # Compute pair significance counts.
+  allSignificantPairs <- do.call(c, permResults$listOfSigPairs)
+  summaryCount <- table(allSignificantPairs)
+  
+  myres.sig.pairs <- paste(inputResults$Analyte1, inputResults$Analyte2, sep = "__V__")
+  original.pairs.count <- unlist(lapply(myres.sig.pairs, function(pair){
+    freq <- 0
+    if(pair %in% allSignificantPairs){
+      freq <- summaryCount[which(names(summaryCount) == pair)]
+    }
+    return(freq)
+  }))
+  original.pairs.df <- data.frame(Pair=myres.sig.pairs, 
+                                  Perm.Count=original.pairs.count)
+  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = reorder(Pair, Perm.Count), 
+                                                       y = as.numeric(as.character(reorder(Perm.Count, Perm.Count)))))+
+    ggplot2::geom_bar(stat = "identity", width = 1) + 
+    ggplot2::coord_flip() + 
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.y=ggplot2::element_blank(),
+                   panel.border = ggplot2::element_blank(),
+                   panel.grid.major = ggplot2::element_blank(),
+                   panel.grid.minor = ggplot2::element_blank(),
+                   axis.line = ggplot2::element_line(colour = "black")) +
+    ggplot2::labs(x="Significant Pair (Original Data)",
+                  y="Number of Permutations Where Significant") +
+    ggplot2::ylim(0,nrow(permResults$numSigPairs))
+  print(plt)
+
+  
+  # Return summary.
+  return(original.pairs.df)
 }

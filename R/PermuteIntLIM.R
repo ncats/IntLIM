@@ -116,6 +116,6 @@ PermuteIntLIM <- function(data,
   permuted.df <- data.frame(avg.r2.vals, sig.pairs)
   colnames(permuted.df) <- c("Avg_R_Squared_Values", "Num_Significant_Pairs")
   
-  permutedResults <- list(permuted.df, sig.list)
+  permutedResults <- list(numSigPairs=permuted.df, listOfSigPairs=sig.list)
   return(permutedResults)
 }
