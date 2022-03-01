@@ -1,5 +1,9 @@
-# IntLIM:  Integration through LInear Modeling
 [![Build Status](https://travis-ci.org/ncats/IntLIM.svg?branch=liz_dev)](https://travis-ci.org/ncats/IntLIM)
+
+# IntLIM:  Integration through LInear Modeling
+
+# IntLIM app is accessible via a server (no installation needed!).
+Please [click here](https://intlim.ncats.io/).  And let us know if additional functionalities would be useful (see contact info below).
 
 ## IntLIM
 
@@ -21,7 +25,7 @@ To access, [click here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5838881/)
 
 IntLIM is an R package and can be run on version >= 3.5.0. 
 
-Download (or upgrade) R here: https://cloud.r-project.org/
+Download (or upgrade) R [here](https://cloud.r-project.org/).
 
 RStudio (an interface to R than can make R easier to use) can be download here (not required): https://www.rstudio.com/products/rstudio/download/
 
@@ -32,12 +36,11 @@ To install IntLIM, simply type the following in the R terminal:
 ```
 install.packages("devtools")
 library(devtools)
-install_github("ncats/IntLIM@liz_dev")
+devtools::install_github("ncats/IntLIM")
 ```
 ## Vignette
 
-A detailed vignette, which uses a subset of the NCI-60 data, can be found here:
-https://ncats.github.io/IntLIM/IntLIMVignette.html
+A detailed vignette can be found [here](https://ncats.github.io/IntLIM/IntLIM2.0_Vignette.html).
 
 ## Formatted Data and Analysis Codes
 

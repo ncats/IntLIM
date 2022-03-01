@@ -4,3 +4,7 @@
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
+^Dockerfile
+^Jenkinsfile
+^install-intlim.R
+^shiny-server.conf
