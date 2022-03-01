@@ -748,9 +748,9 @@ MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnal
   
   #Add analyte and phenotype data for glm
   forglm  = data.frame(row.names = 1:length(outcomeData))
-  forglm$g = outcomeData
+  forglm$Y = outcomeData
   forglm$type = pheno
-  forglm$Y = as.numeric(independentData)
+  forglm$g = as.numeric(independentData)
   
   
   if (covariates != "") {
