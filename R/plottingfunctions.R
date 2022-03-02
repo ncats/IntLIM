@@ -916,7 +916,7 @@ PermutationCountSummary <- function(inputResults, permResults, plot){
 PermutationPairSummary <- function(inputResults, permResults, plot){
   
   # Prevent "visible binding for global variable" notes.
-  Count <- Type <- NULL
+  Pair <- Perm.Count <- NULL
   
   # Compute pair significance counts.
   allSignificantPairs <- do.call(c, permResults$listOfSigPairs)
@@ -932,8 +932,8 @@ PermutationPairSummary <- function(inputResults, permResults, plot){
   }))
   original.pairs.df <- data.frame(Pair=myres.sig.pairs, 
                                   Perm.Count=original.pairs.count)
-  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = reorder(Pair, Perm.Count), 
-                                                       y = as.numeric(as.character(reorder(Perm.Count, Perm.Count)))))+
+  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = stats::reorder(Pair, Perm.Count), 
+                                                       y = as.numeric(as.character(stats::reorder(Perm.Count, Perm.Count)))))+
     ggplot2::geom_bar(stat = "identity", width = 1) + 
     ggplot2::coord_flip() + 
     ggplot2::theme_bw() +
