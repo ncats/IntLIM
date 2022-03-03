@@ -9,7 +9,7 @@ test_that("Nonexistent files cause early termination.", {
 test_that("Incorrect column names cause early termination.", {
 
   # Create a data frame with inappropriate column names.
-  incorrect_colname_df = data.frame("Wilma"=c(1,2,3), "Fred"=c(0,0,0))
+  incorrect_colname_df = data.frame("P2"=c(1,2,3), "P1"=c(0,0,0))
 
   # Save the data frame as a file.
   fname <- paste(getwd(), "incorrect_colname_file.csv", sep = "/")
@@ -73,7 +73,7 @@ test_that("Absence of one omic type results in a warning.", {
 
   #Create metabolite data file.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
@@ -85,7 +85,7 @@ test_that("Absence of one omic type results in a warning.", {
 
   # Create gene data file.
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
@@ -97,7 +97,7 @@ test_that("Absence of one omic type results in a warning.", {
 
   # Create patient data file.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -186,14 +186,14 @@ test_that("Duplicate analytes cause early termination", {
 
   #Create metabolite data file.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   # Create metabolite data file with duplicates.
   metabData <- data.frame("1"=c("Metab1",0,0,0,0), "2"=c("Metab2",0,0,0,0),
                           "3"=c("Metab2",0,0,0,0))
-  rownames(metabData) <- c("","Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("","P1", "P2", "P3", "P4")
   fname_metab_dup <- paste(getwd(), "metab_file_dup.csv", sep = "/")
   write.table(t(metabData), file = fname_metab_dup, quote=FALSE, row.names = FALSE,
               sep = ",")
@@ -212,14 +212,14 @@ test_that("Duplicate analytes cause early termination", {
 
   # Create gene data file.
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   # Create gene data file with duplicates.
   geneData <- data.frame("1"=c("Gene1",0,0,0,0), "2"=c("Gene2",0,0,0,0),
                          "3"=c("Gene2",0,0,0,0))
-  rownames(geneData) <- c("","Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("","P1", "P2", "P3", "P4")
   fname_gene_dup <- paste(getwd(), "gene_file_dup.csv", sep = "/")
   write.table(t(geneData), file = fname_gene_dup, quote=FALSE, row.names = FALSE,
               sep = ",")
@@ -238,7 +238,7 @@ test_that("Duplicate analytes cause early termination", {
 
   # Create patient data file.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -294,7 +294,7 @@ test_that("Inaccessible data files cause early termination.", {
 
   # Create metabolite file.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
@@ -306,7 +306,7 @@ test_that("Inaccessible data files cause early termination.", {
 
   # Create gene file.
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
@@ -318,7 +318,7 @@ test_that("Inaccessible data files cause early termination.", {
 
   # Create patient data file.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -366,19 +366,19 @@ test_that("Missing metadata causes a warning.", {
 
   # Save metabolite file.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   # Save gene file.
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   # Save patient data file.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -469,17 +469,17 @@ test_that("Missing patient data leads to early termination", {
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), file = "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -489,7 +489,7 @@ test_that("Missing patient data leads to early termination", {
   write.csv(metabMetaData, file = fname_metab_meta, quote=FALSE, row.names = FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene_meta, quote=FALSE)
 
@@ -523,17 +523,17 @@ test_that("Missing 'id' column in metadata leads to early termination.",{
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -604,17 +604,17 @@ test_that("Discrepancy between metabolite names and metabolite metadata
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -628,12 +628,12 @@ test_that("Discrepancy between metabolite names and metabolite metadata
   fname_gene_meta <- paste(getwd(), "gene_metadata_file.csv", sep = "/")
   write.csv(geneMetaData, file = fname_gene_meta, quote=FALSE, row.names = FALSE)
 
-  metabMetaDataWrong <- data.frame("id"=c("Metab1","FruityPebbles","Metab3"),
+  metabMetaDataWrong <- data.frame("id"=c("Metab1","FruityP3","Metab3"),
                               "metabname" = c("Metab1","Metab2","Metab3"))
   fname_metab_meta_wrong <- paste(getwd(), "metab_metadata_file_wrong.csv", sep = "/")
   write.csv(metabMetaDataWrong, file = fname_metab_meta_wrong, quote=FALSE, row.names = FALSE)
 
-  geneMetaDataWrong <- data.frame("id"=c("Gene1","CocoaPebbles","Gene3"),
+  geneMetaDataWrong <- data.frame("id"=c("Gene1","CocoaP3","Gene3"),
                                    "genename" = c("Gene1","Gene2","Gene3"))
   fname_gene_meta_wrong <- paste(getwd(), "gene_metadata_file_wrong.csv", sep = "/")
   write.csv(geneMetaDataWrong, file = fname_gene_meta_wrong, quote=FALSE, row.names = FALSE)
@@ -682,17 +682,17 @@ test_that("All fields are present", {
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -720,14 +720,14 @@ test_that("All fields are present", {
                       "analyteType2MetaData", "sampleMetaData")
   expect_identical(slotNames(dataset), expected_names)
   expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
-                                                "Bambam"))
+  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+                                                "P4"))
   expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
-                                                       "Bambam"))
+  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+                                                       "P4"))
   expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+                                                     "P4"))
 
   # Remove files.
   file.remove(fname_metab)
@@ -747,17 +747,17 @@ test_that("All fields are present", {
   
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
   
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
   
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
   
@@ -783,14 +783,14 @@ test_that("All fields are present", {
                       "analyteType2MetaData", "sampleMetaData")
   expect_identical(slotNames(dataset), expected_names)
   expect_identical(colnames(dataset@sampleMetaData), c("Feat1"))
-  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
-                                                       "Bambam"))
+  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+                                                       "P4"))
   expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+                                                     "P4"))
   expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+                                                     "P4"))
   
   # Remove files.
   file.remove(fname_metab)
@@ -810,17 +810,17 @@ test_that("All fields are present", {
   
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
   
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
   
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
   
@@ -846,14 +846,14 @@ test_that("All fields are present", {
                       "analyteType2MetaData", "sampleMetaData")
   expect_identical(slotNames(dataset), expected_names)
   expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
-                                                       "Bambam"))
+  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+                                                       "P4"))
   expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+                                                     "P4"))
   expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+                                                     "P4"))
   
   # Remove files.
   file.remove(fname_metab)
@@ -873,17 +873,17 @@ test_that("Data is log-scaled", {
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,1,2,4), "Metab2"=c(0,1,2,4), "Metab3"=c(0,1,2,4))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,1,2,4), "Gene2"=c(0,1,2,4), "Gene3"=c(0,1,2,4))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,1,2,4), "Feat2"=c(0,1,2,4), "Feat3"=c(0,1,2,4))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -952,17 +952,17 @@ test_that("Negative data is not log-scaled", {
 
   # Save files.
   metabData <- data.frame("Metab1"=c(-1,1,2,4), "Metab2"=c(0,1,2,4), "Metab3"=c(0,1,2,4))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,1,2,4), "Gene2"=c(-1,1,2,4), "Gene3"=c(0,1,2,4))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,1,2,4), "Feat2"=c(0,1,2,4), "Feat3"=c(0,1,2,4))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -1018,17 +1018,17 @@ test_that("Other ID's also work", {
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0), "Metab2"=c(0,0,0,0), "Metab3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0), "Gene2"=c(0,0,0,0), "Gene3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -1058,14 +1058,14 @@ test_that("Other ID's also work", {
                       "analyteType2MetaData", "sampleMetaData")
   expect_identical(slotNames(dataset), expected_names)
   expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
-                                                "Bambam"))
+  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+                                                "P4"))
   expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
-                                                       "Bambam"))
+  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+                                                       "P4"))
   expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+                                                     "P4"))
 
   # Remove files.
   file.remove(fname_metab)
@@ -1085,17 +1085,17 @@ test_that("Samples not shared are removed", {
 
   # Save files.
   metabData <- data.frame("Metab1"=c(0,0,0,0,0), "Metab2"=c(0,0,0,0,0), "Metab3"=c(0,0,0,0,0))
-  rownames(metabData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Deeno")
+  rownames(metabData) <- c("P1", "P2", "P3", "P4", "P7")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene1"=c(0,0,0,0,0), "Gene2"=c(0,0,0,0,0), "Gene3"=c(0,0,0,0,0))
-  rownames(geneData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty")
+  rownames(geneData) <- c("P1", "P2", "P3", "P4", "P5")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat1"=c(0,0,0,0,0), "Feat2"=c(0,0,0,0,0), "Feat3"=c(0,0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Barney")
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P6")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -1120,7 +1120,7 @@ test_that("Samples not shared are removed", {
                                                           Feat2 = "numeric",
                                                           Feat3 = "numeric")),
 				paste("The following samples were not shared in all data types and were removed:",
-				"Barney, Deeno, Betty"),
+				"P6, P7, P5"),
 				fixed = TRUE)
 
   # Check the characteristics of the data set (both gene and metabolite).
@@ -1132,14 +1132,14 @@ test_that("Samples not shared are removed", {
                       "analyteType2MetaData", "sampleMetaData")
   expect_identical(slotNames(dataset), expected_names)
   expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("Fred","Wilma", "Pebbles",
-                                                "Bambam"))
+  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+                                                "P4"))
   expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("Fred","Wilma", "Pebbles",
-                                                       "Bambam"))
+  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+                                                       "P4"))
   expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("Fred","Wilma", "Pebbles",
-                                                     "Bambam"))
+  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+                                                     "P4"))
 
   # Remove files.
   file.remove(fname_metab)
@@ -1158,17 +1158,17 @@ test_that("Names with special symbols are converted appropriately", {
 
   # Save files.
   metabData <- data.frame("Metab-1"=c(0,0,0,0), "Met-ab2"=c(0,0,0,0), "Metab&3"=c(0,0,0,0))
-  rownames(metabData) <- c("Fred%%", "4Wilma", "*Pebbles-", "Bam*bam")
+  rownames(metabData) <- c("P1%%", "4P2", "*P3-", "Bam*bam")
   fname_metab <- paste(getwd(), "metab_file.csv", sep = "/")
   write.csv(t(metabData), file = fname_metab, quote=FALSE)
 
   geneData <- data.frame("Gene*1"=c(0,0,0,0), "Gene&&2"=c(0,0,0,0), "Gene()3"=c(0,0,0,0))
-  rownames(geneData) <- c("Fred%%", "4Wilma", "*Pebbles-", "Bam*bam")
+  rownames(geneData) <- c("P1%%", "4P2", "*P3-", "Bam*bam")
   fname_gene <- paste(getwd(), "gene_file.csv", sep = "/")
   write.csv(t(geneData), file = fname_gene, quote=FALSE)
 
   pData <- data.frame("Feat-1"=c(0,0,0,0), "Feat~2"=c(0,0,0,0), "Feat`3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred%%", "4Wilma", "*Pebbles-", "Bam*bam")
+  rownames(pData) <- c("P1%%", "4P2", "*P3-", "Bam*bam")
   fname_pdata <- paste(getwd(), "pdata_file.csv", sep = "/")
   write.csv(pData, file = fname_pdata, quote=FALSE)
 
@@ -1196,11 +1196,11 @@ test_that("Names with special symbols are converted appropriately", {
                       "analyteType2MetaData", "sampleMetaData")
   expect_identical(slotNames(dataset), expected_names)
   expect_identical(colnames(dataset@sampleMetaData), c("Feat.1", "Feat.2", "Feat.3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("Fred..", "X4Wilma", "X.Pebbles.", "Bam.bam"))
+  expect_identical(rownames(dataset@sampleMetaData), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
   expect_identical(rownames(dataset@analyteType1), c("Metab.1", "Met.ab2","Metab.3"))
-  expect_identical(colnames(dataset@analyteType1), c("Fred..", "X4Wilma", "X.Pebbles.", "Bam.bam"))
+  expect_identical(colnames(dataset@analyteType1), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
   expect_identical(rownames(dataset@analyteType2), c("Gene.1","Gene..2","Gene..3"))
-  expect_identical(colnames(dataset@analyteType2), c("Fred..", "X4Wilma", "X.Pebbles.", "Bam.bam"))
+  expect_identical(colnames(dataset@analyteType2), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
 
   # Remove files.
   file.remove(fname_metab)

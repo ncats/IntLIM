@@ -13,17 +13,17 @@ test_that("Insufficient fold count causes an error",{
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3), 
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3), 
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3), 
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3), 
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -48,17 +48,17 @@ test_that("Function works correctly in multi-omic case.", {
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3), 
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3), 
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3), 
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3), 
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -95,17 +95,17 @@ test_that("Function still works when metadata is missing.", {
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3), 
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3), 
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3), 
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3), 
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   dat <- methods::new("IntLimData", analyteType1=as.matrix(metabData),
                       analyteType2=as.matrix(geneData),
@@ -137,12 +137,12 @@ test_that("Single-omic data gives expected results.", {
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3), 
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3), 
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))

@@ -8,7 +8,7 @@ test_that("Inputting data other than a IntLimData causes early termination.", {
 test_that("Inputting data set without expression or metabolite data causes early termination.", {
   # sample metadata
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
   
   message <- paste("input data must contain assayData of at least one type of analyte.
 	     Try reading in the data with the ReadData function")
@@ -25,12 +25,12 @@ test_that("Inputting out-of-bounds parameters causes early termination.", {
 
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0), 
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0), 
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -98,12 +98,12 @@ test_that("Check that output is correct without filtering.", {
 
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0), 
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0), 
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -154,12 +154,12 @@ test_that("Check that output is correct when we remove metabolites with NA.", {
 
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0), 
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,NA,0), "Pebbles"=c(NA,0,0), 
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,NA,0), "P3"=c(NA,0,0), 
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -197,12 +197,12 @@ test_that("Check that metabolites are filtered properly when cov filtering is ad
   
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0), 
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0), 
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,NA,0), "Pebbles"=c(NA,0,0), 
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,NA,0), "P3"=c(NA,0,0), 
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -235,12 +235,12 @@ test_that("Check for warning when data is log-scaled.", {
   
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(-1,1,2), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                         "Bambam"=c(1,2,3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(-1,1,2), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                         "P4"=c(1,2,3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                          "Bambam"=c(1,2,-3))
+  metabData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                          "P4"=c(1,2,-3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -294,12 +294,12 @@ test_that("Check that output is correct when we filter the lowest percentile ana
 
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                         "Bambam"=c(1,2,3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                         "P4"=c(1,2,3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                          "Bambam"=c(1,2,3))
+  metabData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                          "P4"=c(1,2,3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -351,12 +351,12 @@ test_that("Check that output is correct when we filter the lowest percentile ana
 
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                         "Bambam"=c(1,2,3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                         "P4"=c(1,2,3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                          "Bambam"=c(1,NA,3))
+  metabData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                          "P4"=c(1,NA,3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -395,12 +395,12 @@ test_that("Check that an error is given if all data is filtered out.", {
 
   # Create toy data set.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,3), "Pebbles"=c(1,2,3), 
-                         "Bambam"=c(1,2,3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,3), "P3"=c(1,2,3), 
+                         "P4"=c(1,2,3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(1,2,3), "Wilma"=c(1,2,NA), "Pebbles"=c(1,2,3), 
-                          "Bambam"=c(1,NA,3))
+  metabData <- data.frame("P1"=c(1,2,3), "P2"=c(1,2,NA), "P3"=c(1,2,3), 
+                          "P4"=c(1,NA,3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))

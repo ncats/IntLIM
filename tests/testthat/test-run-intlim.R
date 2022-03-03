@@ -11,12 +11,12 @@ test_that("Inputting more than 2 classes causes early termination.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0),
                       "Level"=c("Low", "Medium", "High", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0),
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0),
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0),
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0),
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -40,12 +40,12 @@ test_that("Invalid parameters cause an error.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0),
                       "Level"=c("Low", "Medium", "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0),
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0),
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0),
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0),
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -68,12 +68,12 @@ test_that("Inputting missing data types causes early termination.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0),
                       "Level"=c("Low", "Medium", "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam")
-  geneData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0),
-                         "Bambam"=c(0,0,0))
+  rownames(pData) <- c("P1", "P2", "P3", "P4")
+  geneData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0),
+                         "P4"=c(0,0,0))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(0,0,0), "Wilma"=c(0,0,0), "Pebbles"=c(0,0,0),
-                          "Bambam"=c(0,0,0))
+  metabData <- data.frame("P1"=c(0,0,0), "P2"=c(0,0,0), "P3"=c(0,0,0),
+                          "P4"=c(0,0,0))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -118,17 +118,17 @@ test_that("Fields are populated appropriately (discrete).", {
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -277,17 +277,17 @@ test_that("Fields are populated appropriately when feature data contains plus si
                                 "z", "two+three", "two+three"),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -373,17 +373,17 @@ test_that("Fields are populated appropriately (continuous).", {
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -535,17 +535,17 @@ test_that("Fields are populated appropriately with factor covariates.", {
   pData <- data.frame("Feat1"=c("one", "two", "three", "one", "two", "three",
                                 "one", "two"),
                       "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -637,17 +637,17 @@ test_that("Fields are populated appropriately with a mix of numeric and factor c
                       "Feat2"=c("one", "one", "two", "two", "one", "one", "two",
                                 "two"),
                       "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -740,17 +740,17 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -931,17 +931,17 @@ test_that("Duplicates are removed when appropriate (continuous).", {
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -1127,17 +1127,17 @@ test_that("Covariate p-values are saved (discrete).", {
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c("Low", "Medium", "Low", "Medium", "Medium", "Low",
                                 "Low", "Medium"))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -1286,17 +1286,17 @@ test_that("Covariate p-values are saved (continuous).", {
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8),
                       "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                       "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                       "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -1451,23 +1451,23 @@ test_that("Check for correlated variables.", {
                        "Feat2"=c(seq(1:8)),
                        "Feat3"=c(seq(1:8)),
                        "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData1) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                        "Dino", "Hoppy")
+  rownames(pData1) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                        "P7", "P8")
   pData2 <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
                        "Feat2"=c(seq(1:8)),
                        "Feat3"=c(rev(seq(1:8))),
                        "Level"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8))
-  rownames(pData2) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                        "Dino", "Hoppy")
-  geneData <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  rownames(pData2) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                        "P7", "P8")
+  geneData <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData) <- c("Gene1", "Gene2", "Gene3")
-  metabData <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                          "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                          "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                          "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                          "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                          "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                          "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData) <- c("Metab1", "Metab2", "Metab3")
   metabMetaData <- data.frame("id"=c("Metab1", "Metab2", "Metab3"), "metabname"=
                                 c("Metab1", "Metab2", "Metab3"))
@@ -1505,41 +1505,41 @@ test_that("If standard deviation is zero, analytes are removed.", {
   pData1 <- data.frame("Feat1"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8),
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
                       "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8))
-  rownames(pData1) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                        "Dino", "Hoppy")
+  rownames(pData1) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                        "P7", "P8")
   pData2 <- data.frame("Feat1"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8),
                        "Feat2"=c(rep(0,8)),
                        "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8))
-  rownames(pData2) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                        "Dino", "Hoppy")
+  rownames(pData2) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                        "P7", "P8")
   pData3 <- data.frame("Feat1"=c(rep(0,8)),
                        "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
                        "Feat3"=c(14.1,74.2,11.3,19.4,73.5,55.6,18.7,91.8))
-  rownames(pData3) <- c("Fred", "Wilma", "Pebbles", "Bambam", "Betty", "Barney",
-                        "Dino", "Hoppy")
+  rownames(pData3) <- c("P1", "P2", "P3", "P4", "P5", "P6",
+                        "P7", "P8")
 
   # Genes with and without standard deviation of zero.
-  geneData1 <- data.frame("Fred"=c(46.1,20.2,59.3), "Wilma"=c(11.1,34.2,19.3),
-                         "Pebbles"=c(28.1,71.2,94.3), "Bambam"=c(51.1,91.2,32.3),
-                         "Betty"=c(73.1,26.2,40.3), "Barney"=c(91.1,99.2,12.3),
-                         "Dino"=c(38.1,44.2,60.3), "Hoppy"=c(91.1,93.2,63.3))
+  geneData1 <- data.frame("P1"=c(46.1,20.2,59.3), "P2"=c(11.1,34.2,19.3),
+                         "P3"=c(28.1,71.2,94.3), "P4"=c(51.1,91.2,32.3),
+                         "P5"=c(73.1,26.2,40.3), "P6"=c(91.1,99.2,12.3),
+                         "P7"=c(38.1,44.2,60.3), "P8"=c(91.1,93.2,63.3))
   rownames(geneData1) <- c("Gene1", "Gene2", "Gene3")
-  geneData2 <- data.frame("Fred"=c(0,20.2,59.3), "Wilma"=c(0,34.2,19.3),
-                          "Pebbles"=c(0,71.2,94.3), "Bambam"=c(0,91.2,32.3),
-                          "Betty"=c(0,26.2,40.3), "Barney"=c(0,99.2,12.3),
-                          "Dino"=c(0,44.2,60.3), "Hoppy"=c(0,93.2,63.3))
+  geneData2 <- data.frame("P1"=c(0,20.2,59.3), "P2"=c(0,34.2,19.3),
+                          "P3"=c(0,71.2,94.3), "P4"=c(0,91.2,32.3),
+                          "P5"=c(0,26.2,40.3), "P6"=c(0,99.2,12.3),
+                          "P7"=c(0,44.2,60.3), "P8"=c(0,93.2,63.3))
   rownames(geneData2) <- c("Gene1", "Gene2", "Gene3")
 
   # Metabolites with and without standard deviation of zero.
-  metabData1 <- data.frame("Fred"=c(0,32.2,81.3), "Wilma"=c(0,58.2,45.3),
-                           "Pebbles"=c(0,61.2,67.3), "Bambam"=c(0,7.2,79.3),
-                           "Betty"=c(0,87.2,91.3), "Barney"=c(0,87.2,91.3),
-                           "Dino"=c(0,10.2,85.3), "Hoppy"=c(0,14.2,76.3))
+  metabData1 <- data.frame("P1"=c(0,32.2,81.3), "P2"=c(0,58.2,45.3),
+                           "P3"=c(0,61.2,67.3), "P4"=c(0,7.2,79.3),
+                           "P5"=c(0,87.2,91.3), "P6"=c(0,87.2,91.3),
+                           "P7"=c(0,10.2,85.3), "P8"=c(0,14.2,76.3))
   rownames(metabData1) <- c("Metab1", "Metab2", "Metab3")
-  metabData2 <- data.frame("Fred"=c(60.1,32.2,81.3), "Wilma"=c(68.1,58.2,45.3),
-                           "Pebbles"=c(30.1,61.2,67.3), "Bambam"=c(36.1,7.2,79.3),
-                           "Betty"=c(5.1,87.2,91.3), "Barney"=c(5.1,87.2,91.3),
-                           "Dino"=c(99.1,10.2,85.3), "Hoppy"=c(51.1,14.2,76.3))
+  metabData2 <- data.frame("P1"=c(60.1,32.2,81.3), "P2"=c(68.1,58.2,45.3),
+                           "P3"=c(30.1,61.2,67.3), "P4"=c(36.1,7.2,79.3),
+                           "P5"=c(5.1,87.2,91.3), "P6"=c(5.1,87.2,91.3),
+                           "P7"=c(99.1,10.2,85.3), "P8"=c(51.1,14.2,76.3))
   rownames(metabData2) <- c("Metab1", "Metab2", "Metab3")
 
   # Metadata
