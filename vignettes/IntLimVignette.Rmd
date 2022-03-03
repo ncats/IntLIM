@@ -49,7 +49,7 @@ if(!require("devtools")){
   install.packages("devtools")
 }
 library("devtools")
-install_github("ncats/IntLIM@liz_dev")
+install_github("ncats/IntLIM")
 ```
 
 IntLIM can be loaded using the library function
@@ -162,8 +162,8 @@ covariates to the given classes.
 
 ```{r}
 inputDatafilt <- IntLIM::FilterData(inputData,
-                                    analyteType1perc = 0.10, analyteType2perc = 0.10,
-                                    analyteMiss = 0.80)
+                                     analyteType1perc = 0.10, analyteType2perc = 0.10,
+                                     analyteMiss = 0.80)
 ```
 
 The __PlotDistribution()__ function allows users to produce a boxplot of the 
@@ -207,8 +207,8 @@ m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1
 are removed.
 
 ```{r}
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia", 
-                              covar = c("cellnbr"), outcome = 1, 
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
+                              covar = c("cellnbr"), outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE)
 ```
@@ -239,21 +239,8 @@ IntLIM::PValueBoxPlots(IntLimResults = myres.gm)
 The __InteractionCoefficientGraph()__ function allows the user to observe the 
 interaction coefficients of all models, sorted in ascending order.
 ```{r}
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, 
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm,
                                     interactionCoeffPercentile = 0.9)
-```
-The __PlotPair()__ function  allows the user to plot a chosen analyte 
-association for selected groups. An example is shown below for DLG4 vs. 
-(p-Hydroxyphenyl)lactic acid.
-
-Plot a pair of interest:
-```{r}
-IntLIM::PlotPair(inputData = inputDatafilt,
-                 inputResults = myres.gm,
-                 outcome = 1, 
-                 independentVariable = 2, 
-                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid", 
-                 independentAnalyteOfInterest = "DLG4")
 ```
 
 The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing 
@@ -275,32 +262,25 @@ p-values (default set at 0.05) between the two groups.  The output
 is a list of significant analyte pairs.
 
 ```{r}
-myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
-                                       inputData = inputDatafilt, 
+myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm,
+                                       inputData = inputDatafilt,
                                        pvalcutoff = 0.10, rsquaredCutoff = 0.2,
                                        interactionCoeffPercentile = 0.5)
 ```
 
-The __InteractionCoefficientGraph()__ function allows the user to observe the 
-interaction coefficients of all models, sorted in ascending order.
-```{r}
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, 
-                                    interactionCoeffPercentile = 0.9)
-```
+The __PlotPair()__ function  allows the user to plot a chosen analyte 
+association for selected groups. An example is shown below for DLG4 vs. 
+(p-Hydroxyphenyl)lactic acid.
 
-The __HistogramPairs()__ function plots the count of analyte pairs by either
-outcome or independent variable analyte.
+Plot a pair of interest:
 ```{r}
-IntLIM::HistogramPairs(myres.gm.sig, type = "outcome")
-IntLIM::HistogramPairs(myres.gm.sig, type = "independent")
+IntLIM::PlotPair(inputData = inputDatafilt,
+                 inputResults = myres.gm,
+                 outcome = 1,
+                 independentVariable = 2,
+                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
+                 independentAnalyteOfInterest = "DLG4")
 ```
-
-Of note, plots are generated using Highcharter (http://jkunst.com/highcharter/) 
-and Plotly (Sievert, et al.) (https://plot.ly), which enables interactive 
-visualization, allowing users to promptly assess the effect of changing parameters 
-on analysis results and accelerating discovery of phenotype-specific analyte 
-pairs.  This will greatly allow the workflow to be accessible to non-computational 
-biologists.   
 
 The __OutputData()__ and __OutputResults()__ function allows the users to output 
 the data and results of the analyses into zipped CSV files.  
@@ -309,9 +289,11 @@ Lastly, various writing functions are implemented.  The __OutputData()__ and
 __OutputResults()__ function allows the users to output the data and results of 
 the analyses into zipped CSV files.
 
+These lines are commented out to speed up build time for the package. Uncomment
+to run.
 ```{r eval = FALSE}
 IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = #"\\"))
 ```
 ## Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
@@ -319,9 +301,9 @@ reading, filtering, running IntLIM, and processing the results for multiple fold
 __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within each
 fold and common between folds.
 ```{r eval = FALSE}
-crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10, 
+crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
                    analyteType2perc = 0.10, analyteMiss = 0.80,
-                   stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1), 
+                   stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5
                    folds = 4)
@@ -335,7 +317,7 @@ __PermutationCountSummary__ returns a summary of the permutation results and
 (optionally) a violin plot of the number of significant pairs and analytes.
 ```{r eval = FALSE}
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "PBO_vs_Leukemia", outcome = 1,
-                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5, 
+                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
                    rsquaredCutoff = 0.2, covar = c("cellnbr"),
                    num.permutations = 5, continuous = TRUE)
 summary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,

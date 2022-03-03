@@ -49,7 +49,7 @@ if(!require("devtools")){
   install.packages("devtools")
 }
 library("devtools")
-install_github("ncats/IntLIM@liz_dev")
+install_github("ncats/IntLIM")
 ```
 
 IntLIM can be loaded using the library function
@@ -206,8 +206,8 @@ are removed.
 is being used.
 
 ```{r}
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="drugscore", 
-                              covar = c("cellnbr"), outcome = 1, 
+myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="drugscore",
+                              covar = c("cellnbr"), outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE, continuous = TRUE)
 ```
@@ -238,7 +238,7 @@ IntLIM::PValueBoxPlots(IntLimResults = myres.gm)
 The __InteractionCoefficientGraph()__ function allows the user to observe the 
 interaction coefficients of all models, sorted in ascending order.
 ```{r}
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm, 
+IntLIM::InteractionCoefficientGraph(inputResults = myres.gm,
                                     interactionCoeffPercentile = 0.9)
 ```
 The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing 
@@ -247,20 +247,6 @@ the interaction coefficient to the –log10(FDR-adjusted p-value).
 ```{r}
 IntLIM::pvalCoefVolcano(inputResults = myres.gm, inputData = inputDatafilt,
                         pvalcutoff = 0.05)
-```
-
-The __PlotPair()__ function allows the user to observe the marginal 
-effects of phenotype for a given pair of analytes. 
-An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid.
-
-Plot a pair of interest:
-```{r}
-IntLIM::PlotPair(inputData = inputDatafilt,
-                 inputResults = myres.gm,
-                 outcome = 1, 
-                 independentVariable = 2, 
-                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid", 
-                 independentAnalyteOfInterest = "DLG4")
 ```
 ## Filter Results
 
@@ -272,25 +258,32 @@ groups. Note that the __diffcorr__ and __corrtype__ arguments must be set to
 ___NA___ for continuous phenotypes.
 
 ```{r}
-myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm, 
-                                       inputData = inputDatafilt, 
-                                       pvalcutoff = 0.10, 
+myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm,
+                                       inputData = inputDatafilt,
+                                       pvalcutoff = 0.10,
                                        rsquaredCutoff = 0.2,
                                        interactionCoeffPercentile = 0.5)
 ```
+The __PlotPair()__ function allows the user to observe the marginal 
+effects of phenotype for a given pair of analytes. 
+An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid.
+
+Plot a pair of interest:
+```{r}
+IntLIM::PlotPair(inputData = inputDatafilt,
+                 inputResults = myres.gm,
+                 outcome = 1,
+                 independentVariable = 2,
+                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
+                 independentAnalyteOfInterest = "DLG4")
+```
+
 The __HistogramPairs()__ function plots the count of analyte pairs by either
 outcome or independent variable analyte.
 ```{r}
 IntLIM::HistogramPairs(myres.gm.sig, type = "outcome")
 IntLIM::HistogramPairs(myres.gm.sig, type = "independent")
 ```
-
-Of note, plots are generated using Highcharter (http://jkunst.com/highcharter/) 
-and Plotly (Sievert, et al.) (https://plot.ly), which enables interactive 
-visualization, allowing users to promptly assess the effect of changing parameters 
-on analysis results and accelerating discovery of phenotype-specific analyte 
-pairs.  This will greatly allow the workflow to be accessible to non-computational 
-biologists.   
 
 The __OutputData()__ and __OutputResults()__ function allows the users to output 
 the data and results of the analyses into zipped CSV files.  
@@ -300,10 +293,10 @@ __OutputResults()__ function allows the users to output the data and results of
 the analyses into zipped CSV files.
 
 ```{r eval = FALSE}
-IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, 
-                                                          "FilteredDataContinuous.zip", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, 
-                                                               "MyResultsContinuous.gm.csv", sep = "\\"))
+IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir,
+                                                         "FilteredDataContinuous.zip", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir,
+                                                              "MyResultsContinuous.gm.csv", sep = "\\"))
 ```
 ## Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
@@ -311,9 +304,9 @@ reading, filtering, running IntLIM, and processing the results for multiple fold
 __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within each
 fold and common between folds.
 ```{r eval = FALSE}
-crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10, 
+crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
                    analyteType2perc = 0.10, analyteMiss = 0.80,
-                   stype="drugscore", covar = c("cellnbr"), outcome = c(1), 
+                   stype="drugscore", covar = c("cellnbr"), outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, diffcorr = NA, rsquaredCutoff = 0.2,
                    folds = 4, corrtype = NA, continuous = TRUE,
@@ -328,7 +321,7 @@ __PermutationCountSummary__ returns a summary of the permutation results and
 (optionally) a violin plot of the number of significant pairs and analytes.
 ```{r eval = FALSE}
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "drugscore", outcome = 1,
-                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5, 
+                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
                    rsquaredCutoff = 0.2, covar = c("cellnbr"),
                    num.permutations = 5, continuous = TRUE)
 summary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
