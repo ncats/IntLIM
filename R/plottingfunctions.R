@@ -73,7 +73,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     g <- highcharter::hc_yAxis(g, title = list(text = "Levels",
                                          style = list(fontSize = "13px")),
                             labels = list(format = "{value}"))
-    g <- highcharter::hc_xAxis(g, labels="", categories = colnames(type1Data))
+    g <- highcharter::hc_xAxis(g, categories = colnames(type1Data))
     g <- highcharter::hc_tooltip(g, valueDecimals = 2)
     g <- highcharter::hc_exporting(g, enabled = TRUE)
   }
@@ -116,7 +116,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
     m <- highcharter::hc_yAxis(m, title = list(text = "Levels",
                                          style = list(fontSize = "13px")),
                             labels = list(format = "{value}"))
-    m <- highcharter::hc_xAxis(m, labels="", categories = colnames(type2Data))
+    m <- highcharter::hc_xAxis(m, categories = colnames(type2Data))
     m <- highcharter::hc_tooltip(m, valueDecimals = 2)
     m <- highcharter::hc_exporting(m, enabled = TRUE)
   }

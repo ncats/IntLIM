@@ -155,10 +155,6 @@ Furthermore we can filter out analytes by percentage of missing or imputed value
 For the analysis, we filter out the genes with the lowest 10% of gene expression 
 and metabolites with more than 80% imputed values.  This is done as below. 
 We henceforth have 1303 genes and 212 metabolites for 20 cell line samples.  
-The "stype" variable is the phenotype or outcome of interest. This function 
-checks that the "stype" values are the same for all input data and retains the 
-phenotype data for later use. The optional "class.covar" variable coerces 
-covariates to the given classes.
 
 ```{r}
 inputDatafilt <- IntLIM::FilterData(inputData,
@@ -207,7 +203,7 @@ m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1
 are removed.
 
 ```{r}
-myres.gm <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
+myres <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
                               covar = c("cellnbr"), outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE)
@@ -218,14 +214,14 @@ By default, FDR-adjusted p-values are shown. However, users can also choose to p
 nominal p-values.
 
 ```{r}
-IntLIM::DistPvalues(IntLimResults = myres.gm)
-IntLIM::DistPvalues(IntLimResults = myres.gm, adjusted = FALSE)
+IntLIM::DistPvalues(IntLimResults = myres)
+IntLIM::DistPvalues(IntLimResults = myres, adjusted = FALSE)
 ```
 
 The __DistRSquared()__ function allows the user to observe a histogram of the 
 r-squared values.
 ```{r}
-IntLIM::DistRSquared(IntLimResults = myres.gm)
+IntLIM::DistRSquared(IntLimResults = myres)
 ```
 
 The __PValueBoxPlots()__ function allows the user to observe the p-value 
@@ -233,13 +229,13 @@ distributions of all covariates in the linear models prior to adjustment.
 Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when 
 running __RunIntLim__. 
 ```{r}
-IntLIM::PValueBoxPlots(IntLimResults = myres.gm)
+IntLIM::PValueBoxPlots(IntLimResults = myres)
 ```
 
 The __InteractionCoefficientGraph()__ function allows the user to observe the 
 interaction coefficients of all models, sorted in ascending order.
 ```{r}
-IntLIM::InteractionCoefficientGraph(inputResults = myres.gm,
+IntLIM::InteractionCoefficientGraph(inputResults = myres,
                                     interactionCoeffPercentile = 0.9)
 ```
 
@@ -247,7 +243,7 @@ The __pvalCoefVolcano()__ function allows users to observe a volcano plot compar
 the interaction coefficient to the –log10(FDR-adjusted p-value).
 
 ```{r}
-IntLIM::pvalCoefVolcano(inputResults = myres.gm, inputData = inputDatafilt,
+IntLIM::pvalCoefVolcano(inputResults = myres, inputData = inputDatafilt,
                         pvalcutoff = 0.05)
 ```
 
@@ -262,7 +258,7 @@ p-values (default set at 0.05) between the two groups.  The output
 is a list of significant analyte pairs.
 
 ```{r}
-myres.gm.sig <- IntLIM::ProcessResults(inputResults = myres.gm,
+myres.sig <- IntLIM::ProcessResults(inputResults = myres,
                                        inputData = inputDatafilt,
                                        pvalcutoff = 0.10, rsquaredCutoff = 0.2,
                                        interactionCoeffPercentile = 0.5)
@@ -275,25 +271,19 @@ association for selected groups. An example is shown below for DLG4 vs.
 Plot a pair of interest:
 ```{r}
 IntLIM::PlotPair(inputData = inputDatafilt,
-                 inputResults = myres.gm,
+                 inputResults = myres,
                  outcome = 1,
                  independentVariable = 2,
                  outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
                  independentAnalyteOfInterest = "DLG4")
 ```
 
-The __OutputData()__ and __OutputResults()__ function allows the users to output 
-the data and results of the analyses into zipped CSV files.  
-
 Lastly, various writing functions are implemented.  The __OutputData()__ and 
 __OutputResults()__ function allows the users to output the data and results of 
 the analyses into zipped CSV files.
-
-These lines are commented out to speed up build time for the package. Uncomment
-to run.
 ```{r eval = FALSE}
 IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.gm.sig,filename=paste(result_dir, "MyResults.gm.csv", sep = #"\\"))
+IntLIM::OutputResults(inputResults=myres.sig,filename=paste(result_dir, "MyResults.csv", sep = "\\"))
 ```
 ## Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
@@ -305,7 +295,7 @@ crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 
                    analyteType2perc = 0.10, analyteMiss = 0.80,
                    stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
-                   pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5
+                   pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5,
                    folds = 4)
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
@@ -319,8 +309,10 @@ __PermutationCountSummary__ returns a summary of the permutation results and
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "PBO_vs_Leukemia", outcome = 1,
                       independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
                    rsquaredCutoff = 0.2, covar = c("cellnbr"),
-                   num.permutations = 5, continuous = TRUE)
-summary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
+                   num.permutations = 5)
+countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
+                              plot = TRUE)
+pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig,
                               plot = TRUE)
 ```
 
