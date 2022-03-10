@@ -627,6 +627,7 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
 #' @param inputResults List of outputs of ProcessResultsAllFolds(), each of which
 #' is a list of IntLIMResults.
 #' @return an UpSet plot
+#' @export
 PlotFoldOverlapUpSet<-function(inputResults){
   sig_list <- lapply(1:length(inputResults), function(i){
     return(paste(inputResults[[i]][,1], inputResults[[i]][,2], sep = "_"))
