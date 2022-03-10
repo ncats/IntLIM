@@ -215,7 +215,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       intervals <- seq(min(mytype), max(mytype),
                        by = (max(mytype) - min(mytype)) / (bin_count - 1))
       subject_color_scale <- findInterval(mytype, intervals)
-      pal <- grDevices::colorRampPalette(c("#1E90FF", "#002366"))(bin_count+1)
+      pal <- grDevices::colorRampPalette(c("#89CFF0", "#002366"))(bin_count+1)
       mycols <-pal[subject_color_scale]
       
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=mycols)
@@ -233,7 +233,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
                                                       pointFormat=paste("{point.label}","{point.z}")),
                                        showInLegend=FALSE)
       pm <- highcharter::hc_colorAxis(pm, min=min(mytype), max=max(mytype), 
-                                      minColor = "#1E90FF", maxColor = "#002366")
+                                      minColor = "#89CFF0", maxColor = "#002366")
     } else {
       type1 <- inputData@analyteType1
       type2 <- inputData@analyteType2
