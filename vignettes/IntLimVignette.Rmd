@@ -290,14 +290,16 @@ You can also choose to run end-to-end cross-validation. This combines the steps 
 reading, filtering, running IntLIM, and processing the results for multiple folds.
 __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within each
 fold and common between folds.
-```{r eval = FALSE}
+Note that __PlotFoldOverlapUpSet__ is currently commented out to avoid large
+packages sizes when building vignettes. Please uncomment while running this vignette.
+```{r}
 crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
                    analyteType2perc = 0.10, analyteMiss = 0.80,
                    stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5,
                    folds = 4)
-IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
+#IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
 
 ## Run Permutation
@@ -305,15 +307,21 @@ You can also choose to run end-to-end permutation. This combines the steps of
 permuting, running IntLIM, and processing results for multiple permutations.
 __PermutationCountSummary__ returns a summary of the permutation results and
 (optionally) a violin plot of the number of significant pairs and analytes.
-```{r eval = FALSE}
+__PermutationPairSummary__ returns a bar chart with a horizontal bar for each
+significant pair. The bar length measures the number of permutations in which
+the pair is also significant.
+Note that __PermutationCountSummary__ and __PermutationPairSummary__ are currently 
+commented out to avoid large
+packages sizes when building vignettes. Please uncomment while running this vignette.
+```{r}
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "PBO_vs_Leukemia", outcome = 1,
                       independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
                    rsquaredCutoff = 0.2, covar = c("cellnbr"),
                    num.permutations = 5)
-countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
-                              plot = TRUE)
-pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig,
-                              plot = TRUE)
+#countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
+#                              plot = TRUE)
+#pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig,
+#                              plot = TRUE)
 ```
 
 ## References
