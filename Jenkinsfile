@@ -48,7 +48,7 @@ pipeline {
                     ]) {
                         checkout scm
                         sh  """  
-                            docker pull rocker/shiny:3.6.3
+                            docker pull rocker/shiny:4.1.0
                         """
                         script {
                             def image = docker.build(
