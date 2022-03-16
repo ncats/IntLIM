@@ -47,6 +47,9 @@ pipeline {
                         "BUILD_VERSION=" + (params.BUILD_VERSION ?: env.BUILD_VERSION)
                     ]) {
                         checkout scm
+                        sh  """  
+                            docker pull rocker/shiny:4.1.0
+                        """
                         script {
                             def image = docker.build(
                                 "ncats/intlim:${env.BUILD_VERSION}",
