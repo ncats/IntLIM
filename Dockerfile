@@ -4,8 +4,8 @@ RUN apt-get update --allow-releaseinfo-change && apt-get install -y build-essent
 
 RUN R -e "install.packages(c('devtools', 'DT', 'ggplot2', 'gplots', 'graphics', 'grDevices', 'heatmaply', 'highcharter', 'htmltools', 'KernSmooth', 'margins', 'methods', 'MASS', 'RColorBrewer', 'reshape2', 'rmarkdown', 'shiny', 'shinydashboard', 'shinyFiles', 'shinyjs', 'stats', 'testthat', 'utils'), repos = 'http://cran.r-project.org/')"
 
-COPY install.R install.R
-RUN Rscript install.R
+COPY install-dependency.R install-dependency.R
+RUN Rscript install-dependency.R
 
 #RUN R -e "update.packages(ask = FALSE)"
 
