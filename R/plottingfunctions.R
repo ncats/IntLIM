@@ -609,15 +609,27 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
     }
     p <- inputData@sampleMetaData[,inputResults@stype]
     volc.table <- IntLIM::ProcessResults(inputResults,  inputData, pvalcutoff = 1)
-    interaction_coef <- volc.table$interaction_coef
-    pval <- -log10(volc.table$FDRadjPval)
-    graphics::smoothScatter(x = interaction_coef, pval, xlab = 'Interaction Coefficient',
+    variances1 <- unlist(lapply(volc.table$Analyte1, function(analyte){
+      return(stats::var(inputDatafilt@analyteType2[analyte,]))
+    }))
+    variances2 <- unlist(lapply(volc.table$Analyte2, function(analyte){
+      return(stats::var(inputDatafilt@analyteType1[analyte,]))
+    }))
+    interaction_coeff <- (volc.table$interaction_coeff / (abs(volc.table$interaction_coeff) +
+                                                           abs(volc.table$a) +
+                                                           abs(volc.table$type) + 
+                                                           abs(volc.table$cellnbr) +
+                                                           abs(volc.table[,"(Intercept)"]))) *
+      volc.table$rsquared
+    #FDRadj
+    pval <- -log10(volc.table$Pval)
+    graphics::smoothScatter(x = interaction_coeff, pval, xlab = "Scaled Interaction Coefficient",
 		ylab = '-log10(FDR-adjusted p-value)', nrpoints=nrpoints,
                 main = 'Volcano Plot')
     graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
-    lower_line = getQuantileForInteractionCoefficient(interaction_coef, 
+    lower_line = getQuantileForInteractionCoefficient(interaction_coeff, 
                                                       coefPercentileCutoff)[1]
-    upper_line = getQuantileForInteractionCoefficient(interaction_coef, 
+    upper_line = getQuantileForInteractionCoefficient(interaction_coeff, 
                                                        coefPercentileCutoff)[2]
     graphics::abline(v=c(lower_line,upper_line),lty=2,col="blue")
 }

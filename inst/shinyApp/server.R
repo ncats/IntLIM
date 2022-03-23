@@ -209,9 +209,13 @@ shinyServer(function(input, output, session) {
   # Step 4
     
   # Process the results using the cutoffs.
+  # We make the interaction coefficient reactive so that the interaction plot
+  # does not show up until the user clicks "Run".
   rsquared2<-reactive(input$rsquared2)
   pvalcutoff2<-reactive(input$pvalcutoff2)
-  interactionCoeff2<-reactive(input$interactionCoeff2)
+  interactionCoeff2 <- eventReactive(input$run4, {
+    input$interactionCoeff2
+  })
   myres2 <- eventReactive(input$run4,{
     IntLIM::ProcessResults(myres(),FmultiData(),pvalcutoff=pvalcutoff2(),
                            rsquared=rsquared2(),
@@ -219,9 +223,14 @@ shinyServer(function(input, output, session) {
   })
         
   # Display the 'betagraph' widget using the InteractionCoefficientGraph function.
-  interactionCoeff2<-reactive(input$interactionCoeff2)
   output$betagraph<-renderPlot({
-    IntLIM::InteractionCoefficientGraph(myres(),interactionCoeff2())
+    # Grabbing FmultiData() data leads to plotting being delayed until button is pressed.
+    fmdat <- FmultiData()
+    IntLIM::InteractionCoefficientGraph(inputResults = myres(),
+                                        interactionCoeffPercentile=interactionCoeff2(),
+                                        percentageToPlot = 0.01, 
+                                        independent.var.type = 1,
+                                        outcome = 2)
   })
   
   # Download the betagraph as a PDF.
