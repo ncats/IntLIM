@@ -209,10 +209,10 @@ shinyServer(function(input, output, session) {
   # Step 4
     
   # Process the results using the cutoffs.
-  # We make the interaction coefficient reactive so that the interaction plot
-  # does not show up until the user clicks "Run".
   rsquared2<-reactive(input$rsquared2)
   pvalcutoff2<-reactive(input$pvalcutoff2)
+  # We make the interaction coefficient reactive so that the interaction plot
+  # does not show up until the user clicks "Run".
   interactionCoeff2 <- eventReactive(input$run4, {
     input$interactionCoeff2
   })
