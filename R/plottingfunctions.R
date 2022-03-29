@@ -607,26 +607,27 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
     if(class(inputResults) != "IntLimResults") {
 	    stop("input data is not a IntLim class")
     }
-    p <- inputData@sampleMetaData[,inputResults@stype]
+  
+    # Get the formatted results of processing, including all results (p-val <= 1)
     volc.table <- IntLIM::ProcessResults(inputResults,  inputData, pvalcutoff = 1)
-    variances1 <- unlist(lapply(volc.table$Analyte1, function(analyte){
-      return(stats::var(inputDatafilt@analyteType2[analyte,]))
-    }))
-    variances2 <- unlist(lapply(volc.table$Analyte2, function(analyte){
-      return(stats::var(inputDatafilt@analyteType1[analyte,]))
-    }))
-    interaction_coeff <- (volc.table$interaction_coeff / (abs(volc.table$interaction_coeff) +
-                                                           abs(volc.table$a) +
-                                                           abs(volc.table$type) + 
-                                                           abs(volc.table$cellnbr) +
-                                                           abs(volc.table[,"(Intercept)"]))) *
-      volc.table$rsquared
-    #FDRadj
+    interaction_coeff <- volc.table$interaction_coeff
     pval <- -log10(volc.table$Pval)
-    graphics::smoothScatter(x = interaction_coeff, pval, xlab = "Scaled Interaction Coefficient",
-		ylab = '-log10(FDR-adjusted p-value)', nrpoints=nrpoints,
+    
+    # Get the p-value cutoff using the FDR-adjusted cutoff.
+    if(length(which(volc.table$FDRadjPval <= pvalcutoff)) == 0){
+      stop(paste("No p-values meet the provided FDR-adjusted cutoff of", 
+                 pvalcutoff, "- please choose a higher p-value cutoff."))
+    }
+    pvals_below_cutoff <- volc.table[which(volc.table$FDRadjPval <= pvalcutoff),]
+    highest_pval_below_cutoff <- pvals_below_cutoff[which.max(pvals_below_cutoff$FDRadjPval), "Pval"]
+    
+    # Create the scatter plot.
+    graphics::smoothScatter(x = interaction_coeff, pval, xlab = "Interaction Coefficient",
+		ylab = '-log10(p-value)', nrpoints=nrpoints,
                 main = 'Volcano Plot')
-    graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
+    
+    # Plot cutoff lines.
+    graphics::abline(h=-log10(highest_pval_below_cutoff),lty=2,col="blue")
     lower_line = getQuantileForInteractionCoefficient(interaction_coeff, 
                                                       coefPercentileCutoff)[1]
     upper_line = getQuantileForInteractionCoefficient(interaction_coeff, 
