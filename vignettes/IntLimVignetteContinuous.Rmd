@@ -130,9 +130,7 @@ which will be used for all further analysis.
 
 ```{r}
 inputData <- IntLIM::ReadData(inputFile = csvfile,analyteType1id='id',analyteType2id='id',
-                              class.feat = list(panelnbr = "factor",
-                                                 cellnbr = "numeric",
-                                                 PBO_vs_Leukemia = "factor",
+                              class.feat = list(PBO_vs_Leukemia = "factor",
                                                 drugscore = "numeric"))
 ```
 
@@ -202,7 +200,7 @@ is being used.
 
 ```{r}
 myres <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="drugscore",
-                              covar = c("cellnbr"), outcome = 1,
+                              outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE, continuous = TRUE)
 ```
@@ -300,7 +298,7 @@ packages sizes when building vignettes. Please uncomment while running this vign
 ```{r eval = FALSE}
 crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
                    analyteType2perc = 0.10, analyteMiss = 0.80,
-                   stype="drugscore", covar = c("cellnbr"), outcome = c(1),
+                   stype="drugscore", outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, rsquaredCutoff = 0.2,
                    folds = 4, continuous = TRUE,
@@ -322,7 +320,7 @@ packages sizes when building vignettes. Please uncomment while running this vign
 ```{r eval = FALSE}
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "drugscore", outcome = 1,
                       independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
-                   rsquaredCutoff = 0.2, covar = c("cellnbr"),
+                   rsquaredCutoff = 0.2,
                    num.permutations = 5, continuous = TRUE)
 countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
                               plot = TRUE)
