@@ -4,7 +4,7 @@ title: "IntLIM:  Integration through Linear Modeling (Continuous)"
 author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone, 
 Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé, 
 Tara Eicher, Kyle Spencer"
-date: "3/29/2018"
+date: "3/29/2022"
 output: rmarkdown::html_document
 vignette: >
   %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling (Continuous)}
@@ -234,6 +234,7 @@ interaction coefficients of all models, sorted in ascending order.
 IntLIM::InteractionCoefficientGraph(inputResults = myres,
                                     interactionCoeffPercentile = 0.9)
 ```
+
 The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing 
 the interaction coefficient to the –log10(FDR-adjusted p-value).
 
@@ -241,6 +242,7 @@ the interaction coefficient to the –log10(FDR-adjusted p-value).
 IntLIM::pvalCoefVolcano(inputResults = myres, inputData = inputDatafilt,
                         pvalcutoff = 0.05)
 ```
+
 ## Filter Results
 
 The __ProcessResults()__ function allows the user to filter the results by FDR 

@@ -4,7 +4,7 @@ title: "IntLIM:  Integration through Linear Modeling (Discrete)"
 author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone, 
 Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé, 
 Tara Eicher, Kyle Spencer"
-date: "3/29/2018"
+date: "3/29/2022"
 output: rmarkdown::html_document
 vignette: >
   %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling (Discrete)}
@@ -131,9 +131,7 @@ which will be used for all further analysis.
 
 ```{r}
 inputData <- IntLIM::ReadData(inputFile = csvfile,analyteType1id='id',analyteType2id='id',
-                              class.feat = list(panelnbr = "factor",
-                                                 cellnbr = "numeric",
-                                                 PBO_vs_Leukemia = "factor",
+                              class.feat = list(PBO_vs_Leukemia = "factor",
                                                 drugscore = "numeric"))
 ```
 
@@ -204,7 +202,7 @@ are removed.
 
 ```{r}
 myres <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
-                              covar = c("cellnbr"), outcome = 1,
+                              outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE)
 ```
@@ -247,10 +245,6 @@ IntLIM::pvalCoefVolcano(inputResults = myres, inputData = inputDatafilt,
                         pvalcutoff = 0.05)
 ```
 
-Process the results and filter pairs of analytes based on adjusted p-values and 
-differences in correlation coefficients between groups 1 and 2.  Then plot heatmap 
-of significant analyte pairs
-
 ## Filter Results
 
 The __ProcessResults()__ function allows the user to filter the results by FDR 
@@ -285,6 +279,7 @@ the analyses into zipped CSV files.
 IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
 IntLIM::OutputResults(inputResults=myres.sig,filename=paste(result_dir, "MyResults.csv", sep = "\\"))
 ```
+
 ## Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
 reading, filtering, running IntLIM, and processing the results for multiple folds.
@@ -295,7 +290,7 @@ packages sizes when building vignettes. Please uncomment while running this vign
 ```{r}
 crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
                    analyteType2perc = 0.10, analyteMiss = 0.80,
-                   stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1),
+                   stype="PBO_vs_Leukemia", outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
                    pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5,
                    folds = 4)
@@ -316,8 +311,7 @@ packages sizes when building vignettes. Please uncomment while running this vign
 ```{r}
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "PBO_vs_Leukemia", outcome = 1,
                       independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
-                   rsquaredCutoff = 0.2, covar = c("cellnbr"),
-                   num.permutations = 5)
+                   rsquaredCutoff = 0.2, num.permutations = 5)
 #countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
 #                              plot = TRUE)
 #pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig,
