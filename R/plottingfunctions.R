@@ -944,10 +944,11 @@ PermutationPairSummary <- function(inputResults, permResults, plot){
     }
     return(freq)
   }))
-  original.pairs.df <- data.frame(Pair=myres.sig.pairs, 
+  original.pairs.df <- data.frame(Pair=as.factor(myres.sig.pairs), 
                                   Perm.Count=original.pairs.count)
-  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = stats::reorder(Pair, Perm.Count), 
-                                                       y = as.numeric(as.character(stats::reorder(Perm.Count, Perm.Count)))))+
+  original.pairs.df <- original.pairs.df[order(-original.pairs.df$Perm.Count),]
+  original.pairs.df$Pair <- order(-original.pairs.df$Perm.Count)
+  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = Pair, y = Perm.Count))+
     ggplot2::geom_bar(stat = "identity", width = 1) + 
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text.x=ggplot2::element_blank(),
