@@ -7,4 +7,5 @@
 ^Dockerfile
 ^Jenkinsfile
 ^install-intlim.R
+^install-dependency.R
 ^shiny-server.conf
