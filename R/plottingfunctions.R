@@ -607,17 +607,30 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
     if(class(inputResults) != "IntLimResults") {
 	    stop("input data is not a IntLim class")
     }
-    p <- inputData@sampleMetaData[,inputResults@stype]
+  
+    # Get the formatted results of processing, including all results (p-val <= 1)
     volc.table <- IntLIM::ProcessResults(inputResults,  inputData, pvalcutoff = 1)
-    interaction_coef <- volc.table$interaction_coef
-    pval <- -log10(volc.table$FDRadjPval)
-    graphics::smoothScatter(x = interaction_coef, pval, xlab = 'Interaction Coefficient',
-		ylab = '-log10(FDR-adjusted p-value)', nrpoints=nrpoints,
+    interaction_coeff <- volc.table$interaction_coeff
+    pval <- -log10(volc.table$Pval)
+    
+    # Get the p-value cutoff using the FDR-adjusted cutoff.
+    if(length(which(volc.table$FDRadjPval <= pvalcutoff)) == 0){
+      stop(paste("No p-values meet the provided FDR-adjusted cutoff of", 
+                 pvalcutoff, "- please choose a higher p-value cutoff."))
+    }
+    pvals_below_cutoff <- volc.table[which(volc.table$FDRadjPval <= pvalcutoff),]
+    highest_pval_below_cutoff <- pvals_below_cutoff[which.max(pvals_below_cutoff$FDRadjPval), "Pval"]
+    
+    # Create the scatter plot.
+    graphics::smoothScatter(x = interaction_coeff, pval, xlab = "Interaction Coefficient",
+		ylab = '-log10(p-value)', nrpoints=nrpoints,
                 main = 'Volcano Plot')
-    graphics::abline(h=-log10(pvalcutoff),lty=2,col="blue")
-    lower_line = getQuantileForInteractionCoefficient(interaction_coef, 
+    
+    # Plot cutoff lines.
+    graphics::abline(h=-log10(highest_pval_below_cutoff),lty=2,col="blue")
+    lower_line = getQuantileForInteractionCoefficient(interaction_coeff, 
                                                       coefPercentileCutoff)[1]
-    upper_line = getQuantileForInteractionCoefficient(interaction_coef, 
+    upper_line = getQuantileForInteractionCoefficient(interaction_coeff, 
                                                        coefPercentileCutoff)[2]
     graphics::abline(v=c(lower_line,upper_line),lty=2,col="blue")
 }
@@ -627,6 +640,7 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
 #' @param inputResults List of outputs of ProcessResultsAllFolds(), each of which
 #' is a list of IntLIMResults.
 #' @return an UpSet plot
+#' @export
 PlotFoldOverlapUpSet<-function(inputResults){
   sig_list <- lapply(1:length(inputResults), function(i){
     return(paste(inputResults[[i]][,1], inputResults[[i]][,2], sep = "_"))
@@ -930,14 +944,14 @@ PermutationPairSummary <- function(inputResults, permResults, plot){
     }
     return(freq)
   }))
-  original.pairs.df <- data.frame(Pair=myres.sig.pairs, 
+  original.pairs.df <- data.frame(Pair=as.factor(myres.sig.pairs), 
                                   Perm.Count=original.pairs.count)
-  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = stats::reorder(Pair, Perm.Count), 
-                                                       y = as.numeric(as.character(stats::reorder(Perm.Count, Perm.Count)))))+
+  original.pairs.df <- original.pairs.df[order(-original.pairs.df$Perm.Count),]
+  original.pairs.df$Pair <- order(-original.pairs.df$Perm.Count)
+  plt <- ggplot2::ggplot(data=original.pairs.df, ggplot2::aes(x = Pair, y = Perm.Count))+
     ggplot2::geom_bar(stat = "identity", width = 1) + 
-    ggplot2::coord_flip() + 
     ggplot2::theme_bw() +
-    ggplot2::theme(axis.text.y=ggplot2::element_blank(),
+    ggplot2::theme(axis.text.x=ggplot2::element_blank(),
                    panel.border = ggplot2::element_blank(),
                    panel.grid.major = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank(),

@@ -61,9 +61,10 @@ body <- shinydashboard::dashboardBody(
 
     shinydashboard::tabItems(
         shinydashboard::tabItem(tabName = "about",
-                             shiny::tabPanel("About",
+                             fluidRow(
                                              shinydashboard::box(
                                                 width = 12,
+                                                solidHeader = TRUE,
                                                 includeMarkdown("README.md")
                                               )
                               )
@@ -102,7 +103,6 @@ body <- shinydashboard::dashboardBody(
                     ),
                     shinydashboard::box(
                         tags$b("Summary Statistics"),
-                        #plot.new(),
                         pre(dataTableOutput('stats')),
                         tags$style(type="text/css", '#stats tfoot {display:none;}')
                     )

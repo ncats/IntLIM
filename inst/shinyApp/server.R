@@ -211,7 +211,11 @@ shinyServer(function(input, output, session) {
   # Process the results using the cutoffs.
   rsquared2<-reactive(input$rsquared2)
   pvalcutoff2<-reactive(input$pvalcutoff2)
-  interactionCoeff2<-reactive(input$interactionCoeff2)
+  # We make the interaction coefficient reactive so that the interaction plot
+  # does not show up until the user clicks "Run".
+  interactionCoeff2 <- eventReactive(input$run4, {
+    input$interactionCoeff2
+  })
   myres2 <- eventReactive(input$run4,{
     IntLIM::ProcessResults(myres(),FmultiData(),pvalcutoff=pvalcutoff2(),
                            rsquared=rsquared2(),
@@ -219,9 +223,14 @@ shinyServer(function(input, output, session) {
   })
         
   # Display the 'betagraph' widget using the InteractionCoefficientGraph function.
-  interactionCoeff2<-reactive(input$interactionCoeff2)
   output$betagraph<-renderPlot({
-    IntLIM::InteractionCoefficientGraph(myres(),interactionCoeff2())
+    # Grabbing FmultiData() data leads to plotting being delayed until button is pressed.
+    fmdat <- FmultiData()
+    IntLIM::InteractionCoefficientGraph(inputResults = myres(),
+                                        interactionCoeffPercentile=interactionCoeff2(),
+                                        percentageToPlot = 0.01, 
+                                        independent.var.type = 1,
+                                        outcome = 2)
   })
   
   # Download the betagraph as a PDF.
@@ -258,41 +267,6 @@ shinyServer(function(input, output, session) {
   scatterrows<-eventReactive(input$run5,{
       input$table_rows_selected
   })
-    
-  # # Display scatterplot to 'scatterplot' widget (discrete).
-  # discreteScatter<-renderUI({
-  #   # Obtain pairs.
-  #   a<-as.matrix(scatterrows())
-  #   pair1<-as.matrix(myres2()[a[1,],])
-  #   independentAnalyteOfInterest1<-pair1[,"Analyte1"]
-  #   outcomeAnalyteOfInterest1<-pair1[,"Analyte2"]
-  #   
-  #   # Plot.
-  #   p<-IntLIM::PlotPair(FmultiData(),
-  #                       myres(),
-  #                       independentAnalyteOfInterest=independentAnalyteOfInterest1,
-  #                       outcomeAnalyteOfInterest=outcomeAnalyteOfInterest1,
-  #                       outcome = 1,
-  #                       independentVariable = 2)
-  #   p <-htmltools::browsable(highcharter::hw_grid(p, ncol = 1, rowheight = 550))
-  # })
-  # 
-  # ## Display scatterplot to 'scatterplot' widget (continuous).
-  # continuousScatter<-renderPlot({
-  #   # Obtain pairs.
-  #   a<-as.matrix(scatterrows())
-  #   pair1<-as.matrix(myres2()[a[1,],])
-  #   independentAnalyteOfInterest1<-pair1[,"Analyte1"]
-  #   outcomeAnalyteOfInterest1<-pair1[,"Analyte2"]
-  #   
-  #   # Plot.
-  #   IntLIM::PlotPair(FmultiData(),
-  #                       myres(),
-  #                       independentAnalyteOfInterest=independentAnalyteOfInterest1,
-  #                       outcomeAnalyteOfInterest=outcomeAnalyteOfInterest1,
-  #                       outcome = 1,
-  #                       independentVariable = 2)
-  # })
   
   output$scatterplot<-renderPlot({
     # Obtain pairs.

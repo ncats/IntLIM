@@ -1,13 +1,13 @@
 
 ---
-title: "IntLIM:  Integration through Linear Modeling (Discrete)"
-author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone, 
-Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé, 
+title: "IntLIM:  Integration through Linear Modeling"
+author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone,
+Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé,
 Tara Eicher, Kyle Spencer"
-date: "3/29/2018"
+date: "3/29/2022"
 output: rmarkdown::html_document
 vignette: >
-  %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling (Discrete)}
+  %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -19,30 +19,29 @@ dir.create(result_dir)
 
 ## Introduction
 
-Interpretation of multi-omics data is very challenging.  The IntLIM package aims 
-to integrate multiple types of omics data.  Unlike other approaches, IntLIM is 
-focused on understanding how specific multi-omic associations are affected by 
-phenotypic features.  To this end, we develop a linear modeling approach that 
-describes how multi-omic associations are affected by phenotype.  More information 
-can be found on <a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2085-6" target="_blank"> our publication "IntLIM: integration using linear models of metabolomics and gene expression data"</a>The workflow involves the following steps: 
+Interpretation of multi-omics data is very challenging.  The IntLIM package aims
+to integrate multiple types of omics data.  Unlike other approaches, IntLIM is
+focused on understanding how specific multi-omic associations are affected by
+phenotypic features.  To this end, we develop a linear modeling approach that
+describes how multi-omic associations are affected by phenotype.  More information
+can be found on <a href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2085-6" target="_blank"> our publication "IntLIM: integration using linear models of metabolomics and gene expression data"</a>The workflow involves the following steps:
 1) Input multi-omic data files.
 2) Filter data sets by analyte abundance and imputed values.
 3) Run the linear model to extract pairwise interaction significance.
-4) Filter results by p-values and/or Spearman correlation differences,
-interaction coefficient percentiles, and r-squared values.
-5) plot/visualize specific analyte associations. 
+4) Filter results by p-values, interaction coefficient percentiles, and r-squared values.
+5) Plot/visualize specific analyte associations.
 
 ## Installation
 
-IntLIM is an R package and can be run on version >= 3.2.0. 
+IntLIM is an R package and can be run on version >= 3.2.0.
 
 Download (or upgrade) R here: https://cloud.r-project.org/
 
-RStudio (an interface to R than can make R easier to use) can be download here 
+RStudio (an interface to R than can make R easier to use) can be download here
 (not required): https://www.rstudio.com/products/rstudio/download3/
 
-The function install_github() from the “devtools” package (Wickham and Chang, 2015) 
-installs IntLIM directly from GitHub.  To install IntLIM, enter the following: 
+The function install_github() from the “devtools” package (Wickham and Chang, 2015)
+installs IntLIM directly from GitHub.  To install IntLIM, enter the following:
 
 ```{r eval = FALSE}
 if(!require("devtools")){
@@ -60,16 +59,16 @@ library(IntLIM)
 
 ## Inputting Analyte Level Data
 
-The first step is importing in the multi-omic data.  To this end we have provided 
-a sample data file for users wishing to use IntLIM.  
+The first step is importing in the multi-omic data.  To this end we have provided
+a sample data file for users wishing to use IntLIM.
 
-IntLIM requires a specific format for multi-omic data.  For IntLIM, we require the 
+IntLIM requires a specific format for multi-omic data.  For IntLIM, we require the
 data corresponding to two analyte types, optional metadata for each of these types,
-and sample meta data.  We also need a CSV meta-file that lists the location of the 
-other files.  These need to be in the same folder.  The formats are described below.  
-In addition, we provide a sample set of files.  
+and sample meta data.  We also need a CSV meta-file that lists the location of the
+other files.  These need to be in the same folder.  The formats are described below.
+In addition, we provide a sample set of files.
 
-**Please be sure that all files noted in the CSV file, including the CSV file,** 
+**Please be sure that all files noted in the CSV file, including the CSV file,**
 **are in the same folder. Do not include path names in the filenames.**
 
 Users need to input a CSV file with two required columns: 'type' and 'filenames'.
@@ -83,39 +82,39 @@ The CSV file is expected to have the following 2 columns and 6 rows:
 5. analyteType2MetaData,myfilename (optional)
 6. sampleMetaData,myfilename"
 
-The data and meta-data is stored in a series of comma-separated-values (.CSV) files.  
-The 5 files consist of data for two analyte types, metadata for two analyte types, 
-and sample meta data.  A meta-file lists the location of the other 5 files.  
-This meta-file is input into IntLIM.  
+The data and meta-data is stored in a series of comma-separated-values (.CSV) files.
+The 5 files consist of data for two analyte types, metadata for two analyte types,
+and sample meta data.  A meta-file lists the location of the other 5 files.
+This meta-file is input into IntLIM.
 
 **Please be sure to normalize your data appropriately before inputting it into IntLIM.**
 
-Input data files should be in a specific format: 
+Input data files should be in a specific format:
 
-File type             | Description   
+File type             | Description
 ----------------------| -----------------------------------------
 analyteType1          | rows are analytes from type 1 (e.g. metabolites), columns are samples
-analytetype2          | rows are analytes from type 2 (e.g. genes), columns are samples 
-analyteType1MetaData  | rows are analytes, features are columns 
+analytetype2          | rows are analytes from type 2 (e.g. genes), columns are samples
+analyteType1MetaData  | rows are analytes, features are columns
 analyteType2MetaData  | rows are analytes, features are columns
-sampleMetaData        | rows are samples, features are columns 
+sampleMetaData        | rows are samples, features are columns
 
-For the analyte data files, the first row contains the feature IDs and the first 
-column contains the sample IDs.  
+For the analyte data files, the first row contains the feature IDs and the first
+column contains the sample IDs.
 
-For the sampleMetaData, the first column of the sampleMetaData file is assumed 
-to be the sample ID, and those sample IDs should match the first row of analyte 
-data (e.g. it is required that all sample IDs in the analyte data are also in the 
+For the sampleMetaData, the first column of the sampleMetaData file is assumed
+to be the sample ID, and those sample IDs should match the first row of analyte
+data (e.g. it is required that all sample IDs in the analyte data are also in the
 sampleMetaDatafile).
 
-Additionally, the analyte data files and SampleMetaData need to contain an 'id' 
-column that contains the name of the features (analytes) or sample (sample id, 
+Additionally, the analyte data files and SampleMetaData need to contain an 'id'
+column that contains the name of the features (analytes) or sample (sample id,
 name, etc).
 
-A small data set is embedded in a package.  This consists of the National Cancer 
-Institute-60 (NCI-60) cell line data with a reduced number of genes for faster 
-calculation.  To access it use the following commands.  csvfile describes the 
-location of the meta-file describing the location of the other 5 input files.  
+A small data set is embedded in a package.  This consists of the National Cancer
+Institute-60 (NCI-60) cell line data with a reduced number of genes for faster
+calculation.  To access it use the following commands.  csvfile describes the
+location of the meta-file describing the location of the other 5 input files.
 
 ```{r}
 dir <- system.file("extdata", package="IntLIM", mustWork=TRUE)
@@ -123,24 +122,22 @@ csvfile <- file.path(dir, "NCItestinput.csv")
 csvfile
 ```
 
-Through the __ReadData()__ function, users input the above .csv files containing 
-analyte data and metadata. 
+Through the __ReadData()__ function, users input the above .csv files containing
+analyte data and metadata.
 **Note: It is assumed that all data has been pre-scaled and preprocessed**
-The input data, sample data, and metadata are read into an IntLimData object, 
+The input data, sample data, and metadata are read into an IntLimData object,
 which will be used for all further analysis.
 
 ```{r}
 inputData <- IntLIM::ReadData(inputFile = csvfile,analyteType1id='id',analyteType2id='id',
-                              class.feat = list(panelnbr = "factor",
-                                                 cellnbr = "numeric",
-                                                 PBO_vs_Leukemia = "factor",
+                              class.feat = list(PBO_vs_Leukemia = "factor",
                                                 drugscore = "numeric"))
 ```
 
-The __ShowStats()__ function allows the user to summarize the data (how many total 
-analytes of each types and samples in each data-set as well as samples in common).  
-We have a data-set that consists of 20 cell lines (samples), 1448 genes, and 257 
-metabolites. 
+The __ShowStats()__ function allows the user to summarize the data (how many total
+analytes of each types and samples in each data-set as well as samples in common).
+We have a data-set that consists of 20 cell lines (samples), 1448 genes, and 257
+metabolites.
 
 ```{r}
 IntLIM::ShowStats(IntLimObject = inputData)
@@ -148,63 +145,72 @@ IntLIM::ShowStats(IntLimObject = inputData)
 
 ## Filtering and Observing Data
 
-Optionally, the __FilterData()__ function allows the user to filter out the 
-features (analytes) based on their mean values. Users should input a percentile 
-cutoff and any feature with a mean value below that cutoff will be removed.  
-Furthermore we can filter out analytes by percentage of missing or imputed values.  
-For the analysis, we filter out the genes with the lowest 10% of gene expression 
-and metabolites with more than 80% imputed values.  This is done as below. 
-We henceforth have 1303 genes and 212 metabolites for 20 cell line samples.  
+Optionally, the __FilterData()__ function allows the user to filter out the
+features (analytes) based on their mean values. Users should input a percentile
+cutoff and any feature with a mean value below that cutoff will be removed.
+Furthermore we can filter out analytes by percentage of missing or imputed values.
+For the analysis, we filter out the genes with the lowest 10% of gene expression
+and metabolites with more than 80% imputed values.  This is done as below.
+We henceforth have 1303 genes and 212 metabolites for 20 cell line samples.  .
 
 ```{r}
 inputDatafilt <- IntLIM::FilterData(inputData,
-                                     analyteType1perc = 0.10, analyteType2perc = 0.10,
-                                     analyteMiss = 0.80)
+                                    analyteType1perc = 0.10, analyteType2perc = 0.10,
+                                    analyteMiss = 0.80)
 ```
 
-The __PlotDistribution()__ function allows users to produce a boxplot of the 
-distribution of analyte level data.  This is done as below.   
+The __PlotDistribution()__ function allows users to produce a boxplot of the
+distribution of analyte level data.  This is done as below.
 
 ```{r}
 IntLIM::PlotDistributions(inputData = inputDatafilt)
 ```
 
-Prior to running the model, the user can also perform a principal component 
-analysis of the analyte data using the __PlotPCA()__ function.  The __stype__ 
-command allows the user to select a column from the sample meta data that 
-color-codes the samples into two categories (two cancer types, tumor vs. 
-non-tumor, etc).  For the sample set, we select PBO (prostate/breast/ovarian 
-cancers) vs. the leukemia group.  
+Prior to running the model, the user can also perform a principal component
+analysis of the analyte data using the __PlotPCA()__ function.  The __stype__
+command allows the user to select a continuous column from the sample meta data that
+color-codes the samples For the sample set, we select drugscore, a continuous metric
+that measures the overall drug responsiveness of the cell line. We additionally run
+a separate plot that color-codes by cancer cell type (Prostate-Breast-Ovarian or PBO
+vs. Leukemia).
 
 ```{r}
+IntLIM::PlotPCA(inputData = inputDatafilt,stype = "drugscore")
 IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
 ```
 
 ## Run IntLIM
-The linear models are run by the __RunIntLim()__ function.  The __stype__ command 
-allows the user to select a column from the sample meta data for the two categories 
-to be compared (two cancer types, tumor vs. non-tumor, etc).  Currently, IntLIM 
-supports continuous data and comparison of two categories (__"PBO_vs_Leukemia"__ 
-is selected). The resulting object from the analysis is an IntLimResults object 
-containing slotsfor un-adjusted and False Discovery Rate (FDR)-adjusted p-values 
-for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value implies 
-that the slope of gene-metabolite association in one phenotype is different from 
-the other. The __RunIntLim()__ function is based heavily on the MultiLinearModel 
-functions developed for the ClassComparison package part of oompa 
+The linear models are run by the __RunIntLim()__ function.  The __stype__ command
+allows the user to select a column from the sample meta data for the continuous or discrete
+phenotype of interest. The resulting object from the analysis is an IntLimResults object
+containing slotsfor un-adjusted and False Discovery Rate (FDR)-adjusted p-values
+for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value implies
+that the gene-metabolite association is dependent on the phenotype. The
+__RunIntLim()__ function is based heavily on the MultiLinearModel
+functions developed for the ClassComparison package part of oompa
 (http://oompa.r-forge.r-project.org).
 
 The following variations of this function are available:
-- Setting `save.covar.pvals` to TRUE returns the p-values and coefficients of 
+- Setting `save.covar.pvals` to TRUE returns the p-values and coefficients of
 all terms in the model (not only the interaction term p-value and coefficient).
 - Setting `remove.duplicates` to TRUE filters analyte association models for the
-same type of output and independent variable type to include only the model with 
+same type of output and independent variable type to include only the model with
 the highest p-value. e.g. if m1 ~ m2 has a higher p-value than m2 ~ m1, then the
-m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1) 
+m2 ~ m1 model will be returned. By default, only self-associations (i.e. m1 ~ m1)
 are removed.
+- Setting `continuous` to TRUE signals to the function that a continuous phenotype
+is being used.
+
+Here, we show examples for a continuous output (drug score) and a discrete output
+(cancer subtype).
 
 ```{r}
-myres <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
-                              covar = c("cellnbr"), outcome = 1,
+myres.drugscore <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="drugscore",
+                              outcome = 1,
+                              independent.var.type = 2,
+                              save.covar.pvals = TRUE, continuous = TRUE)
+myres.cancertype <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
+                              outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE)
 ```
@@ -214,89 +220,149 @@ By default, FDR-adjusted p-values are shown. However, users can also choose to p
 nominal p-values.
 
 ```{r}
-IntLIM::DistPvalues(IntLimResults = myres)
-IntLIM::DistPvalues(IntLimResults = myres, adjusted = FALSE)
+IntLIM::DistPvalues(IntLimResults = myres.drugscore, adjusted = FALSE)
+IntLIM::DistPvalues(IntLimResults = myres.cancertype, adjusted = FALSE)
 ```
 
-The __DistRSquared()__ function allows the user to observe a histogram of the 
+The __DistRSquared()__ function allows the user to observe a histogram of the
 r-squared values.
+
 ```{r}
-IntLIM::DistRSquared(IntLimResults = myres)
+IntLIM::DistRSquared(IntLimResults = myres.drugscore)
+IntLIM::DistRSquared(IntLimResults = myres.cancertype)
 ```
 
-The __PValueBoxPlots()__ function allows the user to observe the p-value 
+The __PValueBoxPlots()__ function allows the user to observe the p-value
 distributions of all covariates in the linear models prior to adjustment.
-Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when 
-running __RunIntLim__. 
+Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when
+running __RunIntLim__.
+
 ```{r}
-IntLIM::PValueBoxPlots(IntLimResults = myres)
+IntLIM::PValueBoxPlots(IntLimResults = myres.drugscore)
+IntLIM::PValueBoxPlots(IntLimResults = myres.cancertype)
 ```
 
-The __InteractionCoefficientGraph()__ function allows the user to observe the 
+The __InteractionCoefficientGraph()__ function allows the user to observe the
 interaction coefficients of all models, sorted in ascending order.
+
 ```{r}
-IntLIM::InteractionCoefficientGraph(inputResults = myres,
+IntLIM::InteractionCoefficientGraph(inputResults = myres.drugscore,
+                                    interactionCoeffPercentile = 0.9)
+IntLIM::InteractionCoefficientGraph(inputResults = myres.cancertype,
                                     interactionCoeffPercentile = 0.9)
 ```
 
-The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing 
+The __pvalCoefVolcano()__ function allows users to observe a volcano plot comparing
 the interaction coefficient to the –log10(FDR-adjusted p-value).
 
 ```{r}
-IntLIM::pvalCoefVolcano(inputResults = myres, inputData = inputDatafilt,
+IntLIM::pvalCoefVolcano(inputResults = myres.drugscore, inputData = inputDatafilt,
+                        pvalcutoff = 0.05)
+IntLIM::pvalCoefVolcano(inputResults = myres.cancertype, inputData = inputDatafilt,
                         pvalcutoff = 0.05)
 ```
 
-Process the results and filter pairs of analytes based on adjusted p-values and 
-differences in correlation coefficients between groups 1 and 2.  Then plot heatmap 
-of significant analyte pairs
-
 ## Filter Results
 
-The __ProcessResults()__ function allows the user to filter the results by FDR 
-p-values (default set at 0.05) between the two groups.  The output 
-is a list of significant analyte pairs.
+The __ProcessResults()__ function allows the user to filter the results by FDR
+p-values (default set at 0.05) and by the R^2 and interaction coefficient percentile.
+
+Here, we find 851 significant drug score dependent pairs and 5,293 cancer type
+specific pairs.
 
 ```{r}
-myres.sig <- IntLIM::ProcessResults(inputResults = myres,
+myres.sig.drugscore <- IntLIM::ProcessResults(inputResults = myres.drugscore,
                                        inputData = inputDatafilt,
-                                       pvalcutoff = 0.10, rsquaredCutoff = 0.2,
+                                       pvalcutoff = 0.10,
+                                       rsquaredCutoff = 0.2,
+                                       interactionCoeffPercentile = 0.5)
+myres.sig.cancertype <- IntLIM::ProcessResults(inputResults = myres.cancertype,
+                                       inputData = inputDatafilt,
+                                       pvalcutoff = 0.10,
+                                       rsquaredCutoff = 0.2,
                                        interactionCoeffPercentile = 0.5)
 ```
 
-The __PlotPair()__ function  allows the user to plot a chosen analyte 
-association for selected groups. An example is shown below for DLG4 vs. 
-(p-Hydroxyphenyl)lactic acid.
+The __PlotPair()__ function operates differently for discrete and continuous
+phenotypes. For continuous phenotypes, it allows the user to observe the marginal
+effects of phenotype for a given pair of analytes.
+An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid with respect to
+drug score.
 
-Plot a pair of interest:
 ```{r}
 IntLIM::PlotPair(inputData = inputDatafilt,
-                 inputResults = myres,
+                 inputResults = myres.drugscore,
                  outcome = 1,
                  independentVariable = 2,
                  outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
                  independentAnalyteOfInterest = "DLG4")
 ```
 
-Lastly, various writing functions are implemented.  The __OutputData()__ and 
-__OutputResults()__ function allows the users to output the data and results of 
-the analyses into zipped CSV files.
-```{r eval = FALSE}
-IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir, "FilteredData.zip", sep = "\\"))
-IntLIM::OutputResults(inputResults=myres.sig,filename=paste(result_dir, "MyResults.csv", sep = "\\"))
+For discrete phenotypes, it allows the user to plot a chosen analyte
+association for selected groups. An example is shown below for DLG4 vs.
+(p-Hydroxyphenyl)lactic acid with respect to cancer type.
+
+```{r}
+IntLIM::PlotPair(inputData = inputDatafilt,
+                 inputResults = myres.cancertype,
+                 outcome = 1,
+                 independentVariable = 2,
+                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
+                 independentAnalyteOfInterest = "DLG4")
 ```
+
+The __HistogramPairs()__ function plots the count of analyte pairs by either
+outcome or independent variable analyte.
+
+```{r}
+IntLIM::HistogramPairs(myres.sig.drugscore, type = "outcome")
+IntLIM::HistogramPairs(myres.sig.drugscore, type = "independent")
+IntLIM::HistogramPairs(myres.sig.cancertype, type = "outcome")
+IntLIM::HistogramPairs(myres.sig.cancertype, type = "independent")
+```
+
+Various writing functions are implemented.  The __OutputData()__ and
+__OutputResults()__ function allows the users to output the data and results of
+the analyses into zipped CSV files.
+
+```{r eval = FALSE}
+IntLIM::OutputData(inputData=inputDatafilt,filename=paste(result_dir,
+                                                         "FilteredData.zip", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.sig.drugscore,filename=paste(result_dir,
+                                                              "MyResultsDrugscore.csv", sep = "\\"))
+IntLIM::OutputResults(inputResults=myres.sig.cancertype,filename=paste(result_dir,
+                                                              "MyResultsCancertype.csv", sep = "\\"))
+```
+
 ## Run Cross-Validation
 You can also choose to run end-to-end cross-validation. This combines the steps of
 reading, filtering, running IntLIM, and processing the results for multiple folds.
 __PlotFoldOverlapUpSet__ creates an UpSet plot of the significant pairs within each
-fold and common between folds.
+fold and common between folds. If the phenotype is continuous (e.g. drug score),
+set continuous = TRUE.
+
+The example below runs cross-validation where drug score is the phenotype.
+
 ```{r eval = FALSE}
 crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
                    analyteType2perc = 0.10, analyteMiss = 0.80,
-                   stype="PBO_vs_Leukemia", covar = c("cellnbr"), outcome = c(1),
+                   stype="drugscore", outcome = c(1),
                    independent.var.type = c(2), save.covar.pvals = TRUE,
-                   pvalcutoff = 0.10, rsquaredCutoff = 0.2, interactionCoeffPercentile = 0.5,
-                   folds = 4)
+                   pvalcutoff = 0.10, rsquaredCutoff = 0.2,
+                   folds = 4, continuous = TRUE,
+                   interactionCoeffPercentile = 0.5)
+IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
+```
+
+The example below runs cross-validation where cancer type is the phenotype.
+
+```{r eval = FALSE}
+crossValResults <- RunCrossValidation(inputData = inputData, analyteType1perc = 0.10,
+                   analyteType2perc = 0.10, analyteMiss = 0.80,
+                   stype="PBO_vs_Leukemia", outcome = c(1),
+                   independent.var.type = c(2), save.covar.pvals = TRUE,
+                   pvalcutoff = 0.10, rsquaredCutoff = 0.2,
+                   folds = 4, interactionCoeffPercentile = 0.5)
 IntLIM::PlotFoldOverlapUpSet(crossValResults$processed)
 ```
 
@@ -305,25 +371,44 @@ You can also choose to run end-to-end permutation. This combines the steps of
 permuting, running IntLIM, and processing results for multiple permutations.
 __PermutationCountSummary__ returns a summary of the permutation results and
 (optionally) a violin plot of the number of significant pairs and analytes.
+__PermutationPairSummary__ returns a bar chart with a horizontal bar for each
+significant pair. The bar length measures the number of permutations in which
+the pair is also significant. If the phenotype is continuous (e.g. drug score),
+set continuous = TRUE.
+
+The example below runs permutation where drug score is the phenotype.
+
+```{r eval = FALSE}
+perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "drugscore", outcome = 1,
+                      independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
+                   rsquaredCutoff = 0.2,
+                   num.permutations = 5, continuous = TRUE)
+countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig.drugscore,
+                              plot = TRUE)
+pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig.drugscore,
+                              plot = TRUE)
+```
+
+The example below runs permutation where cancer type is the phenotype.
+
 ```{r eval = FALSE}
 perm.res <- IntLIM::PermuteIntLIM(data = inputDatafilt, stype = "PBO_vs_Leukemia", outcome = 1,
                       independent.var.type = 2, pvalcutoff = 0.10, interactionCoeffPercentile = 0.5,
-                   rsquaredCutoff = 0.2, covar = c("cellnbr"),
-                   num.permutations = 5)
-countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig,
+                   rsquaredCutoff = 0.2,  num.permutations = 5)
+countSummary <- IntLIM::PermutationCountSummary(permResults = perm.res, inputResults = myres.sig.cancertype,
                               plot = TRUE)
-pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig,
+pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResults = myres.sig.cancertype,
                               plot = TRUE)
 ```
 
 ## References
 
-Siddiqui JK, Baskin E, Liu M, Cantemir-Stone CZ, Zhang B, Bonneville R, McElroy JP, 
-Coombes KR, Mathé EA. IntLIM: integration using linear models of metabolomics and 
+Siddiqui JK, Baskin E, Liu M, Cantemir-Stone CZ, Zhang B, Bonneville R, McElroy JP,
+Coombes KR, Mathé EA. IntLIM: integration using linear models of metabolomics and
 gene expression data. BMC bioinformatics. 2018 Dec;19(1):81.
 
-Sievert, C., et al. plotly: Create Interactive Web Graphics via’plotly. js’. 2016. 
+Sievert, C., et al. plotly: Create Interactive Web Graphics via’plotly. js’. 2016.
 R package version 3.6. 0. In.
 
-Wickham, H. and Chang, W. devtools: Tools to make developing R code easier. 
+Wickham, H. and Chang, W. devtools: Tools to make developing R code easier.
 R package version 2015;1(0).
