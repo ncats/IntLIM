@@ -944,7 +944,7 @@ PermutationPairSummary <- function(inputResults, permResults, plot){
     }
     return(freq)
   }))
-  original.pairs.df <- data.frame(Pair=as.factor(myres.sig.pairs), 
+  original.pairs.df <- data.frame(Pair=myres.sig.pairs, 
                                   Perm.Count=original.pairs.count)
   original.pairs.df <- original.pairs.df[order(-original.pairs.df$Perm.Count),]
   original.pairs.df$Pair <- order(-original.pairs.df$Perm.Count)
@@ -963,5 +963,6 @@ PermutationPairSummary <- function(inputResults, permResults, plot){
 
   
   # Return summary.
+  original.pairs.df$Pair <- myres.sig.pairs[order(-original.pairs.df$Perm.Count)]
   return(original.pairs.df)
 }

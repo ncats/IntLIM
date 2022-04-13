@@ -187,6 +187,10 @@ ProcessResults <- function(inputResults,
 	  return(retval)
 	}) == TRUE)
 	colnames(filtResults)[which_type] <- "type"
+	
+	# Set the row names.
+	rownames(filtResults) <- paste(as.character(filtResults$Analyte1),
+	                               as.character(filtResults$Analyte2), sep = "__")
 
 	# Print and return the results.
   print(paste(nrow(filtResults), 'pairs found given cutoffs'))
@@ -218,33 +222,18 @@ ProcessResultsContinuous<- function(inputResults,
   format_rsquared = reshape2::melt(inputResults@model.rsquared)
 
   # Set rownames for melted frames.
-  if (inputResults@outcome != inputResults@independent.var.type){
-    rownames(format_coeff) <- paste(as.character(format_coeff[,1])
-                                                    ,as.character(format_coeff[,2]),
-                                                    sep = "__")
-    rownames(format_pval) <- paste(as.character(format_pval[,1]),
-                                                   as.character(format_pval[,2]), 
-                                                   sep = "__")
-    rownames(format_adjp) <- paste(as.character(format_adjp[,1]),
-                                                   as.character(format_adjp[,2]), 
-                                                   sep = "__")
-    rownames(format_rsquared) <- paste(as.character(format_rsquared[,1]),
-                                                   as.character(format_rsquared[,2]), 
-                                                   sep = "__")
-  }else{
-    rownames(format_coeff) <- paste(as.character(format_coeff[,2]),
-                                                    as.character(format_coeff[,1]), 
-                                                    sep = "__")
-    rownames(format_pval) <- paste(as.character(format_pval[,2]),
-                                                   as.character(format_pval[,1]), 
-                                                   sep = "__")
-    rownames(format_adjp) <- paste(as.character(format_adjp[,2]),
-                                                   as.character(format_adjp[,1]), 
-                                                   sep = "__")
-    rownames(format_rsquared) <- paste(as.character(format_rsquared[,2]),
-                                                   as.character(format_rsquared[,1]), 
-                                                   sep = "__")
-  }
+  rownames(format_coeff) <- paste(as.character(format_coeff[,1])
+                                  ,as.character(format_coeff[,2]),
+                                  sep = "__")
+  rownames(format_pval) <- paste(as.character(format_pval[,1]),
+                                 as.character(format_pval[,2]), 
+                                 sep = "__")
+  rownames(format_adjp) <- paste(as.character(format_adjp[,1]),
+                                 as.character(format_adjp[,2]), 
+                                 sep = "__")
+  rownames(format_rsquared) <- paste(as.character(format_rsquared[,1]),
+                                     as.character(format_rsquared[,2]), 
+                                     sep = "__")
   tofilter = cbind(format_coeff, format_pval$value, 
                    format_adjp$value, format_rsquared$value)
   colnames(tofilter) = c("Analyte1", "Analyte2", "interaction_coeff", "Pval","FDRadjPval", "rsquared")
