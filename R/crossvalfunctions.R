@@ -74,7 +74,8 @@ RunCrossValidation <- function(inputData,
                                     continuous=continuous, 
                                     save.covar.pvals=save.covar.pvals, 
                                     independent.var.type=independent.var.type,
-                                    remove.duplicates=remove.duplicates)
+                                    remove.duplicates=remove.duplicates,
+                                    suppressWarnings = suppressWarnings)
   
   # Process all results.
   sigResults <- ProcessResultsAllFolds(inputResults=inputResults, 
@@ -257,6 +258,7 @@ RunIntLimAllFolds <- function(inputData,stype="",outcome=1, covar=c(),
     res<-IntLIM::RunIntLim(inputData=inputData[[i]]$training,
                            stype=stype, 
                            save.covar.pvals = save.covar.pvals, 
+                           covar = covar,
                            outcome = outcome, 
                            independent.var.type = independent.var.type,
                            continuous = continuous,

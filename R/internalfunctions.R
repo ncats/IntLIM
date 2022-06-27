@@ -265,6 +265,8 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnin
       print(covariate_msg2)
     }
   })
+  bhat <- NULL
+  
   bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
   yhat <- X %*% bhat                      # Figure out what is predicted by the model
   # Now we partition the sum-of-square errors
