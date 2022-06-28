@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ncats/IntLIM.svg?branch=liz_dev)](https://travis-ci.org/ncats/IntLIM)
+[![Build Status](https://app.travis-ci.com/ncats/IntLIM.svg?branch=liz_dev)](https://app.travis-ci.com/ncats/IntLIM)
 
 # IntLIM:  Integration through LInear Modeling
 
