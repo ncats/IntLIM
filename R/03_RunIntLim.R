@@ -28,7 +28,7 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
                       remove.duplicates = FALSE, suppressWarnings = FALSE){
     
     # If the wrong data type, stop.
-    if(class(inputData) != "IntLimData"){
+    if(!methods::is(inputData, "IntLimData")){
         stop("Input must be an IntLimData object")
     }
 

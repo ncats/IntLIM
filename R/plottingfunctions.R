@@ -604,7 +604,7 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
 #' @export
 pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.05,
                             coefPercentileCutoff=0.9){
-    if(class(inputResults) != "IntLimResults") {
+    if(!methods::is(inputResults, "IntLimResults")) {
 	    stop("input data is not a IntLim class")
     }
   
@@ -675,7 +675,7 @@ InteractionCoefficientGraph<-function(inputResults,
                                       outcome = 2){
 
 
-    if(class(inputResults) != "IntLimResults") {
+    if(!methods::is(inputResults, "IntLimResults")) {
       stop("input data is not a IntLim class")
     }
 
@@ -734,7 +734,7 @@ InteractionCoefficientGraph<-function(inputResults,
 MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnalyteOfInterest, 
                                         outcomeAnalyteOfInterest, continuous, outcome,
                                         independentVariable){
-  if(class(inputResults) != "IntLimResults") {
+  if(!methods::is(inputResults, "IntLimResults")) {
     stop("input data is not a IntLim class")
   }
   

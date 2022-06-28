@@ -105,7 +105,7 @@ RunCrossValidation <- function(inputData,
 CreateCrossValFolds <- function(inputData,folds) {
   
   # Check that input is a IntLimData
-  if (class(inputData) != "IntLimData") {
+  if (!methods::is(inputData, "IntLimData")) {
     stop("input data is not a IntLimData class")
   }
   

@@ -52,7 +52,7 @@ PermuteIntLIM <- function(data,
   
   set.seed(seed)
   
-  if(class(data) != "IntLimData") {
+  if(!methods::is(data, "IntLimData")) {
     stop("The data must be an IntLimData object")
   }
   

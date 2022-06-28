@@ -100,9 +100,9 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
   type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
   covarsd <- as.numeric(apply(covarMatrix,2,function(x){
     return(stats::sd(x,na.rm=T))}))
-  if(class(stype) == "character"){
+  if(methods::is(stype, "character")){
     stype <- as.numeric(as.factor(stype))
-  }else if(class(stype) == "factor"){
+  }else if(methods::is(stype, "factor")){
     stype <- as.numeric(stype)
   }
   stypesd <- stats::sd(stype,na.rm=T)

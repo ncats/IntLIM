@@ -20,7 +20,7 @@
 FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteMiss=0,
                        suppressWarnings = FALSE, cov.cutoff=0) {
   # Check that input is a IntLimData
-  if (class(inputData) != "IntLimData") {
+  if (!methods::is(inputData, "IntLimData")) {
     stop("input data is not a IntLimData class")
   }
   filtdata <- NULL

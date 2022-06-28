@@ -23,10 +23,10 @@ ProcessResults <- function(inputResults,
 				rsquaredCutoff = 0){
   
   # Check input types.
-  if(class(inputResults) != "IntLimResults"){
+  if(!methods::is(inputResults, "IntLimResults")){
     stop("Results must be an IntLIMResults object")
   }
-  if(class(inputData) != "IntLimData"){
+  if(!methods::is(inputData, "IntLimData")){
     stop("Data must be an IntLIMData object")
   }
   
@@ -211,7 +211,7 @@ ProcessResultsContinuous<- function(inputResults,
                          pvalCutoff=0.05,
                          rsquaredCutoff=0.0){
 
-  if(class(inputResults) != "IntLimResults") {
+  if(!methods::is(inputResults, "IntLimResults")) {
     stop("input data is not a IntLim class")
   }
 
