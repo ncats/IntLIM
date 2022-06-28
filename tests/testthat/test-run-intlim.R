@@ -1,12 +1,12 @@
 # If a value other than a data frame is input, an error should be thrown.
-test_that("Inputting the wrong class causes early termination.", {
+testthat::test_that("Inputting the wrong class causes early termination.", {
   inputData <- "Hello World"
-  expect_error(IntLIM::RunIntLim(inputData, stype = "Feat1"), "Input must be an IntLimData object", 
+  testthat::expect_error(IntLIM::RunIntLim(inputData, stype = "Feat1"), "Input must be an IntLimData object", 
                ignore.case = TRUE)
 })
 
 # If the input has more than 2 classes and is not continuous, an error should be thrown.
-test_that("Inputting more than 2 classes causes early termination.", {
+testthat::test_that("Inputting more than 2 classes causes early termination.", {
   
   # Create toy data.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0),
@@ -28,14 +28,14 @@ test_that("Inputting more than 2 classes causes early termination.", {
                       analyteType2MetaData = geneMetaData,
                       sampleMetaData = pData)
   
-  expect_error(IntLIM::RunIntLim(dat, stype = "Level"), 
+  testthat::expect_error(IntLIM::RunIntLim(dat, stype = "Level"), 
                paste("IntLim currently requires only two categories.  Make sure the column",
                      "Level only has two unique values. Did you mean to set continuous to TRUE?"),
                ignore.case = TRUE)
 })
 
 # Check invalid parameters for input or outcome type.
-test_that("Invalid parameters cause an error.", {
+testthat::test_that("Invalid parameters cause an error.", {
   
   # Create toy data.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0),
@@ -57,14 +57,14 @@ test_that("Invalid parameters cause an error.", {
                       analyteType2MetaData = geneMetaData,
                       sampleMetaData = pData)
   
-  expect_error(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = "Scooby Dooby Doo",
+  testthat::expect_error(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = "Scooby Dooby Doo",
                                  outcome = "Where are you?"), paste(
                                    "Error! independent.var.type and outcome.type must",
                                    "both be either 1 or 2 in RunIntLim."), ignore.case = TRUE)
 })
 
 # If the data is missing, an error should be thrown.
-test_that("Inputting missing data types causes early termination.", {
+testthat::test_that("Inputting missing data types causes early termination.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(0,0,0,0), "Feat2"=c(0,0,0,0), "Feat3"=c(0,0,0,0),
                       "Level"=c("Low", "Medium", "Low", "Medium"))
@@ -91,26 +91,26 @@ test_that("Inputting missing data types causes early termination.", {
                        sampleMetaData = pData)
 
   # Check for missing data.
-  expect_error(IntLIM::RunIntLim(dat1, stype = "Level", independent.var.type = 1,
+  testthat::expect_error(IntLIM::RunIntLim(dat1, stype = "Level", independent.var.type = 1,
                                  outcome = 2),
                "One type of analyte data is missing. Cannot run.",
                ignore.case = TRUE)
-  expect_error(IntLIM::RunIntLim(dat2, stype = "Level", independent.var.type = 2,
+  testthat::expect_error(IntLIM::RunIntLim(dat2, stype = "Level", independent.var.type = 2,
                                  outcome = 1),
                "One type of analyte data is missing. Cannot run.",
                ignore.case = TRUE)
 
   # Check for missing data when analyte type is same.
-  expect_error(IntLIM::RunIntLim(dat1, stype = "Level", independent.var.type = 1,
+  testthat::expect_error(IntLIM::RunIntLim(dat1, stype = "Level", independent.var.type = 1,
                                  outcome = 1), "Analyte type 1 is missing. Cannot run.",
                ignore.case = TRUE)
-  expect_error(IntLIM::RunIntLim(dat2, stype = "Level", independent.var.type = 2,
+  testthat::expect_error(IntLIM::RunIntLim(dat2, stype = "Level", independent.var.type = 2,
                                  outcome = 2), "Analyte type 2 is missing. Cannot run.",
                ignore.case = TRUE)
 })
 
 # Check that all fields are populated correctly for discrete data.
-test_that("Fields are populated appropriately (discrete).", {
+testthat::test_that("Fields are populated appropriately (discrete).", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -143,52 +143,52 @@ test_that("Fields are populated appropriately (discrete).", {
   # Run with different analytes and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 2,
                                suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+  testthat::expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
                                                     "interaction.coefficients",
                                                     "model.rsquared", 
                                                     "covariate.pvalues", 
@@ -199,78 +199,78 @@ test_that("Fields are populated appropriately (discrete).", {
                                                     "independent.var.type", 
                                                     "covar", "interaction.pvalues",
                                                     "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 1, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 })
 
 # Check that all fields are populated correctly with plus signs in the feature data.
-test_that("Fields are populated appropriately when feature data contains plus signs.", {
+testthat::test_that("Fields are populated appropriately when feature data contains plus signs.", {
   
   # Create toy data.
   pData <- data.frame("Feat1"=c("one", "two+three", "one", "z", "one",
@@ -302,22 +302,22 @@ test_that("Fields are populated appropriately when feature data contains plus si
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
   
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+  testthat::expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
                                                     "interaction.coefficients",
                                                     "model.rsquared", "covariate.pvalues", 
                                                     "covariate.coefficients", "corr", 
@@ -326,47 +326,47 @@ test_that("Fields are populated appropriately when feature data contains plus si
                                                     "independent.var.type", "covar", 
                                                     "interaction.pvalues",
                                                     "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
   
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 1, outcome = 1, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
   
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 0)
 })
 
 # Check that all fields are populated correctly for continuous data.
-test_that("Fields are populated appropriately (continuous).", {
+testthat::test_that("Fields are populated appropriately (continuous).", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -398,55 +398,55 @@ test_that("Fields are populated appropriately (continuous).", {
   # Run with different analytes and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 2,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues","continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+  testthat::expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
                                                     "interaction.coefficients",
                                                     "model.rsquared", 
                                                     "covariate.pvalues", 
@@ -456,80 +456,80 @@ test_that("Fields are populated appropriately (continuous).", {
                                                     "independent.var.type", 
                                                     "covar", "interaction.pvalues",
                                                     "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 })
 
 # Check that all fields are populated correctly when covariates are factors.
-test_that("Fields are populated appropriately with factor covariates.", {
+testthat::test_that("Fields are populated appropriately with factor covariates.", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c("one", "two", "three", "one", "two", "three",
@@ -561,23 +561,23 @@ test_that("Fields are populated appropriately with factor covariates.", {
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+  testthat::expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
                                                     "interaction.coefficients",
                                                     "model.rsquared", 
                                                     "covariate.pvalues", 
@@ -588,49 +588,49 @@ test_that("Fields are populated appropriately with factor covariates.", {
                                                     "independent.var.type", 
                                                     "covar", "interaction.pvalues",
                                                     "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 1, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 })
 
 # Check that all fields are populated correctly when some covariates are factors.
-test_that("Fields are populated appropriately with a mix of numeric and factor covariates.", {
+testthat::test_that("Fields are populated appropriately with a mix of numeric and factor covariates.", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -663,23 +663,23 @@ test_that("Fields are populated appropriately with a mix of numeric and factor c
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
                                independent.var.type = 2, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
+  testthat::expect_identical(sort(slotNames(results)), sort(c("interaction.adj.pvalues", 
                                                     "interaction.coefficients",
                                                     "model.rsquared", 
                                                     "covariate.pvalues", 
@@ -691,49 +691,49 @@ test_that("Fields are populated appropriately with a mix of numeric and factor c
                                                     "covar", 
                                                     "interaction.pvalues",
                                                     "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
                                independent.var.type = 1, outcome = 1, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2"),
                                independent.var.type = 2, outcome = 2, suppressWarnings = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 })
 
 # Check remove.duplicates.
-test_that("Duplicates are removed when appropriate (continuous).", {
+testthat::test_that("Duplicates are removed when appropriate (continuous).", {
 
   # Create toy data (discrete).
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -766,165 +766,165 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
                                outcome = 2, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
                                    outcome = 2, remove.duplicates = TRUE,
                                    continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 1, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                    outcome = 1, remove.duplicates = TRUE, continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 2, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                    independent.var.type = 1, outcome = 2, remove.duplicates = TRUE, continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                    independent.var.type = 2, outcome = 1, remove.duplicates = TRUE, continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
                                outcome = 1, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 2, remove.duplicates = TRUE,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                remove.duplicates = TRUE, independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                remove.duplicates = TRUE, independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
                           "covar", "interaction.pvalues", "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 })
 
-test_that("Duplicates are removed when appropriate (continuous).", {
+testthat::test_that("Duplicates are removed when appropriate (continuous).", {
 
   # Create toy data (discrete).
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -957,169 +957,169 @@ test_that("Duplicates are removed when appropriate (continuous).", {
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
                                outcome = 2, remove.duplicates = TRUE,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
                                    outcome = 2, remove.duplicates = TRUE,
                                    continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 1, remove.duplicates = TRUE,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                    outcome = 1, remove.duplicates = TRUE,
                                    continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 2, remove.duplicates = TRUE,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                    independent.var.type = 1, outcome = 2, remove.duplicates = TRUE,
                                    continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1, remove.duplicates = TRUE,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
+  testthat::expect_warning(IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                    independent.var.type = 2, outcome = 1, remove.duplicates = TRUE,
                                    continuous = TRUE),
                  paste("remove.duplicates only applies if the independent variable",
                        "and outcome are of the same analyte type. Duplicates will not be removed."))
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1,
                                outcome = 1, remove.duplicates = TRUE,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2,
                                outcome = 2, remove.duplicates = TRUE,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                remove.duplicates = TRUE, independent.var.type = 1, outcome = 1,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                remove.duplicates = TRUE, independent.var.type = 2, outcome = 2,
                                continuous = TRUE, suppressWarnings = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(length(results@covariate.pvalues), 0)
-  expect_equal(length(results@covariate.coefficients), 0)
-  expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
-  expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
-  expect_equal(length(which(is.na(results@model.rsquared))), 6)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(length(results@covariate.pvalues), 0)
+  testthat::expect_equal(length(results@covariate.coefficients), 0)
+  testthat::expect_equal(length(which(is.na(results@interaction.adj.pvalues))), 6)
+  testthat::expect_equal(length(which(is.na(results@interaction.coefficients))), 6)
+  testthat::expect_equal(length(which(is.na(results@model.rsquared))), 6)
+  testthat::expect_equal(results@continuous, 1)
 })
 
 # Check saving covariate pvals.
-test_that("Covariate p-values are saved (discrete).", {
+testthat::test_that("Covariate p-values are saved (discrete).", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -1152,134 +1152,134 @@ test_that("Covariate p-values are saved (discrete).", {
   # Run with different analytes and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 0)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE,
                                save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  testthat::expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 0)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  testthat::expect_equal(results@continuous, 0)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(results@continuous, 0)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(results@continuous, 0)
 })
 
 # Check saving covariate pvals.
-test_that("Covariate p-values are saved (continuous).", {
+testthat::test_that("Covariate p-values are saved (continuous).", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
@@ -1312,140 +1312,140 @@ test_that("Covariate p-values are saved (continuous).", {
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with different analytes and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 2, suppressWarnings = TRUE,
                                save.covar.pvals = TRUE, continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and no covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 36)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 36)
+  testthat::expect_equal(results@continuous, 1)
 
   # Run with the same analyte type and covariates.
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 1, outcome = 1,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.coefficients) * nrow(results@covariate.coefficients), 63)
+  testthat::expect_equal(results@continuous, 1)
 
   results <- IntLIM::RunIntLim(dat, stype = "Level", covar = c("Feat1", "Feat2", "Feat3"),
                                independent.var.type = 2, outcome = 2,
                                suppressWarnings = TRUE, save.covar.pvals = TRUE,
                                continuous = TRUE)
-  expect_identical(sort(slotNames(results)),
+  testthat::expect_identical(sort(slotNames(results)),
                    sort(c("interaction.adj.pvalues", "interaction.coefficients",
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
                           "continuous")))
-  expect_equal(length(results@interaction.adj.pvalues), 9)
-  expect_equal(length(results@interaction.coefficients), 9)
-  expect_equal(length(results@model.rsquared), 9)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
-  expect_equal(results@continuous, 1)
+  testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(results@interaction.coefficients), 9)
+  testthat::expect_equal(length(results@model.rsquared), 9)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(ncol(results@covariate.pvalues) * nrow(results@covariate.pvalues), 63)
+  testthat::expect_equal(results@continuous, 1)
 })
 
 # Check for correlated variables.
-test_that("Check for correlated variables.", {
+testthat::test_that("Check for correlated variables.", {
   # Create toy data.
   pData1 <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8),
                        "Feat2"=c(seq(1:8)),
@@ -1488,19 +1488,19 @@ test_that("Check for correlated variables.", {
   run1 <- IntLIM::RunIntLim(dat1, stype = "Level", independent.var.type = 1,
                             outcome = 2, covar = c("Feat1", "Feat2", "Feat3"),
                             continuous = TRUE)
-  expect_identical(run1@warnings[[1]], "Using pseudoinverse for Metab1")
-  expect_identical(run1@warnings[[2]], paste0("The following covariates have correlation > 0.9 : ",
+  testthat::expect_identical(run1@warnings[[1]], "Using pseudoinverse for Metab1")
+  testthat::expect_identical(run1@warnings[[2]], paste0("The following covariates have correlation > 0.9 : ",
                                               "(Feat2, Feat3)"))
   run2 <- IntLIM::RunIntLim(dat2, stype = "Level", independent.var.type = 1,
                             outcome = 2, covar = c("Feat1", "Feat2", "Feat3"),
                             continuous = TRUE)
-  expect_identical(run2@warnings[[1]], "Using pseudoinverse for Metab1")
-  expect_identical(run2@warnings[[3]], paste0("The following covariates have correlation < -0.9 : ",
+  testthat::expect_identical(run2@warnings[[1]], "Using pseudoinverse for Metab1")
+  testthat::expect_identical(run2@warnings[[3]], paste0("The following covariates have correlation < -0.9 : ",
                                               "(Feat2, Feat3)"))
 })
 
 # Removes genes and metabolites with a standard deviation of zero
-test_that("If standard deviation is zero, analytes are removed.", {
+testthat::test_that("If standard deviation is zero, analytes are removed.", {
   # With and without standard deviation of zero
   pData1 <- data.frame("Feat1"=c(62.1,44.2,42.3,14.4,58.5,95.6,91.7,1.8),
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -1573,36 +1573,36 @@ test_that("If standard deviation is zero, analytes are removed.", {
   # Metabolite with standard deviation of 0
   run1 <- IntLIM::RunIntLim(dat1, stype = "Feat1", independent.var.type = 1,
                             outcome = 2, continuous = TRUE, covar = c("Feat2", "Feat3"))
-  expect_identical(run1@warnings[[1]],
+  testthat::expect_identical(run1@warnings[[1]],
                    "Removed 1 analytes of type 1 that had a standard deviation of 0: Metab1")
-  expect_equal(length(run1@interaction.adj.pvalues), 6)
-  expect_equal(length(run1@interaction.coefficients), 6)
-  expect_equal(length(run1@model.rsquared), 6)
-  expect_equal(length(run1@continuous), 1)
+  testthat::expect_equal(length(run1@interaction.adj.pvalues), 6)
+  testthat::expect_equal(length(run1@interaction.coefficients), 6)
+  testthat::expect_equal(length(run1@model.rsquared), 6)
+  testthat::expect_equal(length(run1@continuous), 1)
 
   # Gene with standard deviation of 0
   run2 <- IntLIM::RunIntLim(dat2, stype = "Feat1", independent.var.type = 1,
                             outcome = 2, continuous = TRUE, covar = c("Feat2", "Feat3"))
-  expect_identical(run2@warnings[[1]],
+  testthat::expect_identical(run2@warnings[[1]],
                    "Removed 1 analytes of type 2 that had a standard deviation of 0: Gene1")
-  expect_equal(length(run2@interaction.adj.pvalues), 6)
-  expect_equal(length(run2@interaction.coefficients), 6)
-  expect_equal(length(run2@model.rsquared), 6)
-  expect_equal(length(run2@continuous), 1)
+  testthat::expect_equal(length(run2@interaction.adj.pvalues), 6)
+  testthat::expect_equal(length(run2@interaction.coefficients), 6)
+  testthat::expect_equal(length(run2@model.rsquared), 6)
+  testthat::expect_equal(length(run2@continuous), 1)
 
   # Covariates with standard deviation of 0
   run3 <- IntLIM::RunIntLim(dat3, stype = "Feat1", independent.var.type = 1,
                             outcome = 2, continuous = TRUE, covar = c("Feat2", "Feat3"))
-  expect_identical(run3@warnings[[1]],
+  testthat::expect_identical(run3@warnings[[1]],
                    "Removed 1 covariates that had a standard deviation of 0: Feat2")
-  expect_equal(length(run3@interaction.adj.pvalues), 9)
-  expect_equal(length(run3@interaction.coefficients), 9)
-  expect_equal(length(run3@model.rsquared), 9)
-  expect_equal(length(run3@covar), 1)
-  expect_equal(length(run3@continuous), 1)
+  testthat::expect_equal(length(run3@interaction.adj.pvalues), 9)
+  testthat::expect_equal(length(run3@interaction.coefficients), 9)
+  testthat::expect_equal(length(run3@model.rsquared), 9)
+  testthat::expect_equal(length(run3@covar), 1)
+  testthat::expect_equal(length(run3@continuous), 1)
 
   # Phenotype with standard deviation of 0
-  expect_error(IntLIM::RunIntLim(dat4, stype = "Feat1", independent.var.type = 1,
+  testthat::expect_error(IntLIM::RunIntLim(dat4, stype = "Feat1", independent.var.type = 1,
                                  outcome = 2, continuous = TRUE, covar = c("Feat2", "Feat3")),
                "stype variable has a standard deviation of zero. Cannot run.")
 })

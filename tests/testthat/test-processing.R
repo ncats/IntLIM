@@ -1,5 +1,5 @@
 # If a value other than an IntLimResults object is input, an error should be thrown.
-test_that("Inputting the wrong class causes early termination.", {
+testthat::test_that("Inputting the wrong class causes early termination.", {
   
   # Generate input data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -53,16 +53,16 @@ test_that("Inputting the wrong class causes early termination.", {
   inputResultsBad <- "Hello World"
   
   
-  expect_error(IntLIM::ProcessResults(inputResultsBad, inputDataGood), 
+  testthat::expect_error(IntLIM::ProcessResults(inputResultsBad, inputDataGood), 
                paste("Results must be an IntLIMResults object"), 
                ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResultsGood, inputDataBad), 
+  testthat::expect_error(IntLIM::ProcessResults(inputResultsGood, inputDataBad), 
                paste("Data must be an IntLIMData object"), 
                ignore.case = TRUE)
 })
 
 # Types for both outcome and independent analyte must be either 1 or 2.
-test_that("Check that outcome and independent analyte types are appropriate.", {
+testthat::test_that("Check that outcome and independent analyte types are appropriate.", {
   
   # Generate input data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -129,11 +129,11 @@ test_that("Check that outcome and independent analyte types are appropriate.", {
                                 continuous=1)
   
   
-  expect_error(IntLIM::ProcessResults(inputResults1, inputData), 
+  testthat::expect_error(IntLIM::ProcessResults(inputResults1, inputData), 
                paste("Independent variable and outcome must both",
                      "be either 1 or 2."),
                ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults2, inputData), 
+  testthat::expect_error(IntLIM::ProcessResults(inputResults2, inputData), 
                paste("Independent variable and outcome must both",
                      "be either 1 or 2."),
                ignore.case = TRUE)
@@ -141,7 +141,7 @@ test_that("Check that outcome and independent analyte types are appropriate.", {
 
 
 # The outcome and independent analytes must both be found in the InputData.
-test_that("An error is thrown if an analyte type is used that is not present in the data.", {
+testthat::test_that("An error is thrown if an analyte type is used that is not present in the data.", {
   
   # Generate input data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -196,17 +196,17 @@ test_that("An error is thrown if an analyte type is used that is not present in 
                                covar="",
                                continuous=1)
   
-  expect_error(IntLIM::ProcessResults(inputResults, inputData2), 
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData2), 
                paste("Outcome type is not present in original data"),
                ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults, inputData1), 
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData1), 
                paste("Independent data type is not present in",
                      "original data"),
                ignore.case = TRUE)
 })
 
 # The type variable must have two levels or be continuous.
-test_that("More than two levels causes an error.", {
+testthat::test_that("More than two levels causes an error.", {
   
   # Generate input data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -258,14 +258,14 @@ test_that("More than two levels causes an error.", {
                                covar="",
                                continuous=0)
   
-  expect_error(IntLIM::ProcessResults(inputResults, inputData), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData), paste(
     "IntLim requires two categories only for correlation analysis. Make sure the column",
     "Level only has two unique values or is continuous"), ignore.case = TRUE)
 })
 
 # Check that out-of-bounds values for interaction coefficient, r-squared,
 # and p-value are not allowed.
-test_that("Out of bounds values are not allowed.", {
+testthat::test_that("Out of bounds values are not allowed.", {
   
   # Generate input data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -318,22 +318,22 @@ test_that("Out of bounds values are not allowed.", {
                                continuous=0)
   
   # Check boundaries
-  expect_error(IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = -2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = -2), paste(
     "P-value must be between 0 and 1"), ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 2), paste(
     "P-value must be between 0 and 1"), ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults, inputData, rsquaredCutoff = -2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, rsquaredCutoff = -2), paste(
     "R-squared value must be between 0 and 1"), ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults, inputData, rsquaredCutoff = 2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, rsquaredCutoff = 2), paste(
     "R-squared value must be between 0 and 1"), ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults, inputData, interactionCoeffPercentile = -2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, interactionCoeffPercentile = -2), paste(
     "Interaction coefficient percentile must be between 0 and 1"), ignore.case = TRUE)
-  expect_error(IntLIM::ProcessResults(inputResults, inputData, interactionCoeffPercentile = 2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, interactionCoeffPercentile = 2), paste(
     "Interaction coefficient percentile must be between 0 and 1"), ignore.case = TRUE)
 })
 
 # Check that everything is returned when there is no filtering.
-test_that("Data is returned appropriately with no filtering.", {
+testthat::test_that("Data is returned appropriately with no filtering.", {
 
   # Generate input data (discrete).
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -408,21 +408,21 @@ test_that("Data is returned appropriately with no filtering.", {
   # Check results
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1,
 		interactionCoeffPercentile = 0, rsquaredCutoff = 0)
-  expect_identical(sort(unlist(inputResults@interaction.adj.pvalues)), sort(results$FDRadjPval))
-  expect_identical(sort(unlist(inputResults@interaction.pvalues)), sort(results$Pval))
-  expect_identical(sort(unlist(inputResults@model.rsquared)), sort(results$rsquared))
-  expect_identical(sort(unlist(inputResults@interaction.coefficients)), sort(results$interaction_coeff))
+  testthat::expect_identical(sort(unlist(inputResults@interaction.adj.pvalues)), sort(results$FDRadjPval))
+  testthat::expect_identical(sort(unlist(inputResults@interaction.pvalues)), sort(results$Pval))
+  testthat::expect_identical(sort(unlist(inputResults@model.rsquared)), sort(results$rsquared))
+  testthat::expect_identical(sort(unlist(inputResults@interaction.coefficients)), sort(results$interaction_coeff))
   inputResults@continuous <- 1
   results <- IntLIM::ProcessResults(inputResults, inputDataCont, pvalcutoff = 1,
                                     interactionCoeffPercentile = 0, rsquaredCutoff = 0)
-  expect_identical(sort(unlist(inputResults@interaction.adj.pvalues)), sort(results$FDRadjPval))
-  expect_identical(sort(unlist(inputResults@interaction.pvalues)), sort(results$Pval))
-  expect_identical(sort(unlist(inputResults@model.rsquared)), sort(results$rsquared))
-  expect_identical(sort(unlist(inputResults@interaction.coefficients)), sort(results$interaction_coeff))
+  testthat::expect_identical(sort(unlist(inputResults@interaction.adj.pvalues)), sort(results$FDRadjPval))
+  testthat::expect_identical(sort(unlist(inputResults@interaction.pvalues)), sort(results$Pval))
+  testthat::expect_identical(sort(unlist(inputResults@model.rsquared)), sort(results$rsquared))
+  testthat::expect_identical(sort(unlist(inputResults@interaction.coefficients)), sort(results$interaction_coeff))
 })
 
 # Check coefficient filtering.
-test_that("Check that coefficients are filtered as expected.", {
+testthat::test_that("Check that coefficients are filtered as expected.", {
 
   # Generate input data (discrete).
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -500,31 +500,31 @@ test_that("Check that coefficients are filtered as expected.", {
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1,
 		interactionCoeffPercentile = 0.7, rsquaredCutoff = 0)
-  expect_equal(max(results$FDRadjPval), 0.8)
-  expect_equal(length(results$FDRadjPval), 3)
-  expect_equal(max(results$Pval), 0.008)
-  expect_equal(length(results$Pval), 3)
-  expect_equal(max(results$interaction_coeff), 9)
-  expect_equal(length(results$interaction_coeff), 3)
-  expect_equal(max(results$rsquared), 0.9)
-  expect_equal(length(results$rsquared), 3)
+  testthat::expect_equal(max(results$FDRadjPval), 0.8)
+  testthat::expect_equal(length(results$FDRadjPval), 3)
+  testthat::expect_equal(max(results$Pval), 0.008)
+  testthat::expect_equal(length(results$Pval), 3)
+  testthat::expect_equal(max(results$interaction_coeff), 9)
+  testthat::expect_equal(length(results$interaction_coeff), 3)
+  testthat::expect_equal(max(results$rsquared), 0.9)
+  testthat::expect_equal(length(results$rsquared), 3)
 
   # Check results (continuous).
   inputResults@continuous <- 1
   results <- IntLIM::ProcessResults(inputResults, inputDataC, pvalcutoff = 1,
 		interactionCoeffPercentile = 0.7, rsquaredCutoff = 0)
-  expect_equal(max(results$FDRadjPval), 0.8)
-  expect_equal(length(results$FDRadjPval), 3)
-  expect_equal(max(results$Pval), 0.008)
-  expect_equal(length(results$Pval), 3)
-  expect_equal(max(results$interaction_coeff), 9)
-  expect_equal(length(results$interaction_coeff), 3)
-  expect_equal(max(results$rsquared), 0.9)
-  expect_equal(length(results$rsquared), 3)
+  testthat::expect_equal(max(results$FDRadjPval), 0.8)
+  testthat::expect_equal(length(results$FDRadjPval), 3)
+  testthat::expect_equal(max(results$Pval), 0.008)
+  testthat::expect_equal(length(results$Pval), 3)
+  testthat::expect_equal(max(results$interaction_coeff), 9)
+  testthat::expect_equal(length(results$interaction_coeff), 3)
+  testthat::expect_equal(max(results$rsquared), 0.9)
+  testthat::expect_equal(length(results$rsquared), 3)
 })
 
 # Check p-value filtering.
-test_that("Check that p-values are filtered as expected.", {
+testthat::test_that("Check that p-values are filtered as expected.", {
 
   # Generate input data (discrete).
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -603,31 +603,31 @@ test_that("Check that p-values are filtered as expected.", {
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 0.3, 
 		interactionCoeffPercentile = 0, rsquaredCutoff = 0)
-  expect_equal(max(results$FDRadjPval), 0.3)
-  expect_equal(length(results$FDRadjPval), 4)
-  expect_equal(max(results$Pval), 0.003)
-  expect_equal(length(results$Pval), 4)
-  expect_equal(max(results$interaction_coeff), 4)
-  expect_equal(length(results$interaction_coeff), 4)
-  expect_equal(max(results$rsquared), 0.4)
-  expect_equal(length(results$rsquared), 4)
+  testthat::expect_equal(max(results$FDRadjPval), 0.3)
+  testthat::expect_equal(length(results$FDRadjPval), 4)
+  testthat::expect_equal(max(results$Pval), 0.003)
+  testthat::expect_equal(length(results$Pval), 4)
+  testthat::expect_equal(max(results$interaction_coeff), 4)
+  testthat::expect_equal(length(results$interaction_coeff), 4)
+  testthat::expect_equal(max(results$rsquared), 0.4)
+  testthat::expect_equal(length(results$rsquared), 4)
 
   # Check results (continuous).
   inputResults@continuous <- 1
   results <- IntLIM::ProcessResults(inputResults, inputDataC, pvalcutoff = 0.3,
 		interactionCoeffPercentile = 0, rsquaredCutoff = 0)
-  expect_equal(max(results$FDRadjPval), 0.3)
-  expect_equal(length(results$FDRadjPval), 4)
-  expect_equal(max(results$Pval), 0.003)
-  expect_equal(length(results$Pval), 4)
-  expect_equal(max(results$interaction_coeff), 4)
-  expect_equal(length(results$interaction_coeff), 4)
-  expect_equal(max(results$rsquared), 0.4)
-  expect_equal(length(results$rsquared), 4)
+  testthat::expect_equal(max(results$FDRadjPval), 0.3)
+  testthat::expect_equal(length(results$FDRadjPval), 4)
+  testthat::expect_equal(max(results$Pval), 0.003)
+  testthat::expect_equal(length(results$Pval), 4)
+  testthat::expect_equal(max(results$interaction_coeff), 4)
+  testthat::expect_equal(length(results$interaction_coeff), 4)
+  testthat::expect_equal(max(results$rsquared), 0.4)
+  testthat::expect_equal(length(results$rsquared), 4)
 })
 
 # Check r-squared filtering
-test_that("Check that R-squared values are filtered as expected.", {
+testthat::test_that("Check that R-squared values are filtered as expected.", {
 
   # Generate input data (discrete).
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -706,24 +706,24 @@ test_that("Check that R-squared values are filtered as expected.", {
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1,
 		interactionCoeffPercentile = 0, rsquaredCutoff = 0.4)
-  expect_equal(max(results$FDRadjPval), 0.8)
-  expect_equal(length(results$FDRadjPval), 6)
-  expect_equal(max(results$Pval), 0.008)
-  expect_equal(length(results$Pval), 6)
-  expect_equal(max(results$interaction_coeff), 9)
-  expect_equal(length(results$interaction_coeff), 6)
-  expect_equal(max(results$rsquared), 0.9)
-  expect_equal(length(results$rsquared), 6)
+  testthat::expect_equal(max(results$FDRadjPval), 0.8)
+  testthat::expect_equal(length(results$FDRadjPval), 6)
+  testthat::expect_equal(max(results$Pval), 0.008)
+  testthat::expect_equal(length(results$Pval), 6)
+  testthat::expect_equal(max(results$interaction_coeff), 9)
+  testthat::expect_equal(length(results$interaction_coeff), 6)
+  testthat::expect_equal(max(results$rsquared), 0.9)
+  testthat::expect_equal(length(results$rsquared), 6)
 
   # Check results (continuous).
   results <- IntLIM::ProcessResults(inputResults, inputDataC, pvalcutoff = 1,
 		interactionCoeffPercentile = 0, rsquaredCutoff = 0.4)
-  expect_equal(max(results$FDRadjPval), 0.8)
-  expect_equal(length(results$FDRadjPval), 6)
-  expect_equal(max(results$Pval), 0.008)
-  expect_equal(length(results$Pval), 6)
-  expect_equal(max(results$interaction_coeff), 9)
-  expect_equal(length(results$interaction_coeff), 6)
-  expect_equal(max(results$rsquared), 0.9)
-  expect_equal(length(results$rsquared), 6)
+  testthat::expect_equal(max(results$FDRadjPval), 0.8)
+  testthat::expect_equal(length(results$FDRadjPval), 6)
+  testthat::expect_equal(max(results$Pval), 0.008)
+  testthat::expect_equal(length(results$Pval), 6)
+  testthat::expect_equal(max(results$interaction_coeff), 9)
+  testthat::expect_equal(length(results$interaction_coeff), 6)
+  testthat::expect_equal(max(results$rsquared), 0.9)
+  testthat::expect_equal(length(results$rsquared), 6)
 })

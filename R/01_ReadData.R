@@ -1,3 +1,18 @@
+#' @keywords internal
+"_PACKAGE"
+
+# Suppress R CMD check note
+#' @importFrom testthat test_that
+#' @importFrom DT datatable
+#' @importFrom KernSmooth bkde
+#' @importFrom gplots angleAxis
+#' @importFrom heatmaply heatmaply
+#' @importFrom rmarkdown all_output_formats
+#' @importFrom shinyFiles shinyFileSave
+#' @importFrom shinydashboard box
+#' @importFrom shinyjs click
+NULL
+
 #' Read in CSV file
 #'
 #' @include internalfunctions.R
@@ -22,6 +37,7 @@
 #' In addition, the first column of the sampleMetaData file is assumed to be the sample id, 
 #' and those sample ids should match the columns of analyteType1/2 (e.g. it is required
 #' that all sample ids in the analyteType1/2 are also in the sampleMetaData).
+#' 
 #'
 #' @include internalfunctions.R
 #'

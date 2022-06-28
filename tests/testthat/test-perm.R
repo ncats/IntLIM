@@ -1,12 +1,12 @@
 # When input data is not valid, should terminate early.
-test_that("Errors on wrong input type",{
-  expect_error(PermuteIntLIM(data = "?!%", stype="something", outcome = 1,
+testthat::test_that("Errors on wrong input type",{
+  testthat::expect_error(PermuteIntLIM(data = "?!%", stype="something", outcome = 1,
                              independent.var.type = 2, num.permutations = 4), 
                "The data must be an IntLimData object", ignore.case = TRUE)
 })
 
 # When the number of permutations is not sufficient, should terminate early.
-test_that("Insufficient fold count causes an error",{
+testthat::test_that("Insufficient fold count causes an error",{
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -34,14 +34,14 @@ test_that("Insufficient fold count causes an error",{
                       analyteType1MetaData = metabMetaData,
                       analyteType2MetaData = geneMetaData,
                       sampleMetaData = pData)
-  expect_error(PermuteIntLIM(data = dat, stype="Level", outcome = 1,
+  testthat::expect_error(PermuteIntLIM(data = dat, stype="Level", outcome = 1,
                              independent.var.type = 2, num.permutations = 0), 
                "The number of permutations must be greater than or equal to 1", 
                ignore.case = TRUE)
 })
 
 # Check that the multi-omic function works with meta-data.
-test_that("Function works correctly in multi-omic case.", {
+testthat::test_that("Function works correctly in multi-omic case.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -73,21 +73,21 @@ test_that("Function works correctly in multi-omic case.", {
   # Discrete 
   res <- PermuteIntLIM(data = dat, stype="Level", outcome = 1,
                        independent.var.type = 2, num.permutations = 4)
-  expect_equal(nrow(res[[1]]), 4)
-  expect_equal(ncol(res[[1]]), 2)
-  expect_equal(length(res[[2]]), 4)
+  testthat::expect_equal(nrow(res[[1]]), 4)
+  testthat::expect_equal(ncol(res[[1]]), 2)
+  testthat::expect_equal(length(res[[2]]), 4)
   
   # Continuous
   res <- PermuteIntLIM(data = dat, stype="Feat1", outcome = 1,
                        independent.var.type = 2, num.permutations = 4,
                        continuous = TRUE)
-  expect_equal(nrow(res[[1]]), 4)
-  expect_equal(ncol(res[[1]]), 2)
-  expect_equal(length(res[[2]]), 4)
+  testthat::expect_equal(nrow(res[[1]]), 4)
+  testthat::expect_equal(ncol(res[[1]]), 2)
+  testthat::expect_equal(length(res[[2]]), 4)
 })
 
 # Check that we are still able to run without the metadata.
-test_that("Function still works when metadata is missing.", {
+testthat::test_that("Function still works when metadata is missing.", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -116,21 +116,21 @@ test_that("Function still works when metadata is missing.", {
   # Discrete
   res <- PermuteIntLIM(data = dat, stype="Level", outcome = 1,
                        independent.var.type = 2, num.permutations = 4)
-  expect_equal(nrow(res[[1]]), 4)
-  expect_equal(ncol(res[[1]]), 2)
-  expect_equal(length(res[[2]]), 4)
+  testthat::expect_equal(nrow(res[[1]]), 4)
+  testthat::expect_equal(ncol(res[[1]]), 2)
+  testthat::expect_equal(length(res[[2]]), 4)
   
   # Continuous
   res <- PermuteIntLIM(data = dat, stype="Feat1", outcome = 1,
                        independent.var.type = 2, num.permutations = 4,
                        continuous = TRUE)
-  expect_equal(nrow(res[[1]]), 4)
-  expect_equal(ncol(res[[1]]), 2)
-  expect_equal(length(res[[2]]), 4)
+  testthat::expect_equal(nrow(res[[1]]), 4)
+  testthat::expect_equal(ncol(res[[1]]), 2)
+  testthat::expect_equal(length(res[[2]]), 4)
 })
 
 # Check that we are able to run with both single-omic and multi-omic data.
-test_that("Single-omic data gives expected results.", {
+testthat::test_that("Single-omic data gives expected results.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -157,15 +157,15 @@ test_that("Single-omic data gives expected results.", {
   # Discrete
   res <- PermuteIntLIM(data = dat, stype="Level", outcome = 1,
                        independent.var.type = 1, num.permutations = 4)
-  expect_equal(nrow(res[[1]]), 4)
-  expect_equal(ncol(res[[1]]), 2)
-  expect_equal(length(res[[2]]), 4)
+  testthat::expect_equal(nrow(res[[1]]), 4)
+  testthat::expect_equal(ncol(res[[1]]), 2)
+  testthat::expect_equal(length(res[[2]]), 4)
   
   # Continuous
   res <- PermuteIntLIM(data = dat, stype="Feat1", outcome = 1,
                        independent.var.type = 1, num.permutations = 4,
                        continuous = TRUE)
-  expect_equal(nrow(res[[1]]), 4)
-  expect_equal(ncol(res[[1]]), 2)
-  expect_equal(length(res[[2]]), 4)
+  testthat::expect_equal(nrow(res[[1]]), 4)
+  testthat::expect_equal(ncol(res[[1]]), 2)
+  testthat::expect_equal(length(res[[2]]), 4)
 })
