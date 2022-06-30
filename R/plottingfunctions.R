@@ -98,7 +98,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
       return(d)
     })
     outs <- do.call(rbind, outsList)
-    outs <- data.frame(outs, 'z' = colnames(type1Data)[outs$x + 1])
+    outs <- data.frame(outs, 'z' = colnames(type2Data)[outs$x + 1])
     z <- outs$z
     
     m <- highcharter::highchart(width = 750, height = 750 )
@@ -240,7 +240,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       alltype <- inputData@sampleMetaData[,stype]
       uniqtypes <- unique(alltype)
       mycols <- as.character(alltype)
-      for (i in 1:numcateg) {
+      for (i in 1:uniqtypes) {
         mycols[which(alltype==uniqtypes[i])] <- cols[i]
       }
       gpca <- stats::prcomp(t(type1),center=T,scale=F)
@@ -268,19 +268,104 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
                                          showInLegend=TRUE)
       }
     }
+  }else if(length(inputData@analyteType1)>0){
+    mpca <- stats::prcomp(t(inputData@analyteType1),center=T,scale=F)
+    
+    if(is.numeric(mytype) == TRUE) {
+      # Set colors.
+      bin_count <- 100
+      # Make sure the spacing is even. We need to do this using seq.
+      intervals <- seq(min(mytype), max(mytype),
+                       by = (max(mytype) - min(mytype)) / (bin_count - 1))
+      subject_color_scale <- findInterval(mytype, intervals)
+      pal <- grDevices::colorRampPalette(c("#89CFF0", "#002366"))(bin_count+1)
+      mycols <-pal[subject_color_scale]
+      
+      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=mycols)
+      mds <- highcharter::list_parse(mtoplot)
+      pm <- highcharter::highchart(width = 350, height = 350)
+      pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
+                                       tooltip = list(headerFormat="",
+                                                      pointFormat=paste("{point.label}","{point.z}")),
+                                       showInLegend=FALSE)
+      pm <- highcharter::hc_colorAxis(pm, min=min(mytype), max=max(mytype), 
+                                      minColor = "#89CFF0", maxColor = "#002366")
+    } else {
+      type1 <- inputData@analyteType1
+      alltype <- inputData@sampleMetaData[,stype]
+      uniqtypes <- unique(alltype)
+      mycols <- as.character(alltype)
+      for (i in 1:numcateg) {
+        mycols[which(alltype==uniqtypes[i])] <- cols[i]
+      }
+      mpca <- stats::prcomp(t(type1),center=T,scale=F)
+      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
+      mds <- highcharter::list_parse(mtoplot)
+      pm <- highcharter::highchart(width = 350, height = 350)
+      for (i in 1:length(uniqtypes)) {
+        mytype <- unique(alltype)[i]
+        mds <- highcharter::list_parse(mtoplot[which(mtoplot$label==mytype),])
+        pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
+                                         name=mytype,
+                                         color=cols[which(alltype==mytype)[1]],
+                                         tooltip = list(headerFormat="",
+                                                        pointFormat=paste("{point.label}","{point.z}")),
+                                         showInLegend=TRUE)
+      }
+    }
+  }else if(length(inputData@analyteType2)>0){
+    if(is.numeric(mytype) == TRUE) {
+      # Set colors.
+      bin_count <- 100
+      # Make sure the spacing is even. We need to do this using seq.
+      intervals <- seq(min(mytype), max(mytype),
+                       by = (max(mytype) - min(mytype)) / (bin_count - 1))
+      subject_color_scale <- findInterval(mytype, intervals)
+      pal <- grDevices::colorRampPalette(c("#89CFF0", "#002366"))(bin_count+1)
+      mycols <-pal[subject_color_scale]
+      
+      gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
+      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=mycols)
+      gds <- highcharter::list_parse(gtoplot)
+      pg <- highcharter::highchart(width = 350, height = 350 )
+      pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
+                                       tooltip = list(headerFormat="",
+                                                      pointFormat=paste("{point.label}","{point.z}")),
+                                       showInLegend=FALSE)
+    } else {
+      type2 <- inputData@analyteType2
+      alltype <- inputData@sampleMetaData[,stype]
+      uniqtypes <- unique(alltype)
+      mycols <- as.character(alltype)
+      for (i in 1:numcateg) {
+        mycols[which(alltype==uniqtypes[i])] <- cols[i]
+      }
+      gpca <- stats::prcomp(t(type2),center=T,scale=F)
+      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
+      gds <- highcharter::list_parse(gtoplot)
+      pg <- highcharter::highchart(width = 350, height = 350)
+      for (i in 1:length(uniqtypes)) {
+        mytype <- unique(alltype)[i]
+        gds <- highcharter::list_parse(gtoplot[which(gtoplot$label==mytype),])
+        pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
+                                         name=mytype,
+                                         color=cols[which(alltype==mytype)[1]],
+                                         tooltip = list(headerFormat="",
+                                                        showInLegend=TRUE))
+      }
+    }
   }
-  
-  # Set up plots.
   if(length(inputData@analyteType1)>0){
     mpercvar=round((mpca$sdev)^2 / sum(mpca$sdev^2)*100,2)
-    pm <- highcharter::hc_title(pm, text="PCA of analyte type 2")
+    pm <- highcharter::hc_title(pm, text="PCA of analyte type 1")
     pm <- highcharter::hc_xAxis(pm, title=list(text=paste0("PC1:",round(mpercvar[1],1),"%")))
     pm <- highcharter::hc_yAxis(pm, title=list(text=paste0("PC2:",round(mpercvar[2],2),"%")))
     pm <- highcharter::hc_chart(pm, zoomType = "xy")
   }
   if(length(inputData@analyteType2)>0){
+    gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
     gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
-    pg <- highcharter::hc_title(pg, text="PCA of analyte type 1")
+    pg <- highcharter::hc_title(pg, text="PCA of analyte type 2")
     pg <- highcharter::hc_xAxis(pg, title=list(text=paste0("PC1:",round(gpercvar[1],1),"%")))
     pg <- highcharter::hc_yAxis(pg, title=list(text=paste0("PC2:",round(gpercvar[2],2),"%")))
     pg <- highcharter::hc_chart(pg, zoomType = "xy")
@@ -294,15 +379,15 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
     }
   } else if(length(inputData@analyteType1)>0){
     if (viewer == TRUE) {
-      p <-htmltools::browsable(highcharter::hw_grid(pg, ncol = 1, rowheight = 550))
-    } else {
-      p <- highcharter::hw_grid(pg)
-    }
-  } else if(length(inputData@analyteType2)>0){
-    if (viewer == TRUE) {
       p <-htmltools::browsable(highcharter::hw_grid(pm, ncol = 1, rowheight = 550))
     } else {
       p <- highcharter::hw_grid(pm)
+    }
+  } else if(length(inputData@analyteType2)>0){
+    if (viewer == TRUE) {
+      p <-htmltools::browsable(highcharter::hw_grid(pg, ncol = 1, rowheight = 550))
+    } else {
+      p <- highcharter::hw_grid(pg)
     }
   }
   

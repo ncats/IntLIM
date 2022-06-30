@@ -280,7 +280,9 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       dataUnion <- c(dataUnion, type2Samps)
       myind <- intersect(myind, type2Samps)
     }
-    pData<-pData[myind,]
+    pData<-data.frame(pData[myind,])
+    rownames(pData) <- myind
+    colnames(pData) <- colnames(pDataOld)
     notShared <- setdiff(dataUnion, myind)
     if(length(notShared) > 0 && suppressWarnings == FALSE){
       warning(paste("The following samples were not shared in all data types",
