@@ -5,7 +5,6 @@
 #' @importFrom testthat test_that
 #' @importFrom DT datatable
 #' @importFrom KernSmooth bkde
-#' @importFrom gplots angleAxis
 #' @importFrom heatmaply heatmaply
 #' @importFrom rmarkdown all_output_formats
 #' @importFrom shinyFiles shinyFileSave
