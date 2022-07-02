@@ -1,7 +1,7 @@
 Package: IntLIM
 Type: Package
 Title: Integration of Omics Data Using Linear Modeling
-Version: 2.0.0
+Version: 2.0.1
 Authors@R: c(
  person("Jalal", "Siddiqui", email = "Jalal.Siddiqui@osumc.edu", role="aut"),
  person("Shunchao", "Wang", email="shunchao.wang@osumc.edu", role="aut"),
