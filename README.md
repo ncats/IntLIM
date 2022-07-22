@@ -25,10 +25,6 @@ To access, [click here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5838881/)
 
 IntLIM is an R package and can be run on version >= 3.5.0. 
 
-Download (or upgrade) R [here](https://cloud.r-project.org/).
-
-RStudio (an interface to R than can make R easier to use) can be download here (not required): https://www.rstudio.com/products/rstudio/download/
-
 ## Installation from Github
 
 To install IntLIM, simply type the following in the R terminal:
@@ -46,7 +42,7 @@ A detailed vignette can be found [here](https://ncats.github.io/IntLIM/IntLIM2.0
 
 Formatted data and codes to reproduce the NCI-60 and breast cancer analyses can be obtained from the following GitHub repository:
 
-https://github.com/ncats/IntLIMVignettes
+[https://github.com/ncats/IntLIMVignettes](https://github.com/ncats/IntLIMVignettes)
 
 
 ## Running IntLIM's user-friendly web app:
