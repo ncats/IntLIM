@@ -256,13 +256,13 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnin
     warnings <- list()
   }, error=function(e){
     if(suppressWarnings == FALSE){
-      print(pinv_message)
+      warning(pinv_message)
     }
     if(length(which(cormat > cutoff)) > 0 && suppressWarnings == FALSE){
-      print(covariate_msg1)
+      warning(covariate_msg1)
     }
     if(length(which(cormat < -1 * cutoff)) > 0 && suppressWarnings == FALSE){
-      print(covariate_msg2)
+      warning(covariate_msg2)
     }
   })
   bhat <- NULL
@@ -401,7 +401,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
     if (numprog != 0){
       if (i %% numprog == 0) {
         progX <- round(i/num*100)
-        print(paste(progX,"% complete"))
+        message(paste(progX,"% complete"))
       }
     }
     list.pvals[[i]] <-  p.val.vector

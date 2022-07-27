@@ -193,7 +193,7 @@ ProcessResults <- function(inputResults,
 	                               as.character(filtResults$Analyte2), sep = "__")
 
 	# Print and return the results.
-  print(paste(nrow(filtResults), 'pairs found given cutoffs'))
+  message(paste(nrow(filtResults), 'pairs found given cutoffs'))
   return(filtResults)
 }
 

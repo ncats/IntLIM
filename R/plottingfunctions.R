@@ -429,7 +429,7 @@ DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 #' @export
 PValueBoxPlots<- function(IntLimResults) {
   if(length(IntLimResults@covariate.pvalues) == 0){
-    print("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
+    stop("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
   }else{
     graphics::par(mar=c(8, 4.1, 4.1, 2.1))
     graphics::boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
@@ -892,7 +892,7 @@ MarginalEffectsGraph<-function(dataframe, title, ylab, xlab){
     margins::cplot(model, x = "type", data = dataframe, what = "prediction", 
                    main = title)
   }, error = function(cond){
-    print(cond)
+    stop(cond)
   })
   return(model)
 

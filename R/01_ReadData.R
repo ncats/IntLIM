@@ -335,7 +335,7 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
                                analyteType2MetaData = as.data.frame(type2MetaData),
                                sampleMetaData = covarMatrix)
 
-    print("IntLIMData created")
+    message("IntLIMData created")
   }
   return(intlimData)
 }
