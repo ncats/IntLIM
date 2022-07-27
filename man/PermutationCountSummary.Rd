@@ -16,6 +16,10 @@ PermutationCountSummary(inputResults, permResults, plot)
 
 \item{plot}{Whether or not to show the boxplot. Default is TRUE.}
 }
+\value{
+A data frame that includes, for each permutation, the number of significant
+pairs and the number of unique analytes of each analyte type within those pairs
+}
 \description{
 Return the number of significant analytes and the number 
 of permutations in which each analyte is significant.

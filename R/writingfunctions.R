@@ -1,7 +1,7 @@
 #' Output data into individual CSV files.  All data will be zipped into one file with all data.
 #'
 #' @param inputData data output from ReadData() or FilterData() function
-#' @param filename name of file to be output (default: '~/output.zip') 
+#' @param filename name of file to be output (default: 'tempdir/output.zip') 
 #'
 #' @return the filename of the CSV file with results named with cohort
 #' @export

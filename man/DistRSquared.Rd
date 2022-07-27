@@ -11,6 +11,9 @@ DistRSquared(IntLimResults, breaks = 100)
 
 \item{breaks}{the number of breaks to use in histogram (see hist() documentation for more details)}
 }
+\value{
+No return value, called for side effects
+}
 \description{
 Visualize the distribution of unadjusted p-values from linear models
 }

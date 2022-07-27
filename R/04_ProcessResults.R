@@ -205,6 +205,9 @@ ProcessResults <- function(inputResults,
 #' default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients)
 #' @param pvalCutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
 #' @param rsquaredCutoff cutoff of R-squared value for filtering (default 0, no filtering)
+#' @return A data frame with the following columns for each pair of analytes:
+#' "Analyte1", "Analyte2", "interaction_coeff", "Pval", "FDRadjPval", and "rsquared".
+#' Optionally, coefficients for each covariate may also be included.
 #' @export
 ProcessResultsContinuous<- function(inputResults,
                          interactionCoeffPercentile=0.1,

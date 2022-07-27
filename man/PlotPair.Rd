@@ -34,6 +34,9 @@ PlotPair(
 \item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
 in Shiny/Knittr (F)}
 }
+\value{
+No return value, called for side effects
+}
 \description{
 scatter plot of pairs (based on user selection)
 }

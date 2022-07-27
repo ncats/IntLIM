@@ -14,6 +14,9 @@ DistPvalues(IntLimResults, breaks = 100, adjusted = TRUE)
 \item{adjusted}{Whether or not to plot adjusted p-values. If TRUE (default),
 adjusted p-values are plotted. If FALSE, unadjusted p-values are plotted.}
 }
+\value{
+No return value, called for side effects
+}
 \description{
 Visualize the distribution of unadjusted p-values from linear models
 }

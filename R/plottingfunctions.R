@@ -405,6 +405,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
 #' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
 #' @param adjusted Whether or not to plot adjusted p-values. If TRUE (default),
 #' adjusted p-values are plotted. If FALSE, unadjusted p-values are plotted.
+#' @return No return value, called for side effects
 #' @export
 DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 
@@ -424,6 +425,7 @@ DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 #' @include IntLimResults_extendedfunctions.R
 #'
 #' @param IntLimResults output of RunIntLim()
+#' @return No return value, called for side effects
 #' @export
 PValueBoxPlots<- function(IntLimResults) {
   if(length(IntLimResults@covariate.pvalues) == 0){
@@ -440,6 +442,7 @@ PValueBoxPlots<- function(IntLimResults) {
 #'
 #' @param IntLimResults output of RunIntLim()
 #' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
+#' @return No return value, called for side effects
 #' @export
 DistRSquared<- function(IntLimResults,breaks=100) {
   
@@ -557,6 +560,7 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @return No return value, called for side effects
 #' @export
 PlotPair<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
                     outcomeAnalyteOfInterest, palette = "Set1",	viewer=T) {
@@ -625,6 +629,7 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @return No return value, called for side effects
 #' @export
 PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
                     outcomeAnalyteOfInterest, palette = "Set1") {
@@ -900,6 +905,7 @@ MarginalEffectsGraph<-function(dataframe, title, ylab, xlab){
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param type 'independent' or 'outcome'.  'outcome' set as default
 #' @param breaks Number of breaks selected for histogram
+#' @return No return value, called for side effects
 #' @export
 HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
 
@@ -932,6 +938,8 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
 #' @param plot Whether or not to show the boxplot. Default is TRUE.
+#' @return A data frame that includes, for each permutation, the number of significant
+#' pairs and the number of unique analytes of each analyte type within those pairs
 #' @export
 PermutationCountSummary <- function(inputResults, permResults, plot){
   
@@ -1011,6 +1019,8 @@ PermutationCountSummary <- function(inputResults, permResults, plot){
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
 #' @param plot Whether or not to show the boxplot. Default is TRUE.
+#' @return A data frame that includes each significant pair from the unpermuted 
+#' data and the number of times that pair was significant in the permuted data.
 #' @export
 PermutationPairSummary <- function(inputResults, permResults, plot){
   

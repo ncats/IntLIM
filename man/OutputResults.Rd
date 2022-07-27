@@ -9,7 +9,7 @@ OutputResults(inputResults, filename = "results.csv")
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of ProcessResults())}
 
-\item{filename}{name of file to be output (default: '~/results.csv')}
+\item{filename}{name of file to be output (default: 'tempdir/results.csv')}
 }
 \value{
 the filename of the CSV file with results named with cohort

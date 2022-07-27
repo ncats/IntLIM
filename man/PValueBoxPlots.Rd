@@ -10,6 +10,9 @@ PValueBoxPlots(IntLimResults)
 \arguments{
 \item{IntLimResults}{output of RunIntLim()}
 }
+\value{
+No return value, called for side effects
+}
 \description{
 Visualize the distribution of unadjusted p-values for all covariates
 from linear models using a bar chart.
