@@ -206,8 +206,8 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
   
   if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
     if(is.numeric(mytype) == TRUE) {
-      mpca <- stats::prcomp(t(inputData@analyteType1),center=T,scale=F)
-      gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
+      mpca <- stats::prcomp(t(inputData@analyteType1),center=TRUE,scale=FALSE)
+      gpca <- stats::prcomp(t(inputData@analyteType2),center=TRUE,scale=FALSE)
       
       # Set colors.
       bin_count <- 100
@@ -243,8 +243,8 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       for (i in 1:uniqtypes) {
         mycols[which(alltype==uniqtypes[i])] <- cols[i]
       }
-      gpca <- stats::prcomp(t(type1),center=T,scale=F)
-      mpca <- stats::prcomp(t(type2),center=T,scale=F)
+      gpca <- stats::prcomp(t(type1),center=TRUE,scale=FALSE)
+      mpca <- stats::prcomp(t(type2),center=TRUE,scale=FALSE)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
       mds <- highcharter::list_parse(mtoplot)
@@ -269,7 +269,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       }
     }
   }else if(length(inputData@analyteType1)>0){
-    mpca <- stats::prcomp(t(inputData@analyteType1),center=T,scale=F)
+    mpca <- stats::prcomp(t(inputData@analyteType1),center=TRUE,scale=FALSE)
     
     if(is.numeric(mytype) == TRUE) {
       # Set colors.
@@ -298,7 +298,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       for (i in 1:numcateg) {
         mycols[which(alltype==uniqtypes[i])] <- cols[i]
       }
-      mpca <- stats::prcomp(t(type1),center=T,scale=F)
+      mpca <- stats::prcomp(t(type1),center=TRUE,scale=FALSE)
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
       mds <- highcharter::list_parse(mtoplot)
       pm <- highcharter::highchart(width = 350, height = 350)
@@ -324,7 +324,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       pal <- grDevices::colorRampPalette(c("#89CFF0", "#002366"))(bin_count+1)
       mycols <-pal[subject_color_scale]
       
-      gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
+      gpca <- stats::prcomp(t(inputData@analyteType2),center=TRUE,scale=FALSE)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=mycols)
       gds <- highcharter::list_parse(gtoplot)
       pg <- highcharter::highchart(width = 350, height = 350 )
@@ -340,7 +340,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       for (i in 1:numcateg) {
         mycols[which(alltype==uniqtypes[i])] <- cols[i]
       }
-      gpca <- stats::prcomp(t(type2),center=T,scale=F)
+      gpca <- stats::prcomp(t(type2),center=TRUE,scale=FALSE)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
       gds <- highcharter::list_parse(gtoplot)
       pg <- highcharter::highchart(width = 350, height = 350)
@@ -363,7 +363,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
     pm <- highcharter::hc_chart(pm, zoomType = "xy")
   }
   if(length(inputData@analyteType2)>0){
-    gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
+    gpca <- stats::prcomp(t(inputData@analyteType2),center=TRUE,scale=FALSE)
     gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
     pg <- highcharter::hc_title(pg, text="PCA of analyte type 2")
     pg <- highcharter::hc_xAxis(pg, title=list(text=paste0("PC1:",round(gpercvar[1],1),"%")))
@@ -787,7 +787,7 @@ InteractionCoefficientGraph<-function(inputResults,
     toplot_sort$color = "black"
     toplot_sort$color[(toplot_sort$interaction_coeff > second_half | toplot_sort$
                          interaction_coeff <first_half)]="red"
-    randomize = function(x) sample(1:nrow(toplot_sort),x,replace=F)
+    randomize = function(x) sample(1:nrow(toplot_sort),x,replace=FALSE)
     random_rows_to_keep = sort(randomize(nrow(toplot_sort)*percentageToPlot))
     toplot_sort = toplot_sort[random_rows_to_keep,]
     if(independent.var.type == outcome){

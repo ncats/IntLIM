@@ -111,14 +111,14 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
         stop(paste("File", temp, "does not exist"))
       }
       else {
-        ids <- utils::read.csv(temp,check.names=F)[,1]
+        ids <- utils::read.csv(temp,check.names=FALSE)[,1]
         if(length(ids) != length(unique(ids))) {
           stop(paste("Error: your input file",temp,"has duplicate",
                      "entries in column 1. Please make sure you have one row per",
                      "analyte"))
         }
         else {
-          type2Data<-utils::read.csv(temp,row.names = 1,check.names=F)
+          type2Data<-utils::read.csv(temp,row.names = 1,check.names=FALSE)
           colnames(type2Data) <- make.names(colnames(type2Data))
           rownames(type2Data) <- make.names(rownames(type2Data))
         }
@@ -139,12 +139,12 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))
       } else {
-        ids <- utils::read.csv(temp,check.names=F)[,1]
+        ids <- utils::read.csv(temp,check.names=FALSE)[,1]
         if(length(ids) != length(unique(ids))) {
           stop(paste("Error: your input file",temp,"has duplicate",
                      "entries in column 1. Please make sure you have one row per analyte"))
         } else {
-          type1Data<-utils::read.csv(temp,row.names = 1,check.names=F)
+          type1Data<-utils::read.csv(temp,row.names = 1,check.names=FALSE)
           colnames(type1Data) <- make.names(colnames(type1Data))
           rownames(type1Data) <- make.names(rownames(type1Data))
         }

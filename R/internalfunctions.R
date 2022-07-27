@@ -96,16 +96,16 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
   }
 
   # Find all standard deviations.
-  type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
-  type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
+  type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=TRUE)}))
+  type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=TRUE)}))
   covarsd <- as.numeric(apply(covarMatrix,2,function(x){
-    return(stats::sd(x,na.rm=T))}))
+    return(stats::sd(x,na.rm=TRUE))}))
   if(methods::is(stype, "character")){
     stype <- as.numeric(as.factor(stype))
   }else if(methods::is(stype, "factor")){
     stype <- as.numeric(stype)
   }
-  stypesd <- stats::sd(stype,na.rm=T)
+  stypesd <- stats::sd(stype,na.rm=TRUE)
 
   # If the standard deviation of the phenotype is zero, then stop.
   if(stypesd == 0){

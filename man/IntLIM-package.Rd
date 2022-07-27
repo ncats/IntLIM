@@ -6,7 +6,7 @@
 \alias{IntLIM-package}
 \title{IntLIM: Integration of Omics Data Using Linear Modeling}
 \description{
-This workflow takes analyte levels from two different types of analytes (e.g. gene expression and metabolite abundance), meta-information on each analyte type, and sample outcome and metadata to identify analyte pairs that are significantly associated with a continuous or discrete outcome (e.g. drug response or tumor type).
+This workflow takes analyte levels from two different types of analytes (e.g. gene expression and metabolite abundance), meta-information on each analyte type, and sample outcome and metadata to identify analyte pairs that are significantly associated with a continuous or discrete outcome (e.g. drug response or tumor type). The following references describe the methods in this package: (1) Kevin R. Coombes (2019) <https://cran.r-project.org/web/packages/ClassComparison/index.html>, (2) Jalal K. Siddiqui, et al. (2018) <doi:10.1186/s12859-018-2085-6>, (3) Andrew Patt, et al. (2019) <doi:10.1007/978-1-4939-9027-6_23>.
 }
 \author{
 \strong{Maintainer}: Tara Eicher \email{tara.eicher@nih.gov}

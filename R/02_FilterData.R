@@ -52,7 +52,7 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteM
       type2Data <- inputData@analyteType2
       if(analyteType1perc > 0) {
         # Filter
-        mymean <- as.numeric(apply(type1Data,1, function(x) mean(x,na.rm=T)))
+        mymean <- as.numeric(apply(type1Data,1, function(x) mean(x,na.rm=TRUE)))
         keepers <- which(mymean > stats::quantile(mymean,analyteType1perc, na.rm = TRUE))
         oldData <- type1Data
         type1Data <- as.matrix(type1Data[keepers,])
@@ -73,7 +73,7 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteM
       }
       if(analyteType2perc > 0) {
         # Filter
-        mymean <- as.numeric(apply(type2Data,1, function(x) mean(x,na.rm=T)))
+        mymean <- as.numeric(apply(type2Data,1, function(x) mean(x,na.rm=TRUE)))
         keepers <- which(mymean > stats::quantile(mymean,analyteType2perc, na.rm = TRUE))
         oldData <- type2Data
         type2Data <- as.matrix(type2Data[keepers,])
@@ -170,7 +170,7 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteM
       if(analyteType1perc > 0) {
         type1Data <- inputData@analyteType1
         mymean <- as.numeric(apply(type1Data,1, function(x)
-          mean(x,na.rm=T)))
+          mean(x,na.rm=TRUE)))
         keepers <- which(mymean > stats::quantile(mymean,analyteType1perc, na.rm = TRUE))
         oldData <- type1Data
         type1Data <- as.matrix(type1Data[keepers,])
@@ -256,7 +256,7 @@ FilterData <- function(inputData,analyteType1perc=0,analyteType2perc=0, analyteM
       if(analyteType2perc > 0) {
         # Filter
         mymean <- as.numeric(apply(type2Data,1, function(x)
-          mean(x,na.rm=T)))
+          mean(x,na.rm=TRUE)))
         keepers <- which(mymean > stats::quantile(mymean,analyteType2perc, na.rm = TRUE))
         oldData <- type2Data
         # Transpose if only one column is remaining
