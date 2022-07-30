@@ -4,7 +4,7 @@
 \alias{OutputResults}
 \title{Output results into a zipped CSV file.  Results include gene and metabolite pairs, along with model interaction p-values, and correlations in each group being evaluated.}
 \usage{
-OutputResults(inputResults, filename = "results.csv")
+OutputResults(inputResults, filename = "")
 }
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of ProcessResults())}

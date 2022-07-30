@@ -13,7 +13,7 @@ vignette: >
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-result_dir <- "~\\IntLIM_vignette_results"
+result_dir <- paste0(tempdir(), "\\IntLIM_vignette_results")
 dir.create(result_dir)
 ```
 
@@ -332,6 +332,11 @@ IntLIM::OutputResults(inputResults=myres.sig.drugscore,filename=paste(result_dir
                                                               "MyResultsDrugscore.csv", sep = "\\"))
 IntLIM::OutputResults(inputResults=myres.sig.cancertype,filename=paste(result_dir,
                                                               "MyResultsCancertype.csv", sep = "\\"))
+```
+
+Remove the directory.
+```{r}
+unlink(result_dir, recursive = TRUE)
 ```
 
 ## Run Cross-Validation
