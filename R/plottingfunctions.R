@@ -431,6 +431,8 @@ PValueBoxPlots<- function(IntLimResults) {
   if(length(IntLimResults@covariate.pvalues) == 0){
     stop("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
   }else{
+    oldpar <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(oldpar))
     graphics::par(mar=c(8, 4.1, 4.1, 2.1))
     graphics::boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
   }
@@ -665,6 +667,8 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
     cols <- plotdata$cols
     
     # Plot
+    oldpar <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(oldpar))
     graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
     plot(data$x, data$y, col = data$color, xlab = independentAnalyteOfInterest,
          ylab = outcomeAnalyteOfInterest, main = paste(independentAnalyteOfInterest,
@@ -672,7 +676,6 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
          pch = 16)
     graphics::lines(line1, col = cols[1])
     graphics::lines(line2, col = cols[2])
-    #graphics::text(data$x, data$y, data$z, col = data$color)
     coord <- graphics::par("usr")
     graphics::legend(x = coord[2] * 1.05, y = coord[4], legend=c(uniqtypes[1],uniqtypes[2]), 
            col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
