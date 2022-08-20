@@ -3,11 +3,11 @@
 #' @param inputData IntLimObject output of ReadData()
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
+#' @param viewer whether the plot should be displayed in the RStudio viewer (TRUE) or
+#' in Shiny/Knittr (FALSE)
 #' @return a highcharter object
 #' @export
-PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
+PlotDistributions <- function(inputData,viewer=TRUE, palette="Set1"){
   . <- c()
   if (length(palette) == 2) {
     cols <- c(palette)
@@ -155,11 +155,11 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 #' @param stype category to color-code by (can be more than two categories)
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
+#' @param viewer whether the plot should be displayed in the RStudio viewer (TRUE) or
+#' in Shiny/Knittr (FALSE)
 #' @return a highcharter object
 #' @export
-PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
+PlotPCA <- function(inputData,viewer=TRUE,stype="",palette = "Set1") {
   
   if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
     mytype <- inputData@sampleMetaData[,stype]
@@ -556,8 +556,8 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
+#' @param viewer whether the plot should be displayed in the RStudio viewer (TRUE) or
+#' in Shiny/Knittr (FALSE)
 #' @param outcomeAnalyteOfInterest outcome analyte in pair
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param outcome '1' or '2' must be set as outcome/independent variable
@@ -565,7 +565,7 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
 #' @return No return value, called for side effects
 #' @export
 PlotPair<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
-                    outcomeAnalyteOfInterest, palette = "Set1",	viewer=T) {
+                    outcomeAnalyteOfInterest, palette = "Set1",	viewer=TRUE) {
   
   # Set type.
   stype <- inputResults@stype

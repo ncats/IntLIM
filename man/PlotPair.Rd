@@ -12,7 +12,7 @@ PlotPair(
   independentAnalyteOfInterest,
   outcomeAnalyteOfInterest,
   palette = "Set1",
-  viewer = T
+  viewer = TRUE
 )
 }
 \arguments{
@@ -31,8 +31,8 @@ PlotPair(
 \item{palette}{choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors}
 
-\item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
-in Shiny/Knittr (F)}
+\item{viewer}{whether the plot should be displayed in the RStudio viewer (TRUE) or
+in Shiny/Knittr (FALSE)}
 }
 \value{
 No return value, called for side effects
