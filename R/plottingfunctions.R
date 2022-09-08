@@ -549,6 +549,95 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
   # Return everything needed.
   return(list(data=data,uniqtypes=uniqtypes,line1=line1,line2=line2,cols=cols))
 }
+
+#' scatter plot of pairs (based on user selection)
+#'
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param inputResults Object of type ModelResults.
+#' @param outcomeAnalyteOfInterest outcome analyte in pair
+#' @param independentAnalyteOfInterest independent analyte in pair
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @return No return value, called for side effects
+#' @export
+PlotPairResiduals<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
+                    outcomeAnalyteOfInterest) {
+
+  ind <- make.names(independentAnalyteOfInterest)
+  out <- make.names(outcomeAnalyteOfInterest)
+  pairName <- paste(ind, out, sep = "__")
+  
+  # Set variables for further analysis.
+  analyteTgtVals <- inputData@analyteType1
+  if(outcome == 2){
+    analyteTgtVals <- inputData@analyteType2
+  }
+  analyteSrcVals <- inputData@analyteType2
+  if(independentVariable == 1){
+    analyteSrcVals <- inputData@analyteType1
+  }
+  covariateVals <- inputData@sampleMetaData
+  covariatePairs <- inputResults@covariate.coefficients[pairName,]
+  tgt <- analyteTgtVals[out,]
+  src <- analyteSrcVals[independentVariable,]
+  phenotype <- covariateVals[,inputResults@stype]
+  if(is.factor(covariateVals[,inputResults@stype])){
+    phenotype <- as.numeric(covariateVals[,inputResults@stype]) - 1
+  }
+  
+  # If the covariates are factors, then one-hot encode them. Else, add the same
+  # values back into the list.
+  for(c in colnames(covariateVals)){
+    # Find all factor covariates derived from the original covariate.
+    if(is.factor(covariateVals[,c])){
+      for(fac in unique(covariateVals[,c])){
+        # Append new one-hot-encoded factor covariates.
+        covariateVals[,paste0(c, fac)] <- 0
+        covariateVals[which(covariateVals[,c] == fac),paste0(c, fac)] <- 1
+      }
+    }
+  }
+  
+  # beta0
+  b0 <- t(matrix(rep(covariatePairs[,"(Intercept)"], nrow(covariateVals)), ncol = nrow(covariateVals)))
+  
+  # beta1
+  b1 <- t(matrix(rep(covariatePairs[,"a"], nrow(covariateVals)), ncol = nrow(covariateVals))) * src
+  
+  # beta2
+  typeVar <- colnames(covariatePairs)[which(grepl("^type",colnames(covariatePairs)))]
+  b2 <- t(matrix(rep(covariatePairs[,typeVar], nrow(covariateVals)), ncol = nrow(covariateVals))) * 
+    phenotype
+  
+  # beta3
+  interactVar <- colnames(covariatePairs)[which(grepl(":",colnames(covariatePairs), fixed = TRUE))]
+  interactionTerm <- t(matrix(rep(covariatePairs[,interactVar], nrow(covariateVals)), ncol = nrow(covariateVals)))
+  b3 <- interactionTerm * src * phenotype
+  
+  # covariates
+  sum_covars <- rep(0, nrow(covariateVals))
+  if(length(inputResults@covar) > 1 || inputResults@covar != ""){
+    covarNames <- setdiff(colnames(covariatePairs), list("(Intercept)", "a", typeVar, interactVar))
+    sum_each <- lapply(covarNames, function(c){
+      return(t(matrix(rep(covariatePairs[,c], nrow(covariateVals)), ncol = nrow(covariateVals)))
+             * covariateVals[,c])
+    })
+    sum_covars <- Reduce('+', sum_each)
+  }
+  Y.pred <- b0 + b1 + sum_covars + b2 + b3
+  
+  # Compute standardized residuals.
+  residuals <- tgt - Y.pred / stats::sd(tgt - Y.pred)
+  
+  # Plot residuals.
+  graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
+  plot(tgt, residuals, xlab = outcomeAnalyteOfInterest,
+       ylab = "Standardized Residual", main = paste("Residuals -", independentAnalyteOfInterest,
+                                                     "and", outcomeAnalyteOfInterest),
+       pch = 16)
+  graphics::abline(h = 0)
+  coord <- graphics::par("usr")
+}
   
 #' scatter plot of pairs (based on user selection)
 #'
@@ -556,16 +645,15 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (TRUE) or
-#' in Shiny/Knittr (FALSE)
+#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
+#' in Shiny/Knittr (F)
 #' @param outcomeAnalyteOfInterest outcome analyte in pair
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' @param independentVariable '1' or '2' must be set as outcome/independent variable
-#' @return No return value, called for side effects
 #' @export
 PlotPair<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
-                    outcomeAnalyteOfInterest, palette = "Set1",	viewer=TRUE) {
+                    outcomeAnalyteOfInterest, palette = "Set1",	viewer=T) {
   
   # Set type.
   stype <- inputResults@stype
@@ -631,11 +719,10 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
 #' @param independentAnalyteOfInterest independent analyte in pair
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' @param independentVariable '1' or '2' must be set as outcome/independent variable
-#' @return No return value, called for side effects
 #' @export
 PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
-                    outcomeAnalyteOfInterest, palette = "Set1") {
-    
+                        outcomeAnalyteOfInterest, palette = "Set1") {
+  
   # Set type.
   stype <- inputResults@stype
   
@@ -667,8 +754,6 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
     cols <- plotdata$cols
     
     # Plot
-    oldpar <- graphics::par(no.readonly = TRUE)
-    on.exit(graphics::par(oldpar))
     graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
     plot(data$x, data$y, col = data$color, xlab = independentAnalyteOfInterest,
          ylab = outcomeAnalyteOfInterest, main = paste(independentAnalyteOfInterest,
@@ -676,9 +761,10 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
          pch = 16)
     graphics::lines(line1, col = cols[1])
     graphics::lines(line2, col = cols[2])
+    #graphics::text(data$x, data$y, data$z, col = data$color)
     coord <- graphics::par("usr")
     graphics::legend(x = coord[2] * 1.05, y = coord[4], legend=c(uniqtypes[1],uniqtypes[2]), 
-           col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
+                     col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
   }
 }
 

@@ -285,8 +285,19 @@ effects of phenotype for a given pair of analytes.
 An example is shown below for DLG4 vs. (p-Hydroxyphenyl)lactic acid with respect to
 drug score.
 
+The __PlotPairResiduals()__ function plots the standardized residuals for a given
+pair, allowing the user to determine whether model assumptions are fulfilled. In
+the example below, the residual error tends to increase as the level of (p-Hydroxyphenyl)lactic acid
+increases.
+
 ```{r}
 IntLIM::PlotPair(inputData = inputDatafilt,
+                 inputResults = myres.drugscore,
+                 outcome = 1,
+                 independentVariable = 2,
+                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
+                 independentAnalyteOfInterest = "DLG4")
+IntLIM::PlotPairResiduals(inputData = inputDatafilt,
                  inputResults = myres.drugscore,
                  outcome = 1,
                  independentVariable = 2,
@@ -298,8 +309,16 @@ For discrete phenotypes, it allows the user to plot a chosen analyte
 association for selected groups. An example is shown below for DLG4 vs.
 (p-Hydroxyphenyl)lactic acid with respect to cancer type.
 
+
+
 ```{r}
 IntLIM::PlotPair(inputData = inputDatafilt,
+                 inputResults = myres.cancertype,
+                 outcome = 1,
+                 independentVariable = 2,
+                 outcomeAnalyteOfInterest = "(p-Hydroxyphenyl)lactic acid",
+                 independentAnalyteOfInterest = "DLG4")
+IntLIM::PlotPairResiduals(inputData = inputDatafilt,
                  inputResults = myres.cancertype,
                  outcome = 1,
                  independentVariable = 2,
