@@ -177,7 +177,7 @@ IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
 ```
 
 ## Run IntLIM
-The linear models are run by the __RunIntLim()__ function.  The __stype__ command
+The linear models are run by the __RunIntLim()__ function.  The __stype__ parameter
 allows the user to select a column from the sample meta data for the continuous or discrete
 phenotype of interest. The resulting object from the analysis is an IntLimResults object
 containing slotsfor un-adjusted and False Discovery Rate (FDR)-adjusted p-values
@@ -185,6 +185,19 @@ for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value
 that the gene-metabolite association is dependent on the phenotype. The
 __RunIntLim()__ function is based heavily on the MultiLinearModel
 functions developed for the ClassComparison package part of oompa.
+
+Covariates (e.g. age and batch) may also be included in the models as a list using the
+__covar__ parameter. Please be advised that not all covariates in the experiment need be included.
+In particular, colliders (variables influenced by one or more other variables) should not be
+included, and potential confounding variables should be included. The choice of covariates
+should be determined by the experiment.
+
+Note that the user must select either analyte type 1 or analyte type 2 for the 
+independent and outcome variables. This choice should be biologically motivated.
+For instance, if the user wants to investigate metabolite abundances that are 
+influenced by gene expression level and metabolite abundance is analyte type 1 and
+gene expression is analyte type 2, then the outcome would be analyte type 1 and
+the independent variable would be analyte type 2.
 
 The following variations of this function are available:
 - Setting `save.covar.pvals` to TRUE returns the p-values and coefficients of
@@ -209,6 +222,10 @@ myres.cancertype <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Le
                               outcome = 1,
                               independent.var.type = 2,
                               save.covar.pvals = TRUE)
+myres.nopval <- IntLIM::RunIntLim(inputData = inputDatafilt,stype="PBO_vs_Leukemia",
+                              outcome = 1,
+                              independent.var.type = 2,
+                              save.covar.pvals = FALSE)
 ```
 
 The __DistPValues()__ function allows the user to observe a histogram of the p-values.
@@ -271,12 +288,62 @@ myres.sig.drugscore <- IntLIM::ProcessResults(inputResults = myres.drugscore,
                                        inputData = inputDatafilt,
                                        pvalcutoff = 0.10,
                                        rsquaredCutoff = 0.2,
-                                       interactionCoeffPercentile = 0.5)
+                                       coeffPercentile = 0.5)
 myres.sig.cancertype <- IntLIM::ProcessResults(inputResults = myres.cancertype,
                                        inputData = inputDatafilt,
                                        pvalcutoff = 0.10,
                                        rsquaredCutoff = 0.2,
-                                       interactionCoeffPercentile = 0.5)
+                                       coeffPercentile = 0.5)
+```
+
+It is also possible to filter for significant main effects (independent analyte level
+or phenotype). Users can then determine which significant pairs also have significant main effects.
+
+Here, we find that 848 of 851 drug score dependent pairs are not significant for either main effect.
+We also find that 5,069 of 5,293 cancer type dependent pairs are not significant for either main effect.
+```{r}
+# Phenotype (stype)
+myres.sig.drugscore.stype <- IntLIM::ProcessResults(inputResults = myres.drugscore,
+                                       inputData = inputDatafilt,
+                                       pvalcutoff = 0.10,
+                                       rsquaredCutoff = 0.2,
+                                       coeffPercentile = 0.5,
+                                       coefficient = "stype")
+myres.sig.cancertype.stype <- IntLIM::ProcessResults(inputResults = myres.cancertype,
+                                       inputData = inputDatafilt,
+                                       pvalcutoff = 0.10,
+                                       rsquaredCutoff = 0.2,
+                                       coeffPercentile = 0.5,
+                                       coefficient = "stype")
+
+# Analyte
+myres.sig.drugscore.analyte <- IntLIM::ProcessResults(inputResults = myres.drugscore,
+                                       inputData = inputDatafilt,
+                                       pvalcutoff = 0.10,
+                                       rsquaredCutoff = 0.2,
+                                       coeffPercentile = 0.5,
+                                       coefficient = "analyte")
+myres.sig.cancertype.analyte <- IntLIM::ProcessResults(inputResults = myres.cancertype,
+                                       inputData = inputDatafilt,
+                                       pvalcutoff = 0.10,
+                                       rsquaredCutoff = 0.2,
+                                       coeffPercentile = 0.5,
+                                       coefficient = "analyte")
+
+# Find overlaps.
+drugscore.sig.names <- paste(myres.sig.drugscore$Analyte1, myres.sig.drugscore$Analyte2, sep = "__")
+cancertype.sig.names <- paste(myres.sig.cancertype$Analyte1, myres.sig.cancertype$Analyte2, sep = "__")
+drugscore.sig.stype.names <- paste(myres.sig.drugscore.stype$Analyte1, myres.sig.drugscore.stype$Analyte2, sep = "__")
+cancertype.sig.stype.names <- paste(myres.sig.cancertype.stype$Analyte1, myres.sig.cancertype.stype$Analyte2, sep = "__")
+drugscore.sig.analyte.names <- paste(myres.sig.drugscore.analyte$Analyte1, myres.sig.drugscore.analyte$Analyte2, sep = "__")
+cancertype.sig.analyte.names <- paste(myres.sig.cancertype.analyte$Analyte1, myres.sig.cancertype.analyte$Analyte2, sep = "__")
+
+print(paste("Drug score is significant in", length(intersect(drugscore.sig.names, drugscore.sig.stype.names)), "of the significant pairs."))
+print(paste("Cancer type is significant in", length(intersect(cancertype.sig.names, cancertype.sig.stype.names)), "of the significant pairs."))
+print(paste("Analyte is significant in", length(intersect(drugscore.sig.names, drugscore.sig.analyte.names)), "of the significant pairs."))
+print(paste("Analyte is significant in", length(intersect(cancertype.sig.names, cancertype.sig.analyte.names)), "of the significant pairs."))
+print(paste(length(setdiff(drugscore.sig.names, union(drugscore.sig.stype.names, drugscore.sig.analyte.names))), "pairs are significant only for analyte:drug score term, not for main effects."))
+print(paste(length(setdiff(cancertype.sig.names, union(cancertype.sig.stype.names, cancertype.sig.analyte.names))), "pairs are significant only for analyte:cancer type term, not for main effects."))
 ```
 
 The __PlotPair()__ function operates differently for discrete and continuous

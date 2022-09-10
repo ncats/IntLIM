@@ -326,9 +326,9 @@ testthat::test_that("Out of bounds values are not allowed.", {
     "R-squared value must be between 0 and 1"), ignore.case = TRUE)
   testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, rsquaredCutoff = 2), paste(
     "R-squared value must be between 0 and 1"), ignore.case = TRUE)
-  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, interactionCoeffPercentile = -2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, coeffPercentile = -2), paste(
     "Interaction coefficient percentile must be between 0 and 1"), ignore.case = TRUE)
-  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, interactionCoeffPercentile = 2), paste(
+  testthat::expect_error(IntLIM::ProcessResults(inputResults, inputData, coeffPercentile = 2), paste(
     "Interaction coefficient percentile must be between 0 and 1"), ignore.case = TRUE)
 })
 
@@ -407,14 +407,14 @@ testthat::test_that("Data is returned appropriately with no filtering.", {
 
   # Check results
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1,
-		interactionCoeffPercentile = 0, rsquaredCutoff = 0)
+		coeffPercentile = 0, rsquaredCutoff = 0)
   testthat::expect_identical(sort(unlist(inputResults@interaction.adj.pvalues)), sort(results$FDRadjPval))
   testthat::expect_identical(sort(unlist(inputResults@interaction.pvalues)), sort(results$Pval))
   testthat::expect_identical(sort(unlist(inputResults@model.rsquared)), sort(results$rsquared))
   testthat::expect_identical(sort(unlist(inputResults@interaction.coefficients)), sort(results$interaction_coeff))
   inputResults@continuous <- 1
   results <- IntLIM::ProcessResults(inputResults, inputDataCont, pvalcutoff = 1,
-                                    interactionCoeffPercentile = 0, rsquaredCutoff = 0)
+                                    coeffPercentile = 0, rsquaredCutoff = 0)
   testthat::expect_identical(sort(unlist(inputResults@interaction.adj.pvalues)), sort(results$FDRadjPval))
   testthat::expect_identical(sort(unlist(inputResults@interaction.pvalues)), sort(results$Pval))
   testthat::expect_identical(sort(unlist(inputResults@model.rsquared)), sort(results$rsquared))
@@ -499,7 +499,7 @@ testthat::test_that("Check that coefficients are filtered as expected.", {
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1,
-		interactionCoeffPercentile = 0.7, rsquaredCutoff = 0)
+		coeffPercentile = 0.7, rsquaredCutoff = 0)
   testthat::expect_equal(max(results$FDRadjPval), 0.8)
   testthat::expect_equal(length(results$FDRadjPval), 3)
   testthat::expect_equal(max(results$Pval), 0.008)
@@ -512,7 +512,7 @@ testthat::test_that("Check that coefficients are filtered as expected.", {
   # Check results (continuous).
   inputResults@continuous <- 1
   results <- IntLIM::ProcessResults(inputResults, inputDataC, pvalcutoff = 1,
-		interactionCoeffPercentile = 0.7, rsquaredCutoff = 0)
+		coeffPercentile = 0.7, rsquaredCutoff = 0)
   testthat::expect_equal(max(results$FDRadjPval), 0.8)
   testthat::expect_equal(length(results$FDRadjPval), 3)
   testthat::expect_equal(max(results$Pval), 0.008)
@@ -602,7 +602,7 @@ testthat::test_that("Check that p-values are filtered as expected.", {
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 0.3, 
-		interactionCoeffPercentile = 0, rsquaredCutoff = 0)
+		coeffPercentile = 0, rsquaredCutoff = 0)
   testthat::expect_equal(max(results$FDRadjPval), 0.3)
   testthat::expect_equal(length(results$FDRadjPval), 4)
   testthat::expect_equal(max(results$Pval), 0.003)
@@ -615,7 +615,7 @@ testthat::test_that("Check that p-values are filtered as expected.", {
   # Check results (continuous).
   inputResults@continuous <- 1
   results <- IntLIM::ProcessResults(inputResults, inputDataC, pvalcutoff = 0.3,
-		interactionCoeffPercentile = 0, rsquaredCutoff = 0)
+		coeffPercentile = 0, rsquaredCutoff = 0)
   testthat::expect_equal(max(results$FDRadjPval), 0.3)
   testthat::expect_equal(length(results$FDRadjPval), 4)
   testthat::expect_equal(max(results$Pval), 0.003)
@@ -705,7 +705,7 @@ testthat::test_that("Check that R-squared values are filtered as expected.", {
 
   # Check results (discrete).
   results <- IntLIM::ProcessResults(inputResults, inputData, pvalcutoff = 1,
-		interactionCoeffPercentile = 0, rsquaredCutoff = 0.4)
+		coeffPercentile = 0, rsquaredCutoff = 0.4)
   testthat::expect_equal(max(results$FDRadjPval), 0.8)
   testthat::expect_equal(length(results$FDRadjPval), 6)
   testthat::expect_equal(max(results$Pval), 0.008)
@@ -717,7 +717,7 @@ testthat::test_that("Check that R-squared values are filtered as expected.", {
 
   # Check results (continuous).
   results <- IntLIM::ProcessResults(inputResults, inputDataC, pvalcutoff = 1,
-		interactionCoeffPercentile = 0, rsquaredCutoff = 0.4)
+		coeffPercentile = 0, rsquaredCutoff = 0.4)
   testthat::expect_equal(max(results$FDRadjPval), 0.8)
   testthat::expect_equal(length(results$FDRadjPval), 6)
   testthat::expect_equal(max(results$Pval), 0.008)

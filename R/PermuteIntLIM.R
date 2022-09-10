@@ -82,7 +82,7 @@ PermuteIntLIM <- function(data,
 
     ProcessedResults <- IntLIM::ProcessResults(inputData = data, inputResults = IntLIMResults,
                                                pvalcutoff = pvalcutoff,
-                                               interactionCoeffPercentile = interactionCoeffPercentile,
+                                               coeffPercentile = interactionCoeffPercentile,
                                                rsquaredCutoff = rsquaredCutoff)
 
     #Compiling Results

@@ -171,6 +171,7 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
                         interaction.coefficients=mat.list$mat.coefficients,
                         model.rsquared = mat.list$mat.rsquared,
                         covariate.pvalues = mat.list$covariate.pvals,
+                        covariate.adj.pvalues = mat.list$covariate.pvalsadj,
                         covariate.coefficients = mat.list$covariate.coefficients,
                         warnings=mymessage, covar = intLimResultsCovar)
 
@@ -439,7 +440,14 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   mat.rsquared <- do.call(rbind, list.rsquared)
   covariate.pvals <- do.call(rbind, list.covariate.pvals)
   covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
-  
+  covariate.pvalsadj <- covariate.pvals
+  if(!is.null(covariate.pvalsadj)){
+    covariate.pvalsadj <- do.call(cbind, lapply(1:ncol(covariate.pvals), function(i){
+      return(stats::p.adjust(covariate.pvals[,i], method = 'fdr'))
+    }))
+    colnames(covariate.pvalsadj) <- colnames(covariate.pvals)
+  }
+
   # Adjust p-values.
   row.pvt <- dim(mat.pvals)[1]
   col.pvt <- dim(mat.pvals)[2]
@@ -519,6 +527,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
     if(save.covar.pvals == TRUE){
       for(i in 1:length(colnames(covariate.pvals))){
         covariate.pvals[which(should_remove == TRUE),i] <- NA
+        covariate.pvalsadj[which(should_remove == TRUE),i] <- NA
         covariate.coefficients[which(should_remove == TRUE),i] <- NA
       }
     }
@@ -541,6 +550,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
       pieces = do.call(rbind, pieces_list)
       for(i in 1:length(colnames(covariate.pvals))){
         covariate.pvals[which(pieces$from == pieces$to),i] <- NA
+        covariate.pvalsadj[which(pieces$from == pieces$to),i] <- NA
         covariate.coefficients[which(pieces$from == pieces$to),i] <- NA
       }
     }
@@ -554,6 +564,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
   list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
   list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
+  list.mat[["covariate.pvalsadj"]] <- as.data.frame(covariate.pvalsadj)
   list.mat[["covariate.coefficients"]] <- as.data.frame(covariate.coefficients)
   list.final[["list"]] <- list.mat
   list.final[["warnings"]] <- warnings
@@ -564,7 +575,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
 #' @param tofilter dataframe for percentile filtering
 #' @return vector with numeric cutoffs
-getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercentile){
+getQuantileForCoefficient<-function(tofilter, interactionCoeffPercentile){
   
   if(interactionCoeffPercentile > 1 || interactionCoeffPercentile < 0) {
     stop("interactionCoeffPercentile parameter must be between 0 and 1")

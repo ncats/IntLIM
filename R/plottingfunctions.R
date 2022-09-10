@@ -563,80 +563,86 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
 PlotPairResiduals<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
                     outcomeAnalyteOfInterest) {
 
-  ind <- make.names(independentAnalyteOfInterest)
-  out <- make.names(outcomeAnalyteOfInterest)
-  pairName <- paste(ind, out, sep = "__")
-  
-  # Set variables for further analysis.
-  analyteTgtVals <- inputData@analyteType1
-  if(outcome == 2){
-    analyteTgtVals <- inputData@analyteType2
-  }
-  analyteSrcVals <- inputData@analyteType2
-  if(independentVariable == 1){
-    analyteSrcVals <- inputData@analyteType1
-  }
-  covariateVals <- inputData@sampleMetaData
-  covariatePairs <- inputResults@covariate.coefficients[pairName,]
-  tgt <- analyteTgtVals[out,]
-  src <- analyteSrcVals[independentVariable,]
-  phenotype <- covariateVals[,inputResults@stype]
-  if(is.factor(covariateVals[,inputResults@stype])){
-    phenotype <- as.numeric(covariateVals[,inputResults@stype]) - 1
-  }
-  
-  # If the covariates are factors, then one-hot encode them. Else, add the same
-  # values back into the list.
-  for(c in colnames(covariateVals)){
-    # Find all factor covariates derived from the original covariate.
-    if(is.factor(covariateVals[,c])){
-      for(fac in unique(covariateVals[,c])){
-        # Append new one-hot-encoded factor covariates.
-        covariateVals[,paste0(c, fac)] <- 0
-        covariateVals[which(covariateVals[,c] == fac),paste0(c, fac)] <- 1
+  if(length(inputResults@covariate.pvalues) > 0){
+    ind <- make.names(independentAnalyteOfInterest)
+    out <- make.names(outcomeAnalyteOfInterest)
+    pairName <- paste(ind, out, sep = "__")
+    
+    # Set variables for further analysis.
+    analyteTgtVals <- inputData@analyteType1
+    if(outcome == 2){
+      analyteTgtVals <- inputData@analyteType2
+    }
+    analyteSrcVals <- inputData@analyteType2
+    if(independentVariable == 1){
+      analyteSrcVals <- inputData@analyteType1
+    }
+    covariateVals <- inputData@sampleMetaData
+    covariatePairs <- inputResults@covariate.coefficients[pairName,]
+    tgt <- analyteTgtVals[out,]
+    src <- analyteSrcVals[independentVariable,]
+    phenotype <- covariateVals[,inputResults@stype]
+    if(is.factor(covariateVals[,inputResults@stype])){
+      phenotype <- as.numeric(covariateVals[,inputResults@stype]) - 1
+    }
+    
+    # If the covariates are factors, then one-hot encode them. Else, add the same
+    # values back into the list.
+    for(c in colnames(covariateVals)){
+      # Find all factor covariates derived from the original covariate.
+      if(is.factor(covariateVals[,c])){
+        for(fac in unique(covariateVals[,c])){
+          # Append new one-hot-encoded factor covariates.
+          covariateVals[,paste0(c, fac)] <- 0
+          covariateVals[which(covariateVals[,c] == fac),paste0(c, fac)] <- 1
+        }
       }
     }
+    
+    # beta0
+    b0 <- t(matrix(rep(covariatePairs[,"(Intercept)"], nrow(covariateVals)), ncol = nrow(covariateVals)))
+    
+    # beta1
+    b1 <- t(matrix(rep(covariatePairs[,"a"], nrow(covariateVals)), ncol = nrow(covariateVals))) * src
+    
+    # beta2
+    typeVar <- colnames(covariatePairs)[which(grepl("^type",colnames(covariatePairs)))]
+    b2 <- t(matrix(rep(covariatePairs[,typeVar], nrow(covariateVals)), ncol = nrow(covariateVals))) * 
+      phenotype
+    
+    # beta3
+    interactVar <- colnames(covariatePairs)[which(grepl(":",colnames(covariatePairs), fixed = TRUE))]
+    interactionTerm <- t(matrix(rep(covariatePairs[,interactVar], nrow(covariateVals)), ncol = nrow(covariateVals)))
+    b3 <- interactionTerm * src * phenotype
+    
+    # covariates
+    sum_covars <- rep(0, nrow(covariateVals))
+    if(length(inputResults@covar) > 1 || inputResults@covar != ""){
+      covarNames <- setdiff(colnames(covariatePairs), list("(Intercept)", "a", typeVar, interactVar))
+      sum_each <- lapply(covarNames, function(c){
+        return(t(matrix(rep(covariatePairs[,c], nrow(covariateVals)), ncol = nrow(covariateVals)))
+               * covariateVals[,c])
+      })
+      sum_covars <- Reduce('+', sum_each)
+    }
+    Y.pred <- b0 + b1 + sum_covars + b2 + b3
+    
+    # Compute standardized residuals.
+    residuals <- tgt - Y.pred / stats::sd(tgt - Y.pred)
+    
+    # Plot residuals.
+    graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
+    plot(tgt, residuals, xlab = outcomeAnalyteOfInterest,
+         ylab = "Standardized Residual", main = paste("Residuals -", independentAnalyteOfInterest,
+                                                      "and", outcomeAnalyteOfInterest),
+         pch = 16)
+    graphics::abline(h = 0)
+    coord <- graphics::par("usr")
+  }else{
+    stop(paste("The model results must include covariate p-values",
+                "and coefficients. To obtain these, set save.covar.pvals = TRUE in the RunIntLim() function."))
   }
   
-  # beta0
-  b0 <- t(matrix(rep(covariatePairs[,"(Intercept)"], nrow(covariateVals)), ncol = nrow(covariateVals)))
-  
-  # beta1
-  b1 <- t(matrix(rep(covariatePairs[,"a"], nrow(covariateVals)), ncol = nrow(covariateVals))) * src
-  
-  # beta2
-  typeVar <- colnames(covariatePairs)[which(grepl("^type",colnames(covariatePairs)))]
-  b2 <- t(matrix(rep(covariatePairs[,typeVar], nrow(covariateVals)), ncol = nrow(covariateVals))) * 
-    phenotype
-  
-  # beta3
-  interactVar <- colnames(covariatePairs)[which(grepl(":",colnames(covariatePairs), fixed = TRUE))]
-  interactionTerm <- t(matrix(rep(covariatePairs[,interactVar], nrow(covariateVals)), ncol = nrow(covariateVals)))
-  b3 <- interactionTerm * src * phenotype
-  
-  # covariates
-  sum_covars <- rep(0, nrow(covariateVals))
-  if(length(inputResults@covar) > 1 || inputResults@covar != ""){
-    covarNames <- setdiff(colnames(covariatePairs), list("(Intercept)", "a", typeVar, interactVar))
-    sum_each <- lapply(covarNames, function(c){
-      return(t(matrix(rep(covariatePairs[,c], nrow(covariateVals)), ncol = nrow(covariateVals)))
-             * covariateVals[,c])
-    })
-    sum_covars <- Reduce('+', sum_each)
-  }
-  Y.pred <- b0 + b1 + sum_covars + b2 + b3
-  
-  # Compute standardized residuals.
-  residuals <- tgt - Y.pred / stats::sd(tgt - Y.pred)
-  
-  # Plot residuals.
-  graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
-  plot(tgt, residuals, xlab = outcomeAnalyteOfInterest,
-       ylab = "Standardized Residual", main = paste("Residuals -", independentAnalyteOfInterest,
-                                                     "and", outcomeAnalyteOfInterest),
-       pch = 16)
-  graphics::abline(h = 0)
-  coord <- graphics::par("usr")
 }
   
 #' scatter plot of pairs (based on user selection)
@@ -807,9 +813,9 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
     
     # Plot cutoff lines.
     graphics::abline(h=-log10(highest_pval_below_cutoff),lty=2,col="blue")
-    lower_line = getQuantileForInteractionCoefficient(interaction_coeff, 
+    lower_line = getQuantileForCoefficient(interaction_coeff, 
                                                       coefPercentileCutoff)[1]
-    upper_line = getQuantileForInteractionCoefficient(interaction_coeff, 
+    upper_line = getQuantileForCoefficient(interaction_coeff, 
                                                        coefPercentileCutoff)[2]
     graphics::abline(v=c(lower_line,upper_line),lty=2,col="blue")
 }
@@ -868,9 +874,9 @@ InteractionCoefficientGraph<-function(inputResults,
 
 
     #get top and bottom cutoffs (need highest positive and highest negative coeffs)
-    first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+    first_half = getQuantileForCoefficient(tofilter$interaction_coeff, 
                                                       interactionCoeffPercentile)[1]
-    second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+    second_half = getQuantileForCoefficient(tofilter$interaction_coeff, 
                                                        interactionCoeffPercentile)[2]
 
     toplot = data.frame(tofilter$interaction_coeff)

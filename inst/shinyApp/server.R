@@ -219,7 +219,7 @@ shinyServer(function(input, output, session) {
   myres2 <- eventReactive(input$run4,{
     IntLIM::ProcessResults(myres(),FmultiData(),pvalcutoff=pvalcutoff2(),
                            rsquared=rsquared2(),
-                           interactionCoeffPercentile=interactionCoeff2())
+                           coeffPercentile=interactionCoeff2())
   })
         
   # Display the 'betagraph' widget using the InteractionCoefficientGraph function.

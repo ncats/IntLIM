@@ -294,7 +294,7 @@ ProcessResultsAllFolds <- function(inputResults,
       return(IntLIM::ProcessResults(inputResults = inputResults[[i]], 
                                               inputData = inputData[[i]]$training, 
                                               pvalcutoff = pvalcutoff, 
-                                              interactionCoeffPercentile = interactionCoeffPercentile, 
+                                              coeffPercentile = interactionCoeffPercentile, 
                                               rsquaredCutoff = rsquaredCutoff))
     })
   return(sig)

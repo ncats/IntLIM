@@ -148,7 +148,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -163,7 +163,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -178,7 +178,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -198,7 +198,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                                                     "outcome", 
                                                     "independent.var.type", 
                                                     "covar", "interaction.pvalues",
-                                                    "continuous")))
+                                                    "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -214,7 +214,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -229,7 +229,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -245,7 +245,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -260,7 +260,7 @@ testthat::test_that("Fields are populated appropriately (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -307,7 +307,7 @@ testthat::test_that("Fields are populated appropriately when feature data contai
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients", 
                           "corr", "filt.results","warnings", "stype", "outcome", 
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -325,7 +325,7 @@ testthat::test_that("Fields are populated appropriately when feature data contai
                                                     "warnings", "stype", "outcome", 
                                                     "independent.var.type", "covar", 
                                                     "interaction.pvalues",
-                                                    "continuous")))
+                                                    "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -341,7 +341,7 @@ testthat::test_that("Fields are populated appropriately when feature data contai
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -356,7 +356,7 @@ testthat::test_that("Fields are populated appropriately when feature data contai
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -403,7 +403,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -418,7 +418,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues","continuous")))
+                          "covar", "interaction.pvalues","continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -435,7 +435,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -455,7 +455,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                                                     "warnings", "stype", "outcome", 
                                                     "independent.var.type", 
                                                     "covar", "interaction.pvalues",
-                                                    "continuous")))
+                                                    "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -471,7 +471,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -486,7 +486,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -503,7 +503,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -519,7 +519,7 @@ testthat::test_that("Fields are populated appropriately (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -566,7 +566,7 @@ testthat::test_that("Fields are populated appropriately with factor covariates."
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -587,7 +587,7 @@ testthat::test_that("Fields are populated appropriately with factor covariates."
                                                     "outcome", 
                                                     "independent.var.type", 
                                                     "covar", "interaction.pvalues",
-                                                    "continuous")))
+                                                    "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -604,7 +604,7 @@ testthat::test_that("Fields are populated appropriately with factor covariates."
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -620,7 +620,7 @@ testthat::test_that("Fields are populated appropriately with factor covariates."
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -668,7 +668,7 @@ testthat::test_that("Fields are populated appropriately with a mix of numeric an
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -690,7 +690,7 @@ testthat::test_that("Fields are populated appropriately with a mix of numeric an
                                                     "independent.var.type", 
                                                     "covar", 
                                                     "interaction.pvalues",
-                                                    "continuous")))
+                                                    "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -707,7 +707,7 @@ testthat::test_that("Fields are populated appropriately with a mix of numeric an
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -723,7 +723,7 @@ testthat::test_that("Fields are populated appropriately with a mix of numeric an
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results","warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -776,7 +776,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -796,7 +796,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -817,7 +817,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -837,7 +837,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -854,7 +854,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -873,7 +873,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -893,7 +893,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -912,7 +912,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", 
                           "covariate.coefficients", "corr", "filt.results",
                           "warnings", "stype", "outcome", "independent.var.type", 
-                          "covar", "interaction.pvalues", "continuous")))
+                          "covar", "interaction.pvalues", "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -967,7 +967,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -988,7 +988,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1010,7 +1010,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1031,7 +1031,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1048,7 +1048,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1067,7 +1067,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1087,7 +1087,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1106,7 +1106,7 @@ testthat::test_that("Duplicates are removed when appropriate (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1157,7 +1157,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1172,7 +1172,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1189,7 +1189,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1205,7 +1205,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1221,7 +1221,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1236,7 +1236,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1253,7 +1253,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1269,7 +1269,7 @@ testthat::test_that("Covariate p-values are saved (discrete).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1317,7 +1317,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1333,7 +1333,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1350,7 +1350,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1367,7 +1367,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1384,7 +1384,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1400,7 +1400,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1418,7 +1418,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)
@@ -1435,7 +1435,7 @@ testthat::test_that("Covariate p-values are saved (continuous).", {
                           "model.rsquared", "covariate.pvalues", "covariate.coefficients",
                           "corr", "filt.results", "warnings", "stype", "outcome",
                           "independent.var.type", "covar", "interaction.pvalues",
-                          "continuous")))
+                          "continuous", "covariate.adj.pvalues")))
   testthat::expect_equal(length(results@interaction.adj.pvalues), 9)
   testthat::expect_equal(length(results@interaction.coefficients), 9)
   testthat::expect_equal(length(results@model.rsquared), 9)

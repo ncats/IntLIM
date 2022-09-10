@@ -20,6 +20,8 @@ IntLimResults class
 
 \item{\code{covariate.pvalues}}{data frame of p-values for each covariate}
 
+\item{\code{covariate.adj.pvalues}}{data frame of adjusted p-values for each covariate}
+
 \item{\code{model.rsquared}}{matrix of r-squared values}
 
 \item{\code{corr}}{matrix of correlations in group 1 and 2}
