@@ -14,6 +14,9 @@ HistogramPairs(inputResults, type = "outcome", breaks = 50)
 
 \item{breaks}{Number of breaks selected for histogram}
 }
+\value{
+No return value, called for side effects
+}
 \description{
 histogram of analyte pairs
 depending upon independent or outcome analyte

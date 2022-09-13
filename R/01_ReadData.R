@@ -1,3 +1,17 @@
+#' @keywords internal
+"_PACKAGE"
+
+# Suppress R CMD check note
+#' @importFrom testthat test_that
+#' @importFrom DT datatable
+#' @importFrom KernSmooth bkde
+#' @importFrom heatmaply heatmaply
+#' @importFrom rmarkdown all_output_formats
+#' @importFrom shinyFiles shinyFileSave
+#' @importFrom shinydashboard box
+#' @importFrom shinyjs click
+NULL
+
 #' Read in CSV file
 #'
 #' @include internalfunctions.R
@@ -22,6 +36,7 @@
 #' In addition, the first column of the sampleMetaData file is assumed to be the sample id, 
 #' and those sample ids should match the columns of analyteType1/2 (e.g. it is required
 #' that all sample ids in the analyteType1/2 are also in the sampleMetaData).
+#' 
 #'
 #' @include internalfunctions.R
 #'
@@ -96,14 +111,14 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
         stop(paste("File", temp, "does not exist"))
       }
       else {
-        ids <- utils::read.csv(temp,check.names=F)[,1]
+        ids <- utils::read.csv(temp,check.names=FALSE)[,1]
         if(length(ids) != length(unique(ids))) {
           stop(paste("Error: your input file",temp,"has duplicate",
                      "entries in column 1. Please make sure you have one row per",
                      "analyte"))
         }
         else {
-          type2Data<-utils::read.csv(temp,row.names = 1,check.names=F)
+          type2Data<-utils::read.csv(temp,row.names = 1,check.names=FALSE)
           colnames(type2Data) <- make.names(colnames(type2Data))
           rownames(type2Data) <- make.names(rownames(type2Data))
         }
@@ -124,12 +139,12 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       if(!file.exists(temp)) {
         stop(paste("File", temp, "does not exist"))
       } else {
-        ids <- utils::read.csv(temp,check.names=F)[,1]
+        ids <- utils::read.csv(temp,check.names=FALSE)[,1]
         if(length(ids) != length(unique(ids))) {
           stop(paste("Error: your input file",temp,"has duplicate",
                      "entries in column 1. Please make sure you have one row per analyte"))
         } else {
-          type1Data<-utils::read.csv(temp,row.names = 1,check.names=F)
+          type1Data<-utils::read.csv(temp,row.names = 1,check.names=FALSE)
           colnames(type1Data) <- make.names(colnames(type1Data))
           rownames(type1Data) <- make.names(rownames(type1Data))
         }
@@ -265,7 +280,9 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
       dataUnion <- c(dataUnion, type2Samps)
       myind <- intersect(myind, type2Samps)
     }
-    pData<-pData[myind,]
+    pData<-data.frame(pData[myind,])
+    rownames(pData) <- myind
+    colnames(pData) <- colnames(pDataOld)
     notShared <- setdiff(dataUnion, myind)
     if(length(notShared) > 0 && suppressWarnings == FALSE){
       warning(paste("The following samples were not shared in all data types",
@@ -318,7 +335,7 @@ ReadData <- function(inputFile,analyteType1id="id",analyteType2id="id",
                                analyteType2MetaData = as.data.frame(type2MetaData),
                                sampleMetaData = covarMatrix)
 
-    print("IntLIMData created")
+    message("IntLIMData created")
   }
   return(intlimData)
 }

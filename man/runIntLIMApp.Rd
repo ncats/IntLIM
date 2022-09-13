@@ -9,6 +9,9 @@ runIntLIMApp(port = "127.0.0.1")
 \arguments{
 \item{port}{set port}
 }
+\value{
+No return value, called for side effects
+}
 \description{
 run shiny app
 }

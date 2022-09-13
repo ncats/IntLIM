@@ -1,12 +1,12 @@
 # If a file is passed as input that does not exist in the system, an error
 # should be thrown.
-test_that("Nonexistent files cause early termination.", {
-  expect_error(IntLIM::ReadData("?!%"), "CSV input file does not exist", ignore.case = TRUE)
+testthat::test_that("Nonexistent files cause early termination.", {
+  testthat::expect_error(IntLIM::ReadData("?!%"), "CSV input file does not exist", ignore.case = TRUE)
 })
 
 # If a file with inappropriate column names is passed as input, an error
 # should be thrown.
-test_that("Incorrect column names cause early termination.", {
+testthat::test_that("Incorrect column names cause early termination.", {
 
   # Create a data frame with inappropriate column names.
   incorrect_colname_df = data.frame("P2"=c(1,2,3), "P1"=c(0,0,0))
@@ -16,14 +16,14 @@ test_that("Incorrect column names cause early termination.", {
   write.csv(incorrect_colname_df, file=fname, quote=FALSE, row.names = FALSE)
 
   # Check for error.
-  expect_error(IntLIM::ReadData(fname),
+  testthat::expect_error(IntLIM::ReadData(fname),
                "Check column names of input files.  'type' and 'filenames' are required",
                ignore.case = TRUE)
   file.remove(fname)
 })
 
 # If one or more data type headings is missing, an error should be thrown.
-test_that("Missing data types cause early termination.", {
+testthat::test_that("Missing data types cause early termination.", {
 
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
@@ -42,13 +42,13 @@ test_that("Missing data types cause early termination.", {
     message <- paste("The column 'type' contains non-allowed entries (See Description). The",
                      "CSV input file must contain 6 rows (if optional meta data files for analytes",
                      "are not to be input, have the corresponding filenames be blanks.")
-    expect_error(IntLIM::ReadData(fname), message, fixed = TRUE)
+    testthat::expect_error(IntLIM::ReadData(fname), message, fixed = TRUE)
     file.remove(fname)
   }
 })
 
 # If no data is included, an error should be thrown.
-test_that("Absence of data causes early termination.", {
+testthat::test_that("Absence of data causes early termination.", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -60,13 +60,13 @@ test_that("Absence of data causes early termination.", {
   write.csv(missing_data_df, file=fname, quote=FALSE)
 
   # Check that error occurs.
-  expect_error(IntLIM::ReadData(fname), "No data provided.", ignore.case = TRUE)
+  testthat::expect_error(IntLIM::ReadData(fname), "No data provided.", ignore.case = TRUE)
   file.remove(fname)
 })
 
 # If only one data type is missing, a warning should be given.
 # However, fields should still be populated appropriately.
-test_that("Absence of one omic type results in a warning.", {
+testthat::test_that("Absence of one omic type results in a warning.", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -113,7 +113,7 @@ test_that("Absence of one omic type results in a warning.", {
   # Check that warning occurs.
   message <- paste("No data provided for Analyte Type 1. This means you cannot run",
                    "analyses involving this analyte type.")
-  expect_warning(IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
                                                           Feat2 = "numeric",
                                                           Feat3 = "numeric")),
                  message, ignore.case = TRUE)
@@ -125,15 +125,15 @@ test_that("Absence of one omic type results in a warning.", {
                                  suppressWarnings = TRUE)
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(data_nometab), expected_names)
-  expect_identical(colnames(data_nometab@sampleMetaData),
+  testthat::expect_identical(slotNames(data_nometab), expected_names)
+  testthat::expect_identical(colnames(data_nometab@sampleMetaData),
                    c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(data_nometab@analyteType2),
+  testthat::expect_identical(rownames(data_nometab@analyteType2),
                    c("Gene1", "Gene2","Gene3"))
-  expect_identical(rownames(data_nometab@analyteType2MetaData),
+  testthat::expect_identical(rownames(data_nometab@analyteType2MetaData),
                    c("Gene1", "Gene2","Gene3"))
-  expect_equal(length(data_nometab@analyteType2), 12)
-  expect_equal(length(data_nometab@analyteType1),0)
+  testthat::expect_equal(length(data_nometab@analyteType2), 12)
+  testthat::expect_equal(length(data_nometab@analyteType1),0)
 
   # Create a file with only gene data missing.
   missing_gene_df = data.frame("filenames"=c("metab_file.csv","",
@@ -147,7 +147,7 @@ test_that("Absence of one omic type results in a warning.", {
   # Check that warning occurs.
   message <- paste("No data provided for Analyte Type 2. This means you cannot run",
                    "analyses involving this analyte type.")
-  expect_warning(IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(fname, class.feat = list(Feat1 = "numeric",
                                                          Feat2 = "numeric",
                                                          Feat3 = "numeric")),
                  message, ignore.case = TRUE)
@@ -159,15 +159,15 @@ test_that("Absence of one omic type results in a warning.", {
                                   suppressWarnings = TRUE)
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(data_nogene), expected_names)
-  expect_identical(colnames(data_nogene@sampleMetaData),
+  testthat::expect_identical(slotNames(data_nogene), expected_names)
+  testthat::expect_identical(colnames(data_nogene@sampleMetaData),
                    c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(data_nogene@analyteType1),
+  testthat::expect_identical(rownames(data_nogene@analyteType1),
                    c("Metab1", "Metab2","Metab3"))
-  expect_identical(rownames(data_nogene@analyteType1MetaData),
+  testthat::expect_identical(rownames(data_nogene@analyteType1MetaData),
                    c("Metab1", "Metab2","Metab3"))
-  expect_equal(length(data_nogene@analyteType1),12)
-  expect_equal(length(data_nogene@analyteType2),0)
+  testthat::expect_equal(length(data_nogene@analyteType1),12)
+  testthat::expect_equal(length(data_nogene@analyteType2),0)
 
   # Remove files.
   file.remove(fname_metab)
@@ -179,7 +179,7 @@ test_that("Absence of one omic type results in a warning.", {
 })
 
 # If there are two analytes with the same name, an error should be thrown.
-test_that("Duplicate analytes cause early termination", {
+testthat::test_that("Duplicate analytes cause early termination", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                             "analyteType2MetaData","sampleMetaData")
@@ -260,14 +260,14 @@ test_that("Duplicate analytes cause early termination", {
 
   # Check that error is thrown.
   fname_metab_dup <- paste(getwd(), "metab_file_dup.csv", sep = "/")
-  expect_error(IntLIM::ReadData(fname_metab_dup_ref),
+  testthat::expect_error(IntLIM::ReadData(fname_metab_dup_ref),
                paste("Error: your input file",fname_metab_dup,"has duplicate",
                      "entries in column 1. Please make sure you have one row per",
                      "analyte"), fixed = TRUE)
 
   # Check that error is thrown.
   fname_gene_dup <- paste(getwd(), "gene_file_dup.csv", sep = "/")
-  expect_error(IntLIM::ReadData(fname_gene_dup_ref),
+  testthat::expect_error(IntLIM::ReadData(fname_gene_dup_ref),
                 paste("Error: your input file",fname_gene_dup,"has duplicate",
                      "entries in column 1. Please make sure you have one row per analyte"),
                fixed = TRUE)
@@ -287,7 +287,7 @@ test_that("Duplicate analytes cause early termination", {
 })
 
 # If a data file is not accessible on the system, an error should be thrown.
-test_that("Inaccessible data files cause early termination.", {
+testthat::test_that("Inaccessible data files cause early termination.", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -330,7 +330,7 @@ test_that("Inaccessible data files cause early termination.", {
   write.csv(missing_metab_df, file = fname_missing_metab, quote=FALSE)
 
   # Check that an error is thrown.
-  expect_error(IntLIM::ReadData("missing_metabdata_file.csv"),
+  testthat::expect_error(IntLIM::ReadData("missing_metabdata_file.csv"),
                  paste("File", paste0(base::dirname("missing_metabdata_file.csv"), "/?!%"),
                        "does not exist"), fixed = TRUE)
 
@@ -342,7 +342,7 @@ test_that("Inaccessible data files cause early termination.", {
   write.csv(missing_gene_df, file = fname_missing_gene, quote=FALSE)
 
   # Check that an error is thrown.
-  expect_error(IntLIM::ReadData("missing_gene_file.csv"),
+  testthat::expect_error(IntLIM::ReadData("missing_gene_file.csv"),
                  paste("File", paste0(base::dirname("missing_gene_file.csv"), "/?!%"),
                        "does not exist"), fixed = TRUE)
 
@@ -359,7 +359,7 @@ test_that("Inaccessible data files cause early termination.", {
 # If analyte metadata files are missing, this should throw a warning but not lead
 # to early termination.
 # Fields should still be populated.
-test_that("Missing metadata causes a warning.", {
+testthat::test_that("Missing metadata causes a warning.", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                             "analyteType2MetaData","sampleMetaData")
@@ -398,7 +398,7 @@ test_that("Missing metadata causes a warning.", {
   rownames(missing_metab_df) <- expected
   fname_metab_missing <- paste(getwd(), "missing_metab_metadata_file.csv", sep = "/")
   write.csv(missing_metab_df, file = fname_metab_missing, quote=FALSE)
-  expect_warning(IntLIM::ReadData(fname_metab_missing, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(fname_metab_missing, class.feat = list(Feat1 = "numeric",
                                                                        Feat2 = "numeric",
                                                                        Feat3 = "numeric")),
                  "No metadata provided for Analyte Type 1", fixed = TRUE)
@@ -409,15 +409,15 @@ test_that("Missing metadata causes a warning.", {
                                  suppressWarnings = TRUE)
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(data_metab), expected_names)
-  expect_identical(colnames(data_metab@sampleMetaData),
+  testthat::expect_identical(slotNames(data_metab), expected_names)
+  testthat::expect_identical(colnames(data_metab@sampleMetaData),
                    c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(data_metab@analyteType1),
+  testthat::expect_identical(rownames(data_metab@analyteType1),
                    c("Metab1", "Metab2","Metab3"))
-  expect_identical(rownames(data_metab@analyteType2),
+  testthat::expect_identical(rownames(data_metab@analyteType2),
                    c("Gene1", "Gene2","Gene3"))
-  expect_equal(length(data_metab@analyteType1MetaData), 0)
-  expect_identical(rownames(data_metab@analyteType2MetaData),
+  testthat::expect_equal(length(data_metab@analyteType1MetaData), 0)
+  testthat::expect_identical(rownames(data_metab@analyteType2MetaData),
 				   c("Gene1", "Gene2","Gene3"))
 
   # Check when only gene data is missing.
@@ -427,7 +427,7 @@ test_that("Missing metadata causes a warning.", {
   rownames(missing_gene_df) <- expected
   fname_gene_missing <- paste(getwd(), "missing_gene_metadata_file.csv", sep = "/")
   write.csv(missing_gene_df, file = fname_gene_missing, quote=FALSE)
-  expect_warning(IntLIM::ReadData(fname_gene_missing, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(fname_gene_missing, class.feat = list(Feat1 = "numeric",
                                                                         Feat2 = "numeric",
                                                                         Feat3 = "numeric")),
                  "No metadata provided for Analyte Type 2", fixed = TRUE)
@@ -439,15 +439,15 @@ test_that("Missing metadata causes a warning.", {
                                 suppressWarnings = TRUE)
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(data_gene), expected_names)
-  expect_identical(colnames(data_gene@sampleMetaData),
+  testthat::expect_identical(slotNames(data_gene), expected_names)
+  testthat::expect_identical(colnames(data_gene@sampleMetaData),
                    c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(data_gene@analyteType1),
+  testthat::expect_identical(rownames(data_gene@analyteType1),
                    c("Metab1", "Metab2","Metab3"))
-  expect_identical(rownames(data_gene@analyteType2),
+  testthat::expect_identical(rownames(data_gene@analyteType2),
                    c("Gene1", "Gene2","Gene3"))
-  expect_equal(length(data_gene@analyteType2MetaData), 0)
-  expect_identical(rownames(data_gene@analyteType1MetaData),
+  testthat::expect_equal(length(data_gene@analyteType2MetaData), 0)
+  testthat::expect_identical(rownames(data_gene@analyteType1MetaData),
 				   c("Metab1", "Metab2","Metab3"))
 
   # Remove files.
@@ -462,7 +462,7 @@ test_that("Missing metadata causes a warning.", {
 
 # If patient data file is missing, this should cause early termination of the
 # program.
-test_that("Missing patient data leads to early termination", {
+testthat::test_that("Missing patient data leads to early termination", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                             "analyteType2MetaData","sampleMetaData")
@@ -499,7 +499,7 @@ test_that("Missing patient data leads to early termination", {
   rownames(missing_pdata_df) <- expected
   fname_pdata_missing <- paste(getwd(), "missing_pdata_file.csv", sep = "/")
   write.csv(missing_pdata_df, file = fname_pdata_missing, quote=FALSE)
-  expect_error(IntLIM::ReadData(fname_pdata_missing, class.feat = list(Feat1 = "numeric",
+  testthat::expect_error(IntLIM::ReadData(fname_pdata_missing, class.feat = list(Feat1 = "numeric",
                                                                        Feat2 = "numeric",
                                                                        Feat3 = "numeric")),
                  paste("File", paste(getwd(), "?%!", sep = "/"),
@@ -516,7 +516,7 @@ test_that("Missing patient data leads to early termination", {
 
 # If the id column is missing from the metadata, this should lead to early
 # termination of the program.
-test_that("Missing 'id' column in metadata leads to early termination.",{
+testthat::test_that("Missing 'id' column in metadata leads to early termination.",{
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -563,7 +563,7 @@ test_that("Missing 'id' column in metadata leads to early termination.",{
   rownames(all_df) <- expected
   fname_metab_meta_noid <- paste(getwd(), "metab_metadata_noid_file.csv", sep = "/")
   write.csv(all_df, file = fname_metab_meta_noid, quote=FALSE)
-  expect_error(IntLIM::ReadData(fname_metab_meta_noid, class.feat = list(Feat1 = "numeric",
+  testthat::expect_error(IntLIM::ReadData(fname_metab_meta_noid, class.feat = list(Feat1 = "numeric",
                                                                          Feat2 = "numeric",
                                                                          Feat3 = "numeric")),
                paste("analyteType1id provided id does not exist in",
@@ -575,7 +575,7 @@ test_that("Missing 'id' column in metadata leads to early termination.",{
   rownames(all_df) <- expected
   fname_gene_meta_noid <- paste(getwd(), "gene_metadata_noid_file.csv", sep = "/")
   write.csv(all_df, file = fname_gene_meta_noid, quote=FALSE)
-  expect_error(IntLIM::ReadData(fname_gene_meta_noid, class.feat = list(Feat1 = "numeric",
+  testthat::expect_error(IntLIM::ReadData(fname_gene_meta_noid, class.feat = list(Feat1 = "numeric",
                                                                         Feat2 = "numeric",
                                                                         Feat3 = "numeric")),
                paste("analyteType2id provided id does not exist in",
@@ -596,7 +596,7 @@ test_that("Missing 'id' column in metadata leads to early termination.",{
 
 # If the ID's in the metadata file do not match the ID's in the analyte
 # file, program should terminate.
-test_that("Discrepancy between metabolite names and metabolite metadata
+testthat::test_that("Discrepancy between metabolite names and metabolite metadata
           leads to early termination.",{
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
@@ -644,7 +644,7 @@ test_that("Discrepancy between metabolite names and metabolite metadata
   rownames(all_df) <- expected
   fname_metab_meta_wrong_ref <- paste(getwd(), "gene_metadata_wrong_file.csv", sep = "/")
   write.csv(all_df, file = fname_metab_meta_wrong_ref, quote=FALSE)
-  expect_error(IntLIM::ReadData(fname_metab_meta_wrong_ref, class.feat = list(Feat1 = "numeric",
+  testthat::expect_error(IntLIM::ReadData(fname_metab_meta_wrong_ref, class.feat = list(Feat1 = "numeric",
                                                                               Feat2 = "numeric",
                                                                               Feat3 = "numeric")),
                "Analytes in Type 1 data file and meta data files are not equal",
@@ -655,7 +655,7 @@ test_that("Discrepancy between metabolite names and metabolite metadata
   rownames(all_df) <- expected
   fname_gene_meta_wrong_ref <- paste(getwd(), "gene_genedata_wrong_file.csv", sep = "/")
   write.csv(all_df, file = fname_gene_meta_wrong_ref, quote=FALSE)
-  expect_error(IntLIM::ReadData(fname_gene_meta_wrong_ref, class.feat = list(Feat1 = "numeric",
+  testthat::expect_error(IntLIM::ReadData(fname_gene_meta_wrong_ref, class.feat = list(Feat1 = "numeric",
                                                                              Feat2 = "numeric",
                                                                              Feat3 = "numeric")),
                "Analytes in Type 2 data file and meta data files are not equal",
@@ -675,7 +675,7 @@ test_that("Discrepancy between metabolite names and metabolite metadata
 
 # When all fields are present, an IntLimData object should be created.
 # All fields should be populated appropriately.
-test_that("All fields are present", {
+testthat::test_that("All fields are present", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -718,15 +718,15 @@ test_that("All fields are present", {
                                                           Feat3 = "numeric"))
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(dataset), expected_names)
-  expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+  testthat::expect_identical(slotNames(dataset), expected_names)
+  testthat::expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
+  testthat::expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
                                                 "P4"))
-  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  testthat::expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
                                                        "P4"))
-  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  testthat::expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
                                                      "P4"))
 
   # Remove files.
@@ -740,7 +740,7 @@ test_that("All fields are present", {
 
 # When all fields are present, an IntLimData object should be created.
 # This should work even when a single covariate is included.
-test_that("All fields are present", {
+testthat::test_that("All fields are present", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -781,15 +781,15 @@ test_that("All fields are present", {
   dataset <- IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric"))
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(dataset), expected_names)
-  expect_identical(colnames(dataset@sampleMetaData), c("Feat1"))
-  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+  testthat::expect_identical(slotNames(dataset), expected_names)
+  testthat::expect_identical(colnames(dataset@sampleMetaData), c("Feat1"))
+  testthat::expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
                                                        "P4"))
-  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  testthat::expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
                                                      "P4"))
-  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  testthat::expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
                                                      "P4"))
   
   # Remove files.
@@ -803,7 +803,7 @@ test_that("All fields are present", {
 
 # When no covariates are specified, all data in sampleMetaData should
 # be read.
-test_that("All fields are present", {
+testthat::test_that("All fields are present", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -844,15 +844,15 @@ test_that("All fields are present", {
   dataset <- IntLIM::ReadData(ref_file)
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(dataset), expected_names)
-  expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+  testthat::expect_identical(slotNames(dataset), expected_names)
+  testthat::expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
+  testthat::expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
                                                        "P4"))
-  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  testthat::expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
                                                      "P4"))
-  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  testthat::expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
                                                      "P4"))
   
   # Remove files.
@@ -866,7 +866,7 @@ test_that("All fields are present", {
 
 # When log scaling is requested for positive valued data, data should be
 # appropriately log-scaled.
-test_that("Data is log-scaled", {
+testthat::test_that("Data is log-scaled", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -909,31 +909,31 @@ test_that("Data is log-scaled", {
                                                           Feat3 = "numeric"),
                               logAnalyteType1 = TRUE, logAnalyteType2 = TRUE)
   cutoff <- 0.0000001
-  expect_lt(dataset@analyteType1[1,1],0)
-  expect_lt(dataset@analyteType1[2,1],0)
-  expect_lt(dataset@analyteType1[3,1],0)
-  expect_equal(dataset@analyteType1[1,2],0, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[2,2],0, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[3,2],0, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[1,3],1, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[2,3],1, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[3,3],1, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[1,4],2, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[2,4],2, tolerance=cutoff)
-  expect_equal(dataset@analyteType1[3,4],2, tolerance=cutoff)
+  testthat::expect_lt(dataset@analyteType1[1,1],0)
+  testthat::expect_lt(dataset@analyteType1[2,1],0)
+  testthat::expect_lt(dataset@analyteType1[3,1],0)
+  testthat::expect_equal(dataset@analyteType1[1,2],0, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[2,2],0, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[3,2],0, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[1,3],1, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[2,3],1, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[3,3],1, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[1,4],2, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[2,4],2, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType1[3,4],2, tolerance=cutoff)
 
-  expect_lt(dataset@analyteType2[1,1],0)
-  expect_lt(dataset@analyteType2[2,1],0)
-  expect_lt(dataset@analyteType2[3,1],0)
-  expect_equal(dataset@analyteType2[1,2],0, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[2,2],0, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[3,2],0, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[1,3],1, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[2,3],1, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[3,3],1, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[1,4],2, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[2,4],2, tolerance=cutoff)
-  expect_equal(dataset@analyteType2[3,4],2, tolerance=cutoff)
+  testthat::expect_lt(dataset@analyteType2[1,1],0)
+  testthat::expect_lt(dataset@analyteType2[2,1],0)
+  testthat::expect_lt(dataset@analyteType2[3,1],0)
+  testthat::expect_equal(dataset@analyteType2[1,2],0, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[2,2],0, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[3,2],0, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[1,3],1, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[2,3],1, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[3,3],1, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[1,4],2, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[2,4],2, tolerance=cutoff)
+  testthat::expect_equal(dataset@analyteType2[3,4],2, tolerance=cutoff)
 
   # Remove files.
   file.remove(fname_metab)
@@ -945,7 +945,7 @@ test_that("Data is log-scaled", {
 })
 
 # Log-scaling for negative data should result in a warning.
-test_that("Negative data is not log-scaled", {
+testthat::test_that("Negative data is not log-scaled", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -988,18 +988,18 @@ test_that("Negative data is not log-scaled", {
                                                           Feat3 = "numeric"),
 														  suppressWarnings = TRUE, logAnalyteType1 = TRUE, 
 														  logAnalyteType2 = TRUE)
-  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
                                                           Feat2 = "numeric",
                                                           Feat3 = "numeric"),
                                   logAnalyteType1 = TRUE, logAnalyteType2 = TRUE),
 														  "Analyte Type 1 data has negative values. Continuing without log-scaling.", fixed = TRUE)
-  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
                                                           Feat2 = "numeric",
                                                           Feat3 = "numeric"),
                                   logAnalyteType1 = TRUE, logAnalyteType2 = TRUE),
 														  "Analyte Type 2 data has negative values. Continuing without log-scaling.", fixed = TRUE)
-  expect_equal(dataset@analyteType1,t(metabData))
-  expect_equal(dataset@analyteType2,t(geneData))
+  testthat::expect_equal(dataset@analyteType1,t(metabData))
+  testthat::expect_equal(dataset@analyteType2,t(geneData))
 
   # Remove files.
   file.remove(fname_metab)
@@ -1012,7 +1012,7 @@ test_that("Negative data is not log-scaled", {
 
 # Test that output is appropriate when a different ID is used.
   # Data types expected
-test_that("Other ID's also work", {
+testthat::test_that("Other ID's also work", {
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
 
@@ -1056,15 +1056,15 @@ test_that("Other ID's also work", {
 														  analyteType2id = "geneIdentifier")
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(dataset), expected_names)
-  expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+  testthat::expect_identical(slotNames(dataset), expected_names)
+  testthat::expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
+  testthat::expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
                                                 "P4"))
-  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  testthat::expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
                                                        "P4"))
-  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  testthat::expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
                                                      "P4"))
 
   # Remove files.
@@ -1077,7 +1077,7 @@ test_that("Other ID's also work", {
  })
 
 # Test that samples not shared between patient and analyte files are removed.
-test_that("Samples not shared are removed", {
+testthat::test_that("Samples not shared are removed", {
 
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
@@ -1116,7 +1116,7 @@ test_that("Samples not shared are removed", {
   write.csv(all_df, file = ref_file, quote=FALSE)
 
   # Check for the warning.
-  expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
+  testthat::expect_warning(IntLIM::ReadData(ref_file, class.feat = list(Feat1 = "numeric",
                                                           Feat2 = "numeric",
                                                           Feat3 = "numeric")),
 				paste("The following samples were not shared in all data types and were removed:",
@@ -1130,15 +1130,15 @@ test_that("Samples not shared are removed", {
 														  suppressWarnings = TRUE)
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(dataset), expected_names)
-  expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
+  testthat::expect_identical(slotNames(dataset), expected_names)
+  testthat::expect_identical(colnames(dataset@sampleMetaData), c("Feat1", "Feat2", "Feat3"))
+  testthat::expect_identical(rownames(dataset@sampleMetaData), c("P1","P2", "P3",
                                                 "P4"))
-  expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
-  expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType1), c("Metab1", "Metab2","Metab3"))
+  testthat::expect_identical(colnames(dataset@analyteType1), c("P1","P2", "P3",
                                                        "P4"))
-  expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
-  expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
+  testthat::expect_identical(rownames(dataset@analyteType2), c("Gene1","Gene2","Gene3"))
+  testthat::expect_identical(colnames(dataset@analyteType2), c("P1","P2", "P3",
                                                      "P4"))
 
   # Remove files.
@@ -1151,7 +1151,7 @@ test_that("Samples not shared are removed", {
  })
 
 # Test that names are converted appropriately.
-test_that("Names with special symbols are converted appropriately", {
+testthat::test_that("Names with special symbols are converted appropriately", {
   # Data types expected
   expected <- c("analyteType1","analyteType2","analyteType1MetaData",
                 "analyteType2MetaData","sampleMetaData")
@@ -1194,13 +1194,13 @@ test_that("Names with special symbols are converted appropriately", {
                                                           Feat.3 = "numeric"))
   expected_names <- c("analyteType1", "analyteType2", "analyteType1MetaData",
                       "analyteType2MetaData", "sampleMetaData")
-  expect_identical(slotNames(dataset), expected_names)
-  expect_identical(colnames(dataset@sampleMetaData), c("Feat.1", "Feat.2", "Feat.3"))
-  expect_identical(rownames(dataset@sampleMetaData), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
-  expect_identical(rownames(dataset@analyteType1), c("Metab.1", "Met.ab2","Metab.3"))
-  expect_identical(colnames(dataset@analyteType1), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
-  expect_identical(rownames(dataset@analyteType2), c("Gene.1","Gene..2","Gene..3"))
-  expect_identical(colnames(dataset@analyteType2), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
+  testthat::expect_identical(slotNames(dataset), expected_names)
+  testthat::expect_identical(colnames(dataset@sampleMetaData), c("Feat.1", "Feat.2", "Feat.3"))
+  testthat::expect_identical(rownames(dataset@sampleMetaData), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
+  testthat::expect_identical(rownames(dataset@analyteType1), c("Metab.1", "Met.ab2","Metab.3"))
+  testthat::expect_identical(colnames(dataset@analyteType1), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
+  testthat::expect_identical(rownames(dataset@analyteType2), c("Gene.1","Gene..2","Gene..3"))
+  testthat::expect_identical(colnames(dataset@analyteType2), c("P1..", "X4P2", "X.P3.", "Bam.bam"))
 
   # Remove files.
   file.remove(fname_metab)

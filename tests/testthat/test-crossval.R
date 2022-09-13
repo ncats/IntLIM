@@ -1,11 +1,11 @@
 # When input data is not valid, should terminate early.
-test_that("Errors on wrong input type",{
-  expect_error(RunCrossValidation(inputData = "?!%", folds = 4, suppressWarnings=TRUE), 
+testthat::test_that("Errors on wrong input type",{
+  testthat::expect_error(RunCrossValidation(inputData = "?!%", folds = 4, suppressWarnings=TRUE), 
                "input data is not a IntLimData class", ignore.case = TRUE)
 })
 
 # When the number of folds is not sufficient, should terminate early.
-test_that("Insufficient fold count causes an error",{
+testthat::test_that("Insufficient fold count causes an error",{
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -33,12 +33,12 @@ test_that("Insufficient fold count causes an error",{
                       analyteType1MetaData = metabMetaData,
                       analyteType2MetaData = geneMetaData,
                       sampleMetaData = pData)
-  expect_error(RunCrossValidation(inputData = dat, folds = 1, suppressWarnings=TRUE), 
+  testthat::expect_error(RunCrossValidation(inputData = dat, folds = 1, suppressWarnings=TRUE), 
                "At least 2 folds are required.", ignore.case = TRUE)
 })
 
 # When there are more folds than samples, building data folds should terminate early.
-test_that("Inputting too many folds causes early termination.", {
+testthat::test_that("Inputting too many folds causes early termination.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -66,12 +66,12 @@ test_that("Inputting too many folds causes early termination.", {
                       analyteType1MetaData = metabMetaData,
                       analyteType2MetaData = geneMetaData,
                       sampleMetaData = pData)
-  expect_error(RunCrossValidation(inputData = dat, folds = 9, suppressWarnings=TRUE), 
+  testthat::expect_error(RunCrossValidation(inputData = dat, folds = 9, suppressWarnings=TRUE), 
                "The number of folds is greater than the number of samples!", ignore.case = TRUE)
 })
 
 # Check that the multi-omic function works with meta-data.
-test_that("Function returns all folds correctly in multi-omic case.", {
+testthat::test_that("Function returns all folds correctly in multi-omic case.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -105,11 +105,11 @@ test_that("Function returns all folds correctly in multi-omic case.", {
                             interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                             stype = "Level")
   
-  expect_equal(length(res$folds), 4)
+  testthat::expect_equal(length(res$folds), 4)
 })
 
 # Check that we are still able to run without the metadata.
-test_that("Function still returns all folds when metadata is missing.", {
+testthat::test_that("Function still returns all folds when metadata is missing.", {
 
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -140,11 +140,11 @@ test_that("Function still returns all folds when metadata is missing.", {
                             interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                             stype = "Level")
   
-  expect_equal(length(res$folds), 4)
+  testthat::expect_equal(length(res$folds), 4)
 })
 
 # Check that we are able to build folds with both single-omic and multi-omic data.
-test_that("Single-omic data gives expected results.", {
+testthat::test_that("Single-omic data gives expected results.", {
   # Create toy data.
   pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
                       "Feat2"=c(37.1,40.2,80.3,83.4,6.5,12.6,43.7,75.8),
@@ -173,11 +173,11 @@ test_that("Single-omic data gives expected results.", {
                             interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                             stype = "Level")
   
-  expect_equal(length(res$folds), 4)
+  testthat::expect_equal(length(res$folds), 4)
 })
 
 # If data is not divisible by fold number
-test_that("When number of samples is not divisible by fold count, make sure the samples
+testthat::test_that("When number of samples is not divisible by fold count, make sure the samples
           are evenly divided", {
     # Create toy data.
     pData <- data.frame("Feat1"=c(47.1,26.2,84.3,98.4,43.5,82.6,13.7,87.8), 
@@ -212,11 +212,11 @@ test_that("When number of samples is not divisible by fold count, make sure the 
                               interactionCoeffPercentile = 0, rsquaredCutoff = 0.4,
                               stype = "Level")
     
-    expect_equal(length(res$folds), 3)
-    expect_lte(nrow(res$folds[[1]]$training@sampleMetaData), 6)
-    expect_lte(nrow(res$folds[[2]]$training@sampleMetaData), 6)
-    expect_lte(nrow(res$folds[[3]]$training@sampleMetaData), 6)
-    expect_lte(nrow(res$folds[[1]]$testing@sampleMetaData), 3)
-    expect_lte(nrow(res$folds[[2]]$testing@sampleMetaData), 3)
-    expect_lte(nrow(res$folds[[3]]$testing@sampleMetaData), 3)
+    testthat::expect_equal(length(res$folds), 3)
+    testthat::expect_lte(nrow(res$folds[[1]]$training@sampleMetaData), 6)
+    testthat::expect_lte(nrow(res$folds[[2]]$training@sampleMetaData), 6)
+    testthat::expect_lte(nrow(res$folds[[3]]$training@sampleMetaData), 6)
+    testthat::expect_lte(nrow(res$folds[[1]]$testing@sampleMetaData), 3)
+    testthat::expect_lte(nrow(res$folds[[2]]$testing@sampleMetaData), 3)
+    testthat::expect_lte(nrow(res$folds[[3]]$testing@sampleMetaData), 3)
 })

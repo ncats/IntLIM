@@ -4,13 +4,13 @@
 \alias{PlotPCA}
 \title{PCA plots of data for QC}
 \usage{
-PlotPCA(inputData, viewer = T, stype = "", palette = "Set1")
+PlotPCA(inputData, viewer = TRUE, stype = "", palette = "Set1")
 }
 \arguments{
 \item{inputData}{IntLimObject output of ReadData()}
 
-\item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
-in Shiny/Knittr (F)}
+\item{viewer}{whether the plot should be displayed in the RStudio viewer (TRUE) or
+in Shiny/Knittr (FALSE)}
 
 \item{stype}{category to color-code by (can be more than two categories)}
 

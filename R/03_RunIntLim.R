@@ -28,7 +28,7 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
                       remove.duplicates = FALSE, suppressWarnings = FALSE){
     
     # If the wrong data type, stop.
-    if(class(inputData) != "IntLimData"){
+    if(!methods::is(inputData, "IntLimData")){
         stop("Input must be an IntLimData object")
     }
 
@@ -37,11 +37,12 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
 	               stype,"only has two unique values. Did you mean to set",
 	               "continuous to TRUE?"))
     }
-    print("Running the analysis on")
     if(continuous == FALSE){
-        print(table(inputData@sampleMetaData[,stype]))
+        message(do.call(paste, list("Running the analysis on discrete data with group sizes", table(inputData@sampleMetaData[,stype])[1],
+                                    table(inputData@sampleMetaData[,stype])[2])))
     }else{
-        print(range(inputData@sampleMetaData[,stype]))
+        message(do.call(paste, list("Running the analysis on continuous data with range", range(inputData@sampleMetaData[,stype])[1],
+                                    range(inputData@sampleMetaData[,stype])[2])))
     }
 
     ptm <- proc.time()
@@ -109,7 +110,6 @@ RunIntLim <- function(inputData,stype="",outcome=1, covar=c(),
         stop(paste("Error! independent.var.type and outcome.type must both be either",
         "1 or 2 in RunIntLim."))
     }
-    print(proc.time() - ptm)
     myres@stype=stype
     myres@outcome=outcome
     myres@independent.var.type=independent.var.type

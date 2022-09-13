@@ -53,17 +53,10 @@ pairs (default = 0.20)}
 \value{
 List object with 1st slot populated with dataframe containing the R^2 values of the models, 
 and number of significant pairs before and after p-value adjustment. The 2nd slot in the list contains 
-a string vector of the IDs of the significant pairs
+a string vector of the IDs of the significant pairs.
 }
 \description{
 This function allows users to test different permutations of the metadata with their analytes to ensure
 that any pairs being deemed significant by IntIM are not being suggested due to random chance, as is 
 sometimes a problem in correlative associations.
-}
-\examples{
-\dontrun{
-permutedResults <- PermuteIntLIM(data = mydata, stype = "PBO_vs_Leukemia", outcome = 1, 
-                                 independent.var.type = 2, analyte.metadata = TRUE,
-                                 num.permutations = 100)
-}
 }

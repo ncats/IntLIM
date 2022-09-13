@@ -4,12 +4,12 @@
 \alias{OutputData}
 \title{Output data into individual CSV files.  All data will be zipped into one file with all data.}
 \usage{
-OutputData(inputData, filename = "~/output.zip")
+OutputData(inputData, filename = "")
 }
 \arguments{
 \item{inputData}{data output from ReadData() or FilterData() function}
 
-\item{filename}{name of file to be output (default: '~/output.zip')}
+\item{filename}{name of file to be output (default: 'tempdir/output.zip')}
 }
 \value{
 the filename of the CSV file with results named with cohort

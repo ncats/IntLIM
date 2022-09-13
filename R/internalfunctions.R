@@ -96,16 +96,16 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
   }
 
   # Find all standard deviations.
-  type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
-  type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=T)}))
+  type1sd <- as.numeric(apply(type1,1,function(x){stats::sd(as.numeric(x),na.rm=TRUE)}))
+  type2sd <- as.numeric(apply(type2,1,function(x){stats::sd(as.numeric(x),na.rm=TRUE)}))
   covarsd <- as.numeric(apply(covarMatrix,2,function(x){
-    return(stats::sd(x,na.rm=T))}))
-  if(class(stype) == "character"){
+    return(stats::sd(x,na.rm=TRUE))}))
+  if(methods::is(stype, "character")){
     stype <- as.numeric(as.factor(stype))
-  }else if(class(stype) == "factor"){
+  }else if(methods::is(stype, "factor")){
     stype <- as.numeric(stype)
   }
-  stypesd <- stats::sd(stype,na.rm=T)
+  stypesd <- stats::sd(stype,na.rm=TRUE)
 
   # If the standard deviation of the phenotype is zero, then stop.
   if(stypesd == 0){
@@ -171,6 +171,7 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
                         interaction.coefficients=mat.list$mat.coefficients,
                         model.rsquared = mat.list$mat.rsquared,
                         covariate.pvalues = mat.list$covariate.pvals,
+                        covariate.adj.pvalues = mat.list$covariate.pvalsadj,
                         covariate.coefficients = mat.list$covariate.coefficients,
                         warnings=mymessage, covar = intLimResultsCovar)
 
@@ -256,15 +257,17 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnin
     warnings <- list()
   }, error=function(e){
     if(suppressWarnings == FALSE){
-      print(pinv_message)
+      warning(pinv_message)
     }
     if(length(which(cormat > cutoff)) > 0 && suppressWarnings == FALSE){
-      print(covariate_msg1)
+      warning(covariate_msg1)
     }
     if(length(which(cormat < -1 * cutoff)) > 0 && suppressWarnings == FALSE){
-      print(covariate_msg2)
+      warning(covariate_msg2)
     }
   })
+  bhat <- NULL
+  
   bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
   yhat <- X %*% bhat                      # Figure out what is predicted by the model
   # Now we partition the sum-of-square errors
@@ -399,7 +402,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
     if (numprog != 0){
       if (i %% numprog == 0) {
         progX <- round(i/num*100)
-        print(paste(progX,"% complete"))
+        message(paste(progX,"% complete"))
       }
     }
     list.pvals[[i]] <-  p.val.vector
@@ -437,7 +440,14 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   mat.rsquared <- do.call(rbind, list.rsquared)
   covariate.pvals <- do.call(rbind, list.covariate.pvals)
   covariate.coefficients <- do.call(rbind, list.covariate.coefficients)
-  
+  covariate.pvalsadj <- covariate.pvals
+  if(!is.null(covariate.pvalsadj)){
+    covariate.pvalsadj <- do.call(cbind, lapply(1:ncol(covariate.pvals), function(i){
+      return(stats::p.adjust(covariate.pvals[,i], method = 'fdr'))
+    }))
+    colnames(covariate.pvalsadj) <- colnames(covariate.pvals)
+  }
+
   # Adjust p-values.
   row.pvt <- dim(mat.pvals)[1]
   col.pvt <- dim(mat.pvals)[2]
@@ -517,6 +527,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
     if(save.covar.pvals == TRUE){
       for(i in 1:length(colnames(covariate.pvals))){
         covariate.pvals[which(should_remove == TRUE),i] <- NA
+        covariate.pvalsadj[which(should_remove == TRUE),i] <- NA
         covariate.coefficients[which(should_remove == TRUE),i] <- NA
       }
     }
@@ -539,6 +550,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
       pieces = do.call(rbind, pieces_list)
       for(i in 1:length(colnames(covariate.pvals))){
         covariate.pvals[which(pieces$from == pieces$to),i] <- NA
+        covariate.pvalsadj[which(pieces$from == pieces$to),i] <- NA
         covariate.coefficients[which(pieces$from == pieces$to),i] <- NA
       }
     }
@@ -552,6 +564,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
   list.mat[["mat.coefficients"]] <- as.matrix(mat.coefficients)
   list.mat[["mat.rsquared"]] <- as.matrix(mat.rsquared)
   list.mat[["covariate.pvals"]] <- as.data.frame(covariate.pvals)
+  list.mat[["covariate.pvalsadj"]] <- as.data.frame(covariate.pvalsadj)
   list.mat[["covariate.coefficients"]] <- as.data.frame(covariate.coefficients)
   list.final[["list"]] <- list.mat
   list.final[["warnings"]] <- warnings
@@ -562,7 +575,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
 #' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
 #' @param tofilter dataframe for percentile filtering
 #' @return vector with numeric cutoffs
-getQuantileForInteractionCoefficient<-function(tofilter, interactionCoeffPercentile){
+getQuantileForCoefficient<-function(tofilter, interactionCoeffPercentile){
   
   if(interactionCoeffPercentile > 1 || interactionCoeffPercentile < 0) {
     stop("interactionCoeffPercentile parameter must be between 0 and 1")

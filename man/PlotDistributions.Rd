@@ -4,13 +4,13 @@
 \alias{PlotDistributions}
 \title{Get some stats after reading in data}
 \usage{
-PlotDistributions(inputData, viewer = T, palette = "Set1")
+PlotDistributions(inputData, viewer = TRUE, palette = "Set1")
 }
 \arguments{
 \item{inputData}{IntLimObject output of ReadData()}
 
-\item{viewer}{whether the plot should be displayed in the RStudio viewer (T) or
-in Shiny/Knittr (F)}
+\item{viewer}{whether the plot should be displayed in the RStudio viewer (TRUE) or
+in Shiny/Knittr (FALSE)}
 
 \item{palette}{choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors}

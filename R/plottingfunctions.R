@@ -3,11 +3,11 @@
 #' @param inputData IntLimObject output of ReadData()
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
+#' @param viewer whether the plot should be displayed in the RStudio viewer (TRUE) or
+#' in Shiny/Knittr (FALSE)
 #' @return a highcharter object
 #' @export
-PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
+PlotDistributions <- function(inputData,viewer=TRUE, palette="Set1"){
   . <- c()
   if (length(palette) == 2) {
     cols <- c(palette)
@@ -98,7 +98,7 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
       return(d)
     })
     outs <- do.call(rbind, outsList)
-    outs <- data.frame(outs, 'z' = colnames(type1Data)[outs$x + 1])
+    outs <- data.frame(outs, 'z' = colnames(type2Data)[outs$x + 1])
     z <- outs$z
     
     m <- highcharter::highchart(width = 750, height = 750 )
@@ -155,11 +155,11 @@ PlotDistributions <- function(inputData,viewer=T, palette="Set1"){
 #' @param stype category to color-code by (can be more than two categories)
 #' @param palette choose an RColorBrewer palette ("Set1", "Set2", "Set3",
 #' "Pastel1", "Pastel2", "Paired", etc.) or submit a vector of colors
-#' @param viewer whether the plot should be displayed in the RStudio viewer (T) or
-#' in Shiny/Knittr (F)
+#' @param viewer whether the plot should be displayed in the RStudio viewer (TRUE) or
+#' in Shiny/Knittr (FALSE)
 #' @return a highcharter object
 #' @export
-PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
+PlotPCA <- function(inputData,viewer=TRUE,stype="",palette = "Set1") {
   
   if(is.numeric(inputData@sampleMetaData[,stype]) == TRUE) {
     mytype <- inputData@sampleMetaData[,stype]
@@ -206,8 +206,8 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
   
   if(length(inputData@analyteType1)>0 && length(inputData@analyteType2)>0){
     if(is.numeric(mytype) == TRUE) {
-      mpca <- stats::prcomp(t(inputData@analyteType1),center=T,scale=F)
-      gpca <- stats::prcomp(t(inputData@analyteType2),center=T,scale=F)
+      mpca <- stats::prcomp(t(inputData@analyteType1),center=TRUE,scale=FALSE)
+      gpca <- stats::prcomp(t(inputData@analyteType2),center=TRUE,scale=FALSE)
       
       # Set colors.
       bin_count <- 100
@@ -240,11 +240,11 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
       alltype <- inputData@sampleMetaData[,stype]
       uniqtypes <- unique(alltype)
       mycols <- as.character(alltype)
-      for (i in 1:numcateg) {
+      for (i in 1:uniqtypes) {
         mycols[which(alltype==uniqtypes[i])] <- cols[i]
       }
-      gpca <- stats::prcomp(t(type1),center=T,scale=F)
-      mpca <- stats::prcomp(t(type2),center=T,scale=F)
+      gpca <- stats::prcomp(t(type1),center=TRUE,scale=FALSE)
+      mpca <- stats::prcomp(t(type2),center=TRUE,scale=FALSE)
       gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
       mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
       mds <- highcharter::list_parse(mtoplot)
@@ -268,19 +268,104 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
                                          showInLegend=TRUE)
       }
     }
+  }else if(length(inputData@analyteType1)>0){
+    mpca <- stats::prcomp(t(inputData@analyteType1),center=TRUE,scale=FALSE)
+    
+    if(is.numeric(mytype) == TRUE) {
+      # Set colors.
+      bin_count <- 100
+      # Make sure the spacing is even. We need to do this using seq.
+      intervals <- seq(min(mytype), max(mytype),
+                       by = (max(mytype) - min(mytype)) / (bin_count - 1))
+      subject_color_scale <- findInterval(mytype, intervals)
+      pal <- grDevices::colorRampPalette(c("#89CFF0", "#002366"))(bin_count+1)
+      mycols <-pal[subject_color_scale]
+      
+      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),color=mycols)
+      mds <- highcharter::list_parse(mtoplot)
+      pm <- highcharter::highchart(width = 350, height = 350)
+      pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
+                                       tooltip = list(headerFormat="",
+                                                      pointFormat=paste("{point.label}","{point.z}")),
+                                       showInLegend=FALSE)
+      pm <- highcharter::hc_colorAxis(pm, min=min(mytype), max=max(mytype), 
+                                      minColor = "#89CFF0", maxColor = "#002366")
+    } else {
+      type1 <- inputData@analyteType1
+      alltype <- inputData@sampleMetaData[,stype]
+      uniqtypes <- unique(alltype)
+      mycols <- as.character(alltype)
+      for (i in 1:numcateg) {
+        mycols[which(alltype==uniqtypes[i])] <- cols[i]
+      }
+      mpca <- stats::prcomp(t(type1),center=TRUE,scale=FALSE)
+      mtoplot=data.frame(x=mpca$x[,1],y=mpca$x[,2],z=rownames(mpca$x),label=alltype,color=mycols)
+      mds <- highcharter::list_parse(mtoplot)
+      pm <- highcharter::highchart(width = 350, height = 350)
+      for (i in 1:length(uniqtypes)) {
+        mytype <- unique(alltype)[i]
+        mds <- highcharter::list_parse(mtoplot[which(mtoplot$label==mytype),])
+        pm <- highcharter::hc_add_series(pm, data=mds,type="scatter",
+                                         name=mytype,
+                                         color=cols[which(alltype==mytype)[1]],
+                                         tooltip = list(headerFormat="",
+                                                        pointFormat=paste("{point.label}","{point.z}")),
+                                         showInLegend=TRUE)
+      }
+    }
+  }else if(length(inputData@analyteType2)>0){
+    if(is.numeric(mytype) == TRUE) {
+      # Set colors.
+      bin_count <- 100
+      # Make sure the spacing is even. We need to do this using seq.
+      intervals <- seq(min(mytype), max(mytype),
+                       by = (max(mytype) - min(mytype)) / (bin_count - 1))
+      subject_color_scale <- findInterval(mytype, intervals)
+      pal <- grDevices::colorRampPalette(c("#89CFF0", "#002366"))(bin_count+1)
+      mycols <-pal[subject_color_scale]
+      
+      gpca <- stats::prcomp(t(inputData@analyteType2),center=TRUE,scale=FALSE)
+      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),color=mycols)
+      gds <- highcharter::list_parse(gtoplot)
+      pg <- highcharter::highchart(width = 350, height = 350 )
+      pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
+                                       tooltip = list(headerFormat="",
+                                                      pointFormat=paste("{point.label}","{point.z}")),
+                                       showInLegend=FALSE)
+    } else {
+      type2 <- inputData@analyteType2
+      alltype <- inputData@sampleMetaData[,stype]
+      uniqtypes <- unique(alltype)
+      mycols <- as.character(alltype)
+      for (i in 1:numcateg) {
+        mycols[which(alltype==uniqtypes[i])] <- cols[i]
+      }
+      gpca <- stats::prcomp(t(type2),center=TRUE,scale=FALSE)
+      gtoplot=data.frame(x=gpca$x[,1],y=gpca$x[,2],z=rownames(gpca$x),label=alltype,color=mycols)
+      gds <- highcharter::list_parse(gtoplot)
+      pg <- highcharter::highchart(width = 350, height = 350)
+      for (i in 1:length(uniqtypes)) {
+        mytype <- unique(alltype)[i]
+        gds <- highcharter::list_parse(gtoplot[which(gtoplot$label==mytype),])
+        pg <- highcharter::hc_add_series(pg, data=gds,type="scatter",
+                                         name=mytype,
+                                         color=cols[which(alltype==mytype)[1]],
+                                         tooltip = list(headerFormat="",
+                                                        showInLegend=TRUE))
+      }
+    }
   }
-  
-  # Set up plots.
   if(length(inputData@analyteType1)>0){
     mpercvar=round((mpca$sdev)^2 / sum(mpca$sdev^2)*100,2)
-    pm <- highcharter::hc_title(pm, text="PCA of analyte type 2")
+    pm <- highcharter::hc_title(pm, text="PCA of analyte type 1")
     pm <- highcharter::hc_xAxis(pm, title=list(text=paste0("PC1:",round(mpercvar[1],1),"%")))
     pm <- highcharter::hc_yAxis(pm, title=list(text=paste0("PC2:",round(mpercvar[2],2),"%")))
     pm <- highcharter::hc_chart(pm, zoomType = "xy")
   }
   if(length(inputData@analyteType2)>0){
+    gpca <- stats::prcomp(t(inputData@analyteType2),center=TRUE,scale=FALSE)
     gpercvar=round((gpca$sdev)^2 / sum(gpca$sdev^2)*100,2)
-    pg <- highcharter::hc_title(pg, text="PCA of analyte type 1")
+    pg <- highcharter::hc_title(pg, text="PCA of analyte type 2")
     pg <- highcharter::hc_xAxis(pg, title=list(text=paste0("PC1:",round(gpercvar[1],1),"%")))
     pg <- highcharter::hc_yAxis(pg, title=list(text=paste0("PC2:",round(gpercvar[2],2),"%")))
     pg <- highcharter::hc_chart(pg, zoomType = "xy")
@@ -294,15 +379,15 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
     }
   } else if(length(inputData@analyteType1)>0){
     if (viewer == TRUE) {
-      p <-htmltools::browsable(highcharter::hw_grid(pg, ncol = 1, rowheight = 550))
-    } else {
-      p <- highcharter::hw_grid(pg)
-    }
-  } else if(length(inputData@analyteType2)>0){
-    if (viewer == TRUE) {
       p <-htmltools::browsable(highcharter::hw_grid(pm, ncol = 1, rowheight = 550))
     } else {
       p <- highcharter::hw_grid(pm)
+    }
+  } else if(length(inputData@analyteType2)>0){
+    if (viewer == TRUE) {
+      p <-htmltools::browsable(highcharter::hw_grid(pg, ncol = 1, rowheight = 550))
+    } else {
+      p <- highcharter::hw_grid(pg)
     }
   }
   
@@ -320,6 +405,7 @@ PlotPCA <- function(inputData,viewer=T,stype="",palette = "Set1") {
 #' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
 #' @param adjusted Whether or not to plot adjusted p-values. If TRUE (default),
 #' adjusted p-values are plotted. If FALSE, unadjusted p-values are plotted.
+#' @return No return value, called for side effects
 #' @export
 DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 
@@ -339,11 +425,14 @@ DistPvalues<- function(IntLimResults,breaks=100,adjusted = TRUE) {
 #' @include IntLimResults_extendedfunctions.R
 #'
 #' @param IntLimResults output of RunIntLim()
+#' @return No return value, called for side effects
 #' @export
 PValueBoxPlots<- function(IntLimResults) {
   if(length(IntLimResults@covariate.pvalues) == 0){
-    print("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
+    stop("Error! You must set save.covar.pvals to TRUE when running IntLIM to run PValueBoxPlots")
   }else{
+    oldpar <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(oldpar))
     graphics::par(mar=c(8, 4.1, 4.1, 2.1))
     graphics::boxplot(IntLimResults@covariate.pvalues, las = 3, ylim = c(0,1), ylab = "P-Value")
   }
@@ -355,6 +444,7 @@ PValueBoxPlots<- function(IntLimResults) {
 #'
 #' @param IntLimResults output of RunIntLim()
 #' @param breaks the number of breaks to use in histogram (see hist() documentation for more details)
+#' @return No return value, called for side effects
 #' @export
 DistRSquared<- function(IntLimResults,breaks=100) {
   
@@ -459,6 +549,101 @@ BuildDataAndLines <- function(inputData,inputResults,outcome,independentVariable
   # Return everything needed.
   return(list(data=data,uniqtypes=uniqtypes,line1=line1,line2=line2,cols=cols))
 }
+
+#' scatter plot of pairs (based on user selection)
+#'
+#' @param inputData IntLimObject output of ReadData() or FilterData()
+#' @param inputResults Object of type ModelResults.
+#' @param outcomeAnalyteOfInterest outcome analyte in pair
+#' @param independentAnalyteOfInterest independent analyte in pair
+#' @param outcome '1' or '2' must be set as outcome/independent variable
+#' @param independentVariable '1' or '2' must be set as outcome/independent variable
+#' @return No return value, called for side effects
+#' @export
+PlotPairResiduals<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
+                    outcomeAnalyteOfInterest) {
+
+  if(length(inputResults@covariate.pvalues) > 0){
+    ind <- make.names(independentAnalyteOfInterest)
+    out <- make.names(outcomeAnalyteOfInterest)
+    pairName <- paste(ind, out, sep = "__")
+    
+    # Set variables for further analysis.
+    analyteTgtVals <- inputData@analyteType1
+    if(outcome == 2){
+      analyteTgtVals <- inputData@analyteType2
+    }
+    analyteSrcVals <- inputData@analyteType2
+    if(independentVariable == 1){
+      analyteSrcVals <- inputData@analyteType1
+    }
+    covariateVals <- inputData@sampleMetaData
+    covariatePairs <- inputResults@covariate.coefficients[pairName,]
+    tgt <- analyteTgtVals[out,]
+    src <- analyteSrcVals[independentVariable,]
+    phenotype <- covariateVals[,inputResults@stype]
+    if(is.factor(covariateVals[,inputResults@stype])){
+      phenotype <- as.numeric(covariateVals[,inputResults@stype]) - 1
+    }
+    
+    # If the covariates are factors, then one-hot encode them. Else, add the same
+    # values back into the list.
+    for(c in colnames(covariateVals)){
+      # Find all factor covariates derived from the original covariate.
+      if(is.factor(covariateVals[,c])){
+        for(fac in unique(covariateVals[,c])){
+          # Append new one-hot-encoded factor covariates.
+          covariateVals[,paste0(c, fac)] <- 0
+          covariateVals[which(covariateVals[,c] == fac),paste0(c, fac)] <- 1
+        }
+      }
+    }
+    
+    # beta0
+    b0 <- t(matrix(rep(covariatePairs[,"(Intercept)"], nrow(covariateVals)), ncol = nrow(covariateVals)))
+    
+    # beta1
+    b1 <- t(matrix(rep(covariatePairs[,"a"], nrow(covariateVals)), ncol = nrow(covariateVals))) * src
+    
+    # beta2
+    typeVar <- colnames(covariatePairs)[which(grepl("^type",colnames(covariatePairs)))]
+    b2 <- t(matrix(rep(covariatePairs[,typeVar], nrow(covariateVals)), ncol = nrow(covariateVals))) * 
+      phenotype
+    
+    # beta3
+    interactVar <- colnames(covariatePairs)[which(grepl(":",colnames(covariatePairs), fixed = TRUE))]
+    interactionTerm <- t(matrix(rep(covariatePairs[,interactVar], nrow(covariateVals)), ncol = nrow(covariateVals)))
+    b3 <- interactionTerm * src * phenotype
+    
+    # covariates
+    sum_covars <- rep(0, nrow(covariateVals))
+    if(length(inputResults@covar) > 1 || inputResults@covar != ""){
+      covarNames <- setdiff(colnames(covariatePairs), list("(Intercept)", "a", typeVar, interactVar))
+      sum_each <- lapply(covarNames, function(c){
+        return(t(matrix(rep(covariatePairs[,c], nrow(covariateVals)), ncol = nrow(covariateVals)))
+               * covariateVals[,c])
+      })
+      sum_covars <- Reduce('+', sum_each)
+    }
+    Y.pred <- b0 + b1 + sum_covars + b2 + b3
+    
+    # Compute standardized residuals.
+    residuals <- tgt - Y.pred / stats::sd(tgt - Y.pred)
+    
+    # Plot residuals.
+    graphics::par(mar = c(5, 4, 4, 8), xpd = TRUE, pty="s")
+    plot(tgt, residuals, xlab = outcomeAnalyteOfInterest,
+         ylab = "Standardized Residual", main = paste("Residuals -", independentAnalyteOfInterest,
+                                                      "and", outcomeAnalyteOfInterest),
+         pch = 16)
+    graphics::abline(h = 0)
+    coord <- graphics::par("usr")
+  }else{
+    stop(paste("The model results must include covariate p-values",
+                "and coefficients. To obtain these, set save.covar.pvals = TRUE in the RunIntLim() function."))
+  }
+  
+}
   
 #' scatter plot of pairs (based on user selection)
 #'
@@ -542,8 +727,8 @@ PlotPair<- function(inputData,inputResults,outcome,independentVariable, independ
 #' @param independentVariable '1' or '2' must be set as outcome/independent variable
 #' @export
 PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, independentAnalyteOfInterest, 
-                    outcomeAnalyteOfInterest, palette = "Set1") {
-    
+                        outcomeAnalyteOfInterest, palette = "Set1") {
+  
   # Set type.
   stype <- inputResults@stype
   
@@ -585,7 +770,7 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
     #graphics::text(data$x, data$y, data$z, col = data$color)
     coord <- graphics::par("usr")
     graphics::legend(x = coord[2] * 1.05, y = coord[4], legend=c(uniqtypes[1],uniqtypes[2]), 
-           col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
+                     col=c(cols[1],cols[2]), title="stype",lty=1,bg="transparent")
   }
 }
 
@@ -604,7 +789,7 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
 #' @export
 pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.05,
                             coefPercentileCutoff=0.9){
-    if(class(inputResults) != "IntLimResults") {
+    if(!methods::is(inputResults, "IntLimResults")) {
 	    stop("input data is not a IntLim class")
     }
   
@@ -628,9 +813,9 @@ pvalCoefVolcano <- function(inputResults, inputData,nrpoints=10000,pvalcutoff=0.
     
     # Plot cutoff lines.
     graphics::abline(h=-log10(highest_pval_below_cutoff),lty=2,col="blue")
-    lower_line = getQuantileForInteractionCoefficient(interaction_coeff, 
+    lower_line = getQuantileForCoefficient(interaction_coeff, 
                                                       coefPercentileCutoff)[1]
-    upper_line = getQuantileForInteractionCoefficient(interaction_coeff, 
+    upper_line = getQuantileForCoefficient(interaction_coeff, 
                                                        coefPercentileCutoff)[2]
     graphics::abline(v=c(lower_line,upper_line),lty=2,col="blue")
 }
@@ -675,7 +860,7 @@ InteractionCoefficientGraph<-function(inputResults,
                                       outcome = 2){
 
 
-    if(class(inputResults) != "IntLimResults") {
+    if(!methods::is(inputResults, "IntLimResults")) {
       stop("input data is not a IntLim class")
     }
 
@@ -689,9 +874,9 @@ InteractionCoefficientGraph<-function(inputResults,
 
 
     #get top and bottom cutoffs (need highest positive and highest negative coeffs)
-    first_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+    first_half = getQuantileForCoefficient(tofilter$interaction_coeff, 
                                                       interactionCoeffPercentile)[1]
-    second_half = getQuantileForInteractionCoefficient(tofilter$interaction_coeff, 
+    second_half = getQuantileForCoefficient(tofilter$interaction_coeff, 
                                                        interactionCoeffPercentile)[2]
 
     toplot = data.frame(tofilter$interaction_coeff)
@@ -702,7 +887,7 @@ InteractionCoefficientGraph<-function(inputResults,
     toplot_sort$color = "black"
     toplot_sort$color[(toplot_sort$interaction_coeff > second_half | toplot_sort$
                          interaction_coeff <first_half)]="red"
-    randomize = function(x) sample(1:nrow(toplot_sort),x,replace=F)
+    randomize = function(x) sample(1:nrow(toplot_sort),x,replace=FALSE)
     random_rows_to_keep = sort(randomize(nrow(toplot_sort)*percentageToPlot))
     toplot_sort = toplot_sort[random_rows_to_keep,]
     if(independent.var.type == outcome){
@@ -734,7 +919,7 @@ InteractionCoefficientGraph<-function(inputResults,
 MarginalEffectsGraphDataframe<-function(inputResults, inputData, independentAnalyteOfInterest, 
                                         outcomeAnalyteOfInterest, continuous, outcome,
                                         independentVariable){
-  if(class(inputResults) != "IntLimResults") {
+  if(!methods::is(inputResults, "IntLimResults")) {
     stop("input data is not a IntLim class")
   }
   
@@ -802,7 +987,7 @@ MarginalEffectsGraph<-function(dataframe, title, ylab, xlab){
     margins::cplot(model, x = "type", data = dataframe, what = "prediction", 
                    main = title)
   }, error = function(cond){
-    print(cond)
+    stop(cond)
   })
   return(model)
 
@@ -815,6 +1000,7 @@ MarginalEffectsGraph<-function(dataframe, title, ylab, xlab){
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param type 'independent' or 'outcome'.  'outcome' set as default
 #' @param breaks Number of breaks selected for histogram
+#' @return No return value, called for side effects
 #' @export
 HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
 
@@ -847,6 +1033,8 @@ HistogramPairs <- function(inputResults, type = 'outcome', breaks = 50){
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
 #' @param plot Whether or not to show the boxplot. Default is TRUE.
+#' @return A data frame that includes, for each permutation, the number of significant
+#' pairs and the number of unique analytes of each analyte type within those pairs
 #' @export
 PermutationCountSummary <- function(inputResults, permResults, plot){
   
@@ -926,6 +1114,8 @@ PermutationCountSummary <- function(inputResults, permResults, plot){
 #' @param inputResults Data frame with model results (output of ProcessResults())
 #' @param permResults An object of type PermutationResults (output of PermuteIntLIM())
 #' @param plot Whether or not to show the boxplot. Default is TRUE.
+#' @return A data frame that includes each significant pair from the unpermuted 
+#' data and the number of times that pair was significant in the permuted data.
 #' @export
 PermutationPairSummary <- function(inputResults, permResults, plot){
   

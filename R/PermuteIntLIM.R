@@ -24,14 +24,7 @@
 #' @param seed set.seed paramter allowing for custom random number generation seeds 
 #' @return List object with 1st slot populated with dataframe containing the R^2 values of the models, 
 #' and number of significant pairs before and after p-value adjustment. The 2nd slot in the list contains 
-#' a string vector of the IDs of the significant pairs
-#' 
-#' @examples 
-#' \dontrun{
-#' permutedResults <- PermuteIntLIM(data = mydata, stype = "PBO_vs_Leukemia", outcome = 1, 
-#'                                  independent.var.type = 2, analyte.metadata = TRUE,
-#'                                  num.permutations = 100)
-#' }
+#' a string vector of the IDs of the significant pairs.
 #' @export
 PermuteIntLIM <- function(data, 
                           stype="", 
@@ -52,7 +45,7 @@ PermuteIntLIM <- function(data,
   
   set.seed(seed)
   
-  if(class(data) != "IntLimData") {
+  if(!methods::is(data, "IntLimData")) {
     stop("The data must be an IntLimData object")
   }
   
@@ -89,7 +82,7 @@ PermuteIntLIM <- function(data,
 
     ProcessedResults <- IntLIM::ProcessResults(inputData = data, inputResults = IntLIMResults,
                                                pvalcutoff = pvalcutoff,
-                                               interactionCoeffPercentile = interactionCoeffPercentile,
+                                               coeffPercentile = interactionCoeffPercentile,
                                                rsquaredCutoff = rsquaredCutoff)
 
     #Compiling Results

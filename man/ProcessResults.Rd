@@ -12,8 +12,9 @@ ProcessResults(
   inputResults,
   inputData,
   pvalcutoff = 0.05,
-  interactionCoeffPercentile = 0,
-  rsquaredCutoff = 0
+  coeffPercentile = 0,
+  rsquaredCutoff = 0,
+  coefficient = "interaction"
 )
 }
 \arguments{
@@ -24,11 +25,14 @@ and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
+\item{coeffPercentile}{percentile cutoff for coefficient 
 (default bottom 10 percent (high negative coefficients) and top 10 percent 
 (high positive coefficients))}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
+
+\item{coefficient}{Coefficient to filter by. Default is interaction coefficient.
+Other options are "stype" and "analyte".}
 }
 \value{
 IntResults object with model results (now includes correlations)
