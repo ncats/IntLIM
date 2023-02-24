@@ -92,12 +92,12 @@ File type             | Description
 ----------------------| -----------------------------------------
 analyteType1          | rows are analytes from type 1 (e.g. metabolites), columns are samples
 analytetype2          | rows are analytes from type 2 (e.g. genes), columns are samples
-analyteType1MetaData  | rows are analytes, features are columns
-analyteType2MetaData  | rows are analytes, features are columns
-sampleMetaData        | rows are samples, features are columns
+analyteType1MetaData  | rows are analytes, analyte features are columns
+analyteType2MetaData  | rows are analytes, analyte features are columns
+sampleMetaData        | rows are samples, sample features are columns
 
-For the analyte data files, the first row contains the feature IDs and the first
-column contains the sample IDs.
+For the analyte data files, the first row contains the sample IDs and the first
+column contains the analyte IDs.
 
 For the sampleMetaData, the first column of the sampleMetaData file is assumed
 to be the sample ID, and those sample IDs should match the first row of analyte
@@ -105,7 +105,7 @@ data (e.g. it is required that all sample IDs in the analyte data are also in th
 sampleMetaDatafile).
 
 Additionally, the analyte data files and SampleMetaData need to contain an 'id'
-column that contains the name of the features (analytes) or sample (sample id,
+column that contains the name of the analyte or sample (sample id,
 name, etc).
 
 A small data set is embedded in a package.  This consists of the National Cancer

@@ -11,8 +11,8 @@
 #' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
 #' (default: no filtering of analytes) (default:0)
 #' @param analyteMiss missing value percent cutoff (0-1) for filtering both analyte types 
-#' (analytes with > 80\% missing values will be removed) (default:0)
-#' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
+#' (analytes with > X% missing values will be removed) (default:0)
+#' @param cov.cutoff percentile cutoff (0-1) for the coefficient of variation of the analytes (defaultl: 0.30)
 #' @param suppressWarnings whether or not to print warnings. If TRUE, warnings will
 #' not be printed.
 #' @return filtData IntLimData object with input data after filtering
