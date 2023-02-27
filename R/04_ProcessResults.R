@@ -1,22 +1,17 @@
-#' Retrieve significant pairs, based on adjusted p-values.
-#' For each pair that is statistically significant, calculate the
-#' correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
-#' non-cancer).  Users can then remove pairs with a difference in correlations between
-#' groups 1 and 2 less than a user-defined threshold.
+#' Retrieve significant pairs, based on adjusted p-values, interaction coefficient
+#' percentile, and R^2 values.
 #'
 #' @include internalfunctions.R
 #'
 #' @param inputResults IntLimResults object with model results (output of RunIntLim())
-#' @param inputData MultiDataSet object (output of ReadData()) with analyte levels
+#' @param inputData IntLimData object (output of ReadData()) with analyte levels
 #'  and associated meta-data
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param coeffPercentile percentile cutoff for coefficient 
-#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
-#' (high positive coefficients))
+#' @param coeffPercentile percentile cutoff for absolute value of coefficient
 #' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @param coefficient Coefficient to filter by. Default is interaction coefficient.
-#' Other options are "stype" and "analyte".
-#' @return IntResults object with model results (now includes correlations)
+#' Other options are "stype" (phenotype) and "analyte" (independent analyte).
+#' @return IntLimResults object with model results.
 #' @export
 ProcessResults <- function(inputResults,
 				inputData,
@@ -235,15 +230,15 @@ ProcessResults <- function(inputResults,
   
 }
 
-#' Retrieve significant pairs (aka filter out nonsignificant pairs) 
-#' based on value of analyte:type interaction coefficient from linear model
+#' Retrieve significant pairs, based on adjusted p-values, interaction coefficient
+#' percentile, and R^2 values for continuous models
 #'
-#' @param inputResults IntLimResults object with model results: output of RunIntLim
-#' @param coeffPercentile percentile cutoff for interaction coefficient
-#' default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients)
+#' @param inputResults IntLimResults object with model results (output of RunIntLim())
 #' @param pvalCutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param rsquaredCutoff cutoff of R-squared value for filtering (default 0, no filtering)
+#' @param coeffPercentile percentile cutoff for absolute value of coefficient
+#' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @param coefficient Coefficient to filter by. Default is interaction coefficient.
+#' Other options are "stype" (phenotype) and "analyte" (independent analyte).
 #' Other options are "stype" and "analyte".
 #' @return A data frame with the following columns for each pair of analytes:
 #' "Analyte1", "Analyte2", "interaction_coeff", "Pval", "FDRadjPval", and "rsquared".

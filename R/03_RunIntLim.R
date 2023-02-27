@@ -3,14 +3,13 @@
 #' @include internalfunctions.R
 #' @include AllClasses.R
 #'
-#' @param inputData Named list (output of 
-#' FilterData()) with analyte abundances, 
+#' @param inputData IntLimData object (output of FilterData()) with analyte abundances, 
 #' and associated meta-data
 #' @param stype column name that represents sample type (by default, it will be used
-#' in the interaction term). Only 2 categories are currently supported.
+#' in the interaction term). Only 2 categories or continuous values are currently supported.
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' (default is '1')
-#' @param covar Additional variables from the phenotypic data that be integrated into linear model
+#' @param covar Additional variables from the phenotypic data to integrate into linear model
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time. The default is FALSE.

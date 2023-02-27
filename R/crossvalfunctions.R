@@ -4,27 +4,25 @@
 #' 3. Run IntLIM for all folds.
 #' 4. Process the results for all folds.
 #'
-#' @param inputData IntLimData object (output of ReadData()) with analylte levels and
+#' @param inputData IntLimData object (output of ReadData()) with analyte levels and
 #'  associated meta-data
 #' @param folds number of folds to create
-#' @param suppressWarnings whether to suppress warnings
+#' @param suppressWarnings whether or not to print warnings. If TRUE, do not print.
 #' @param analyteType1perc percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 #' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
-#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
-#' (default: no filtering of analytes) (default:0)
-#' @param analyteMiss missing value percent cutoff (0-1) for filtering analytes 
-#' (analytes with > 80\% missing values will be removed) (default:0)
-#' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
+#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 (e.g. 
+#' remove analytes with mean values < 'analyteType2perc' percentile) (default:0)
+#' @param analyteMiss missing value percent cutoff (0-1) for filtering both analyte types 
+#' (analytes with > X\% missing values will be removed) (default:0)
+#' @param cov.cutoff percentile cutoff (0-1) for the coefficient of variation of the analytes (default: 0)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient
-#' @param treecuts user-selected number of clusters (of pairs) 
-#' to cut the tree into
+#' @param interactionCoeffPercentile percentile cutoff for absolute value of coefficient
 #' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @param stype column name that represents sample type (by default, it will be used
-#' in the interaction term). Only 2 categories are currently supported.
+#' in the interaction term). Only 2 categories or continuous variables are currently supported.
 #' @param outcome list of outcomes to run. '1' or '2' must be set as outcome/independent variable
 #' (default is '1')
-#' @param covar Additional variables from the phenotypic data that be integrated into linear model
+#' @param covar Additional variables from the phenotypic data to integrate into linear model
 #' @param continuous boolean to indicate whether the data is continuous or discrete
 #' @param save.covar.pvals boolean to indicate whether or not to save the p-values of all covariates,
 #' which can be analyzed later but will also lengthen computation time. The default is FALSE.
@@ -33,7 +31,7 @@
 #' (default is '1')
 #' @param remove.duplicates boolean to indicate whether or not to remove the 
 #'  pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
-#' @return List of IntResults object with model results (now includes correlations)
+#' @return List of IntResults object with model results
 #' @export
 RunCrossValidation <- function(inputData,
                                folds, 
@@ -51,7 +49,6 @@ RunCrossValidation <- function(inputData,
                                pvalcutoff=0.05,
                                interactionCoeffPercentile=0,
                                rsquaredCutoff = 0.0,
-                               treecuts = 0,
                                suppressWarnings=FALSE) {
 
   # Create the folds.
@@ -204,12 +201,12 @@ CreateCrossValFolds <- function(inputData,folds) {
 #'  associated meta-data
 #' @param analyteType1perc percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 #' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
-#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
-#' (default: no filtering of analytes) (default:0)
+#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 (e.g. 
+#' remove analytes with mean values < 'analyteType2perc' percentile) (default:0)
 #' @param analyteMiss missing value percent cutoff (0-1) for filtering analytes 
-#' (analytes with > 80\% missing values will be removed) (default:0)
+#' (analytes with > X\% missing values will be removed) (default:0)
 #' @param suppressWarnings whether to suppress warnings
-#' @param cov.cutoff percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)
+#' @param cov.cutoff percentile cutoff (0-1) for the coefficient of variation of the anaytes (default: 0)
 #' @return filtData IntLimData object with input data after filtering
 FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
                             analyteType2perc=0, analyteMiss=0,
@@ -238,7 +235,7 @@ FilterDataFolds <- function(inputDataFolds,analyteType1perc=0,
 #' @param inputData IntLimData object (output of ReadData()) with analyte levels
 #'  and associated meta-data
 #' @param stype column name that represents sample type (by default, it will be used
-#' in the interaction term). Only 2 categories are currently supported.
+#' in the interaction term). Only 2 categories and continuous data are currently supported.
 #' @param outcome '1' or '2' must be set as outcome/independent variable
 #' (default is '1')
 #' @param covar Additional variables from the phenotypic data that be integrated into linear model
@@ -277,19 +274,15 @@ RunIntLimAllFolds <- function(inputData,stype="",outcome=1, covar=c(),
 #' @param inputData List of MultiDataSet objects (output of CreateCrossValFolds()) 
 #' with analyte levels and associated meta-data
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient 
-#' (default bottom 10 percent (high negative coefficients) and top 10 percent 
-#' (high positive coefficients))
-#' @param treecuts user-selected number of clusters (of pairs) 
-#' to cut the tree into
+#' @param interactionCoeffPercentile percentile cutoff for absolute value of interaction
+#' coefficient
 #' @param rsquaredCutoff cutoff for lowest r-squared value
 #' @return List of IntResults object with model results (now includes correlations)
 ProcessResultsAllFolds <- function(inputResults,
                                    inputData,
                                    pvalcutoff=0.05,
                                    interactionCoeffPercentile=0.5,
-                                   rsquaredCutoff = 0.0,
-                                   treecuts = 0){
+                                   rsquaredCutoff = 0.0){
   sig <- lapply(1:length(inputResults), function(i){
       return(IntLIM::ProcessResults(inputResults = inputResults[[i]], 
                                               inputData = inputData[[i]]$training, 

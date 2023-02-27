@@ -10,8 +10,7 @@ ProcessResultsAllFolds(
   inputData,
   pvalcutoff = 0.05,
   interactionCoeffPercentile = 0.5,
-  rsquaredCutoff = 0,
-  treecuts = 0
+  rsquaredCutoff = 0
 )
 }
 \arguments{
@@ -22,14 +21,10 @@ with analyte levels and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient 
-(default bottom 10 percent (high negative coefficients) and top 10 percent 
-(high positive coefficients))}
+\item{interactionCoeffPercentile}{percentile cutoff for absolute value of interaction
+coefficient}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
-
-\item{treecuts}{user-selected number of clusters (of pairs) 
-to cut the tree into}
 }
 \value{
 List of IntResults object with model results (now includes correlations)

@@ -9,7 +9,7 @@ getQuantileForCoefficient(tofilter, interactionCoeffPercentile)
 \arguments{
 \item{tofilter}{dataframe for percentile filtering}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))}
+\item{interactionCoeffPercentile}{percentile cutoff for absolute value of interaction coefficient}
 }
 \value{
 vector with numeric cutoffs

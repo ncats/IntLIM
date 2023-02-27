@@ -2,8 +2,8 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResultsContinuous}
 \alias{ProcessResultsContinuous}
-\title{Retrieve significant pairs (aka filter out nonsignificant pairs) 
-based on value of analyte:type interaction coefficient from linear model}
+\title{Retrieve significant pairs, based on adjusted p-values, interaction coefficient
+percentile, and R^2 values for continuous models}
 \usage{
 ProcessResultsContinuous(
   inputResults,
@@ -14,16 +14,16 @@ ProcessResultsContinuous(
 )
 }
 \arguments{
-\item{inputResults}{IntLimResults object with model results: output of RunIntLim}
+\item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{coeffPercentile}{percentile cutoff for interaction coefficient
-default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients)}
+\item{coeffPercentile}{percentile cutoff for absolute value of coefficient}
 
 \item{pvalCutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{rsquaredCutoff}{cutoff of R-squared value for filtering (default 0, no filtering)}
+\item{rsquaredCutoff}{cutoff for lowest r-squared value}
 
 \item{coefficient}{Coefficient to filter by. Default is interaction coefficient.
+Other options are "stype" (phenotype) and "analyte" (independent analyte).
 Other options are "stype" and "analyte".}
 }
 \value{
@@ -32,6 +32,6 @@ A data frame with the following columns for each pair of analytes:
 Optionally, coefficients for each covariate may also be included.
 }
 \description{
-Retrieve significant pairs (aka filter out nonsignificant pairs) 
-based on value of analyte:type interaction coefficient from linear model
+Retrieve significant pairs, based on adjusted p-values, interaction coefficient
+percentile, and R^2 values for continuous models
 }

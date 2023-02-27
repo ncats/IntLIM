@@ -438,7 +438,7 @@ PValueBoxPlots<- function(IntLimResults) {
   }
 }
 
-#' Visualize the distribution of unadjusted p-values from linear models
+#' Visualize the distribution of R^2 values from linear models
 #'
 #' @include IntLimResults_extendedfunctions.R
 #'
@@ -775,12 +775,11 @@ PlotPairFlat<- function(inputData,inputResults,outcome,independentVariable, inde
 }
 
 
-#' 'volcano' plot (difference in correlations vs p-values)
+#' 'volcano' plot (interaction coefficients vs p-values)
 #' of all pairs
 #'
 #' @param inputResults Data frame with model results (output of ProcessResults())
-#' @param inputData Named list (output of 
-#' FilterData()) with analyte levels 
+#' @param inputData Named list (output of FilterData()) with analyte levels 
 #' and associated meta-data
 #' @param nrpoints number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)
 #' @param pvalcutoff cutoff of FDR-adjusted p-value for filtering (default 0.05)

@@ -1,18 +1,16 @@
-#' Filter input data by abundance values and number of missing values.
+#' Filter input data by abundance values (with user-input percentile cutoff), missing values 
+#' (with user-input percent cutoff), and/or coefficient of variation. 
+#' Missing values are commonly found in metabolomics data.
 #'
-#' Filter data by abundance (with user-input percentile cutoff) of missing values 
-#' (with user-input percent cutoff). Missing values are commonly found in metabolomics 
-#' data.
-#'
-#' @param inputData IntLimData object (output of ReadData()) with analylte levels and
+#' @param inputData IntLimData object (output of ReadData()) with analyte levels and
 #'  associated meta-data
 #' @param analyteType1perc percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 #' remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)
-#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 
-#' (default: no filtering of analytes) (default:0)
+#' @param analyteType2perc percentile cutoff (0-1) for filtering analyte type 2 (e.g. 
+#' remove analytes with mean values < 'analyteType2perc' percentile) (default:0)
 #' @param analyteMiss missing value percent cutoff (0-1) for filtering both analyte types 
-#' (analytes with > X% missing values will be removed) (default:0)
-#' @param cov.cutoff percentile cutoff (0-1) for the coefficient of variation of the analytes (defaultl: 0.30)
+#' (analytes with > X\% missing values will be removed) (default:0)
+#' @param cov.cutoff percentile cutoff (0-1) for the coefficient of variation of the analytes (default: 0)
 #' @param suppressWarnings whether or not to print warnings. If TRUE, warnings will
 #' not be printed.
 #' @return filtData IntLimData object with input data after filtering

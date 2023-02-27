@@ -572,7 +572,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
 }
 
 #' Function that gets numeric cutoffs from percentile
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
+#' @param interactionCoeffPercentile percentile cutoff for absolute value of interaction coefficient
 #' @param tofilter dataframe for percentile filtering
 #' @return vector with numeric cutoffs
 getQuantileForCoefficient<-function(tofilter, interactionCoeffPercentile){
