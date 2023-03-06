@@ -2,7 +2,9 @@
 % Please edit documentation in R/02_FilterData.R
 \name{FilterData}
 \alias{FilterData}
-\title{Filter input data by abundance values and number of missing values.}
+\title{Filter input data by abundance values (with user-input percentile cutoff), missing values 
+(with user-input percent cutoff), and/or coefficient of variation. 
+Missing values are commonly found in metabolomics data.}
 \usage{
 FilterData(
   inputData,
@@ -14,28 +16,28 @@ FilterData(
 )
 }
 \arguments{
-\item{inputData}{IntLimData object (output of ReadData()) with analylte levels and
+\item{inputData}{IntLimData object (output of ReadData()) with analyte levels and
 associated meta-data}
 
 \item{analyteType1perc}{percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}
 
-\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 
-(default: no filtering of analytes) (default:0)}
+\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 (e.g. 
+remove analytes with mean values < 'analyteType2perc' percentile) (default:0)}
 
 \item{analyteMiss}{missing value percent cutoff (0-1) for filtering both analyte types 
-(analytes with > 80\% missing values will be removed) (default:0)}
+(analytes with > X\% missing values will be removed) (default:0)}
 
 \item{suppressWarnings}{whether or not to print warnings. If TRUE, warnings will
 not be printed.}
 
-\item{cov.cutoff}{percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)}
+\item{cov.cutoff}{percentile cutoff (0-1) for the coefficient of variation of the analytes (default: 0)}
 }
 \value{
 filtData IntLimData object with input data after filtering
 }
 \description{
-Filter data by abundance (with user-input percentile cutoff) of missing values 
-(with user-input percent cutoff). Missing values are commonly found in metabolomics 
-data.
+Filter input data by abundance values (with user-input percentile cutoff), missing values 
+(with user-input percent cutoff), and/or coefficient of variation. 
+Missing values are commonly found in metabolomics data.
 }

@@ -4,7 +4,7 @@
 #' that any pairs being deemed significant by IntIM are not being suggested due to random chance, as is 
 #' sometimes a problem in correlative associations.
 #'
-#' @param data IntLimData object (output of ReadData()) with analylte levels and
+#' @param data IntLimData object (output of ReadData()) with analyte levels and
 #'  associated sample meta-data
 #' @param stype column name that represents sample type (by default, it will be used
 #' in the interaction term). Only 2 categories are currently supported.

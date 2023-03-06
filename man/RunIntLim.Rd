@@ -17,17 +17,16 @@ RunIntLim(
 )
 }
 \arguments{
-\item{inputData}{Named list (output of 
-FilterData()) with analyte abundances, 
+\item{inputData}{IntLimData object (output of FilterData()) with analyte abundances, 
 and associated meta-data}
 
 \item{stype}{column name that represents sample type (by default, it will be used
-in the interaction term). Only 2 categories are currently supported.}
+in the interaction term). Only 2 categories or continuous values are currently supported.}
 
 \item{outcome}{'1' or '2' must be set as outcome/independent variable
 (default is '1')}
 
-\item{covar}{Additional variables from the phenotypic data that be integrated into linear model}
+\item{covar}{Additional variables from the phenotypic data to integrate into linear model}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
 
