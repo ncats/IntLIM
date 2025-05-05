@@ -13,7 +13,7 @@ RemovePlusInCovars <- function(covar=c(), sampleDataColnames){
   # Find which covariates have plus signs.
   which_plus <- which(grepl("+", covar, fixed = TRUE) == TRUE)
   oldCovars <- covar
-  
+
   # Replace each plus sign with "plus".
   covar <- unlist(lapply(1:length(covar), function(i){
     retval <- covar[i]
@@ -23,7 +23,7 @@ RemovePlusInCovars <- function(covar=c(), sampleDataColnames){
     }
     return(retval)
   }))
-  
+
   # Replace the plus signs in the sampleMetaData column names as well.
   sampleDataColnames <- unlist(lapply(1:length(sampleDataColnames),
                                                      function(i){
@@ -78,15 +78,22 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
     colnames(incommon@sampleMetaData) <- adjNames$sampleDataColnames
     
     # Convert covariates to matrix. Ensure that matrix is one-hot encoded.
-    f <- paste('~ 0 + ', paste(covar, collapse = ' + '))
+    f <- paste('~ ', paste(covar, collapse = ' + '))
     dat <- incommon@sampleMetaData[,covar]
     if(length(covar) == 1){
       dat <- data.frame(V1 = incommon@sampleMetaData[,covar])
       colnames(dat) <- covar[1]
     }
     covarMatrix <- stats::model.matrix(stats::as.formula(f), data = dat)
+    # Remove the intercept.
+    covarMatrix <- covarMatrix[,2:ncol(covarMatrix)]
+    if(length(covar) == 1){
+      dat <- data.frame(V1 = covarMatrix)
+      colnames(dat) <- covar[1]
+      covarMatrix <- dat
+    }
     covar <- colnames(covarMatrix)
-    
+
     # Since names will be changed now, we need to remove plus signs again. For example,
     # if we have a variable 'treatment' that has values 'med1', 'med2', and 'med1+med2',
     # the column names will now include 'treatmentmed1' and 'treatmentmed1+med2'.
