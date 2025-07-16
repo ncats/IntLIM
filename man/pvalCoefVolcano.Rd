@@ -2,7 +2,7 @@
 % Please edit documentation in R/plottingfunctions.R
 \name{pvalCoefVolcano}
 \alias{pvalCoefVolcano}
-\title{'volcano' plot (difference in correlations vs p-values)
+\title{'volcano' plot (interaction coefficients vs p-values)
 of all pairs}
 \usage{
 pvalCoefVolcano(
@@ -16,8 +16,7 @@ pvalCoefVolcano(
 \arguments{
 \item{inputResults}{Data frame with model results (output of ProcessResults())}
 
-\item{inputData}{Named list (output of 
-FilterData()) with analyte levels 
+\item{inputData}{Named list (output of FilterData()) with analyte levels 
 and associated meta-data}
 
 \item{nrpoints}{number of points to be plotted in lowest density areas (see 'smoothScatter' documentation for more detail)}
@@ -30,6 +29,6 @@ and associated meta-data}
 a smoothScatter plot
 }
 \description{
-'volcano' plot (difference in correlations vs p-values)
+'volcano' plot (interaction coefficients vs p-values)
 of all pairs
 }

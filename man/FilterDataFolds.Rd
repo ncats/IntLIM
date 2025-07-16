@@ -21,13 +21,13 @@ associated meta-data}
 \item{analyteType1perc}{percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}
 
-\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 
-(default: no filtering of analytes) (default:0)}
+\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 (e.g. 
+remove analytes with mean values < 'analyteType2perc' percentile) (default:0)}
 
 \item{analyteMiss}{missing value percent cutoff (0-1) for filtering analytes 
-(analytes with > 80\% missing values will be removed) (default:0)}
+(analytes with > X\% missing values will be removed) (default:0)}
 
-\item{cov.cutoff}{percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)}
+\item{cov.cutoff}{percentile cutoff (0-1) for the coefficient of variation of the anaytes (default: 0)}
 
 \item{suppressWarnings}{whether to suppress warnings}
 }

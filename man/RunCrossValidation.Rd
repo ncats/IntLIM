@@ -25,12 +25,11 @@ RunCrossValidation(
   pvalcutoff = 0.05,
   interactionCoeffPercentile = 0,
   rsquaredCutoff = 0,
-  treecuts = 0,
   suppressWarnings = FALSE
 )
 }
 \arguments{
-\item{inputData}{IntLimData object (output of ReadData()) with analylte levels and
+\item{inputData}{IntLimData object (output of ReadData()) with analyte levels and
 associated meta-data}
 
 \item{folds}{number of folds to create}
@@ -38,21 +37,21 @@ associated meta-data}
 \item{analyteType1perc}{percentile cutoff (0-1) for filtering analyte type 1 (e.g. 
 remove analytes with mean values < 'analyteType1perc' percentile) (default: 0)}
 
-\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 
-(default: no filtering of analytes) (default:0)}
+\item{analyteType2perc}{percentile cutoff (0-1) for filtering analyte type 2 (e.g. 
+remove analytes with mean values < 'analyteType2perc' percentile) (default:0)}
 
-\item{analyteMiss}{missing value percent cutoff (0-1) for filtering analytes 
-(analytes with > 80\% missing values will be removed) (default:0)}
+\item{analyteMiss}{missing value percent cutoff (0-1) for filtering both analyte types 
+(analytes with > X\% missing values will be removed) (default:0)}
 
-\item{cov.cutoff}{percentile cutoff (0-1) for the covariances of the anaytes (default: 0.30)}
+\item{cov.cutoff}{percentile cutoff (0-1) for the coefficient of variation of the analytes (default: 0)}
 
 \item{stype}{column name that represents sample type (by default, it will be used
-in the interaction term). Only 2 categories are currently supported.}
+in the interaction term). Only 2 categories or continuous variables are currently supported.}
 
 \item{outcome}{list of outcomes to run. '1' or '2' must be set as outcome/independent variable
 (default is '1')}
 
-\item{covar}{Additional variables from the phenotypic data that be integrated into linear model}
+\item{covar}{Additional variables from the phenotypic data to integrate into linear model}
 
 \item{continuous}{boolean to indicate whether the data is continuous or discrete}
 
@@ -68,17 +67,14 @@ pair with the highest p-value across two duplicate models (e.g. m1~m2 and m2~m1)
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{interactionCoeffPercentile}{percentile cutoff for interaction coefficient}
+\item{interactionCoeffPercentile}{percentile cutoff for absolute value of coefficient}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
 
-\item{treecuts}{user-selected number of clusters (of pairs) 
-to cut the tree into}
-
-\item{suppressWarnings}{whether to suppress warnings}
+\item{suppressWarnings}{whether or not to print warnings. If TRUE, do not print.}
 }
 \value{
-List of IntResults object with model results (now includes correlations)
+List of IntResults object with model results
 }
 \description{
 Runs the cross-validation end-to-end using the following steps:

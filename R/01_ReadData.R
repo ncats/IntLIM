@@ -27,8 +27,7 @@ NULL
 #'
 #' Note that all files supplied in the CSV file, and the CSV file itself should 
 #' be placed in the same folder.  The software assumes will automatically retrieve 
-#' the file path of
-#' the input files (based on location of CSV files).  
+#' the file path of the input files (based on location of CSV files).  
 #' Note also that the input data files should be in a specific format:
 #'	analyteType1/2: rows are analytes, columns are samples
 #'	analyteType1/2MetaData: rows are analytes, features are columns
@@ -40,7 +39,7 @@ NULL
 #'
 #' @include internalfunctions.R
 #'
-#' @param inputFile input file in CSV format (see Despcription)
+#' @param inputFile input file in CSV format (see Description)
 #' @param analyteType1id name of column from Analyte Type 1 meta data to be used as id
 #'      (required if an Analyte Type 1 meta data file is present, 
 #'      must match Analyte Type 1 data)

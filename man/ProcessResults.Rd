@@ -2,11 +2,8 @@
 % Please edit documentation in R/04_ProcessResults.R
 \name{ProcessResults}
 \alias{ProcessResults}
-\title{Retrieve significant pairs, based on adjusted p-values.
-For each pair that is statistically significant, calculate the
-correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
-non-cancer).  Users can then remove pairs with a difference in correlations between
-groups 1 and 2 less than a user-defined threshold.}
+\title{Retrieve significant pairs, based on adjusted p-values, interaction coefficient
+percentile, and R^2 values.}
 \usage{
 ProcessResults(
   inputResults,
@@ -20,27 +17,22 @@ ProcessResults(
 \arguments{
 \item{inputResults}{IntLimResults object with model results (output of RunIntLim())}
 
-\item{inputData}{MultiDataSet object (output of ReadData()) with analyte levels
+\item{inputData}{IntLimData object (output of ReadData()) with analyte levels
 and associated meta-data}
 
 \item{pvalcutoff}{cutoff of FDR-adjusted p-value for filtering (default 0.05)}
 
-\item{coeffPercentile}{percentile cutoff for coefficient 
-(default bottom 10 percent (high negative coefficients) and top 10 percent 
-(high positive coefficients))}
+\item{coeffPercentile}{percentile cutoff for absolute value of coefficient}
 
 \item{rsquaredCutoff}{cutoff for lowest r-squared value}
 
 \item{coefficient}{Coefficient to filter by. Default is interaction coefficient.
-Other options are "stype" and "analyte".}
+Other options are "stype" (phenotype) and "analyte" (independent analyte).}
 }
 \value{
-IntResults object with model results (now includes correlations)
+IntLimResults object with model results.
 }
 \description{
-Retrieve significant pairs, based on adjusted p-values.
-For each pair that is statistically significant, calculate the
-correlation within group1 (e.g. cancer) and the correlation within group2 (e.g.
-non-cancer).  Users can then remove pairs with a difference in correlations between
-groups 1 and 2 less than a user-defined threshold.
+Retrieve significant pairs, based on adjusted p-values, interaction coefficient
+percentile, and R^2 values.
 }

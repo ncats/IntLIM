@@ -1,10 +1,9 @@
 
 ---
 title: "IntLIM:  Integration through Linear Modeling"
-author: "Jalal K. Siddiqui, Elizabeth Baskin, Mingrui Liu, Carmen Z. Cantemir-Stone,
-Bofei Zhang, Russell Bonneville, Joseph P. McElroy, Kevin R. Coombes, Ewy Mathé,
-Tara Eicher, Kyle Spencer"
-date: "3/29/2022"
+author: "Tara Eicher, Kyle D. Spencer, Jalal K. Siddiqui, Raghu Machiraju,
+Ewy A. Mathé"
+date: "2/24/2023"
 output: rmarkdown::html_document
 vignette: >
   %\VignetteIndexEntry{IntLIM:  Integration through Linear Modeling}
@@ -24,14 +23,16 @@ to integrate multiple types of omics data.  Unlike other approaches, IntLIM is
 focused on understanding how specific multi-omic associations are affected by
 phenotypic features.  To this end, we develop a linear modeling approach that
 describes how multi-omic associations are affected by phenotype.  More information
-can be found on our publication "IntLIM: integration using linear models of 
-metabolomics and gene expression data".
+can be found on our publications "IntLIM: integration using linear models of 
+metabolomics and gene expression data" and "IntLIM 2.0: Identifying Multi-Omic 
+Relationships Dependent on Discrete or Continuous Phenotypic Measurements".
 The workflow involves the following steps:
 1) Input multi-omic data files.
 2) Filter data sets by analyte abundance and imputed values.
-3) Run the linear model to extract pairwise interaction significance.
-4) Filter results by p-values, interaction coefficient percentiles, and r-squared values.
-5) Plot/visualize specific analyte associations.
+3) Run the linear model to extract phenotype-dependent analyte associations.
+4) Filter results by interacton coefficients, p-values, interaction coefficient percentiles, and r-squared values.
+5) Perform cross-validation and/or null model validation.
+6) Plot/visualize specific analyte associations.
 
 ## Installation
 
@@ -48,7 +49,7 @@ library("devtools")
 install_github("ncats/IntLIM")
 ```
 
-IntLIM can be loaded using the library function
+IntLIM can be loaded using the library function.
 
 ```{r}
 library(IntLIM)
@@ -60,24 +61,13 @@ The first step is importing in the multi-omic data.  To this end we have provide
 a sample data file for users wishing to use IntLIM.
 
 IntLIM requires a specific format for multi-omic data.  For IntLIM, we require the
-data corresponding to two analyte types, optional metadata for each of these types,
+data corresponding to 1-2 analyte types, optional metadata for each of these types,
 and sample meta data.  We also need a CSV meta-file that lists the location of the
 other files.  These need to be in the same folder.  The formats are described below.
 In addition, we provide a sample set of files.
 
 **Please be sure that all files noted in the CSV file, including the CSV file,**
 **are in the same folder. Do not include path names in the filenames.**
-
-Users need to input a CSV file with two required columns: 'type' and 'filenames'.
-
-The CSV file is expected to have the following 2 columns and 6 rows:
-
-1. type,filenames
-2. analyteType1,myfilename (optional if analyteType2 is provided)
-3. analyteType2,myfilename (optional if analyteType1 is provided)
-4. analyteType1MetaData,myfilename (optional)
-5. analyteType2MetaData,myfilename (optional)
-6. sampleMetaData,myfilename"
 
 The data and meta-data is stored in a series of comma-separated-values (.CSV) files.
 The 5 files consist of data for two analyte types, metadata for two analyte types,
@@ -92,25 +82,25 @@ File type             | Description
 ----------------------| -----------------------------------------
 analyteType1          | rows are analytes from type 1 (e.g. metabolites), columns are samples
 analytetype2          | rows are analytes from type 2 (e.g. genes), columns are samples
-analyteType1MetaData  | rows are analytes, features are columns
-analyteType2MetaData  | rows are analytes, features are columns
-sampleMetaData        | rows are samples, features are columns
+analyteType1MetaData  | rows are analytes, analyte features are columns
+analyteType2MetaData  | rows are analytes, analyte features are columns
+sampleMetaData        | rows are samples, sample features are columns
 
-For the analyte data files, the first row contains the feature IDs and the first
-column contains the sample IDs.
+For the analyte data files, the first row contains the sample IDs and the first
+column contains the analyte IDs.
 
 For the sampleMetaData, the first column of the sampleMetaData file is assumed
 to be the sample ID, and those sample IDs should match the first row of analyte
 data (e.g. it is required that all sample IDs in the analyte data are also in the
-sampleMetaDatafile).
+sampleMetaData file).
 
-Additionally, the analyte data files and SampleMetaData need to contain an 'id'
-column that contains the name of the features (analytes) or sample (sample id,
+Additionally, the analyte data files and sampleMetaData need to contain an 'id'
+column that contains the name of the analyte or sample (sample id,
 name, etc).
 
 A small data set is embedded in a package.  This consists of the National Cancer
 Institute-60 (NCI-60) cell line data with a reduced number of genes for faster
-calculation.  To access it use the following commands.  csvfile describes the
+calculation.  To access it, use the following commands.  *csvfile* describes the
 location of the meta-file describing the location of the other 5 input files.
 
 ```{r}
@@ -147,8 +137,10 @@ features (analytes) based on their mean values. Users should input a percentile
 cutoff and any feature with a mean value below that cutoff will be removed.
 Furthermore we can filter out analytes by percentage of missing or imputed values.
 For the analysis, we filter out the genes with the lowest 10% of gene expression
-and metabolites with more than 80% imputed values.  This is done as below.
-We henceforth have 1303 genes and 212 metabolites for 20 cell line samples.
+and metabolite abundance and metabolites with more than 80% imputed values.  The
+__cov.cutoff__ parameter can also be used to filter by coefficient of variation,
+which is not shown in this example.
+We henceforth have 1303 genes and 231 metabolites for 20 cell line samples.
 
 ```{r}
 inputDatafilt <- IntLIM::FilterData(inputData,
@@ -180,11 +172,9 @@ IntLIM::PlotPCA(inputData = inputDatafilt,stype = "PBO_vs_Leukemia")
 The linear models are run by the __RunIntLim()__ function.  The __stype__ parameter
 allows the user to select a column from the sample meta data for the continuous or discrete
 phenotype of interest. The resulting object from the analysis is an IntLimResults object
-containing slotsfor un-adjusted and False Discovery Rate (FDR)-adjusted p-values
+containing slots for un-adjusted and False Discovery Rate (FDR)-adjusted p-values
 for the “(g:p)” interaction coefficient.  A significant FDR-adjusted p-value implies
-that the gene-metabolite association is dependent on the phenotype. The
-__RunIntLim()__ function is based heavily on the MultiLinearModel
-functions developed for the ClassComparison package part of oompa.
+that the gene-metabolite association is dependent on the phenotype.
 
 Covariates (e.g. age and batch) may also be included in the models as a list using the
 __covar__ parameter. Please be advised that not all covariates in the experiment need be included.
@@ -248,7 +238,7 @@ IntLIM::DistRSquared(IntLimResults = myres.cancertype)
 The __PValueBoxPlots()__ function allows the user to observe the p-value
 distributions of all covariates in the linear models prior to adjustment.
 Note: To view these values, you must set __save.covar.pvals__ to __TRUE__ when
-running __RunIntLim__.
+running __RunIntLim()__.
 
 ```{r}
 IntLIM::PValueBoxPlots(IntLimResults = myres.drugscore)
@@ -298,6 +288,8 @@ myres.sig.cancertype <- IntLIM::ProcessResults(inputResults = myres.cancertype,
 
 It is also possible to filter for significant main effects (independent analyte level
 or phenotype). Users can then determine which significant pairs also have significant main effects.
+This is done by setting the __coefficient__ argument to "stype" (for phenotype) or "analyte"
+(for independent analyte level).
 
 Here, we find that 848 of 851 drug score dependent pairs are not significant for either main effect.
 We also find that 5,069 of 5,293 cancer type dependent pairs are not significant for either main effect.
@@ -372,11 +364,9 @@ IntLIM::PlotPairResiduals(inputData = inputDatafilt,
                  independentAnalyteOfInterest = "DLG4")
 ```
 
-For discrete phenotypes, it allows the user to plot a chosen analyte
+For discrete phenotypes, __PlotPair()__ allows the user to plot a chosen analyte
 association for selected groups. An example is shown below for DLG4 vs.
 (p-Hydroxyphenyl)lactic acid with respect to cancer type.
-
-
 
 ```{r}
 IntLIM::PlotPair(inputData = inputDatafilt,
@@ -490,12 +480,13 @@ pairSummary <- IntLIM::PermutationPairSummary(permResults = perm.res, inputResul
 
 ## References
 
+Eicher T, Spencer KD, Siddiqui JK, Machiraju R, Mathé EA. 
+IntLIM 2.0: Identifying Multi-Omic Relationships Dependent on Discrete or 
+Continuous Phenotypic Measurements. 2023 Feb;01:vbad009.
+
 Siddiqui JK, Baskin E, Liu M, Cantemir-Stone CZ, Zhang B, Bonneville R, McElroy JP,
 Coombes KR, Mathé EA. IntLIM: integration using linear models of metabolomics and
 gene expression data. BMC bioinformatics. 2018 Dec;19(1):81.
-
-Sievert, C., et al. plotly: Create Interactive Web Graphics via’plotly. js’. 2016.
-R package version 3.6. 0. In.
 
 Wickham, H. and Chang, W. devtools: Tools to make developing R code easier.
 R package version 2015;1(0).

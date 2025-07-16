@@ -20,7 +20,7 @@ PermuteIntLIM(
 )
 }
 \arguments{
-\item{data}{IntLimData object (output of ReadData()) with analylte levels and
+\item{data}{IntLimData object (output of ReadData()) with analyte levels and
 associated sample meta-data}
 
 \item{stype}{column name that represents sample type (by default, it will be used

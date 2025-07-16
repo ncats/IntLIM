@@ -2,7 +2,7 @@
 % Please edit documentation in R/plottingfunctions.R
 \name{DistRSquared}
 \alias{DistRSquared}
-\title{Visualize the distribution of unadjusted p-values from linear models}
+\title{Visualize the distribution of R^2 values from linear models}
 \usage{
 DistRSquared(IntLimResults, breaks = 100)
 }
@@ -15,5 +15,5 @@ DistRSquared(IntLimResults, breaks = 100)
 No return value, called for side effects
 }
 \description{
-Visualize the distribution of unadjusted p-values from linear models
+Visualize the distribution of R^2 values from linear models
 }

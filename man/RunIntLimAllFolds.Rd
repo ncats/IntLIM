@@ -21,7 +21,7 @@ RunIntLimAllFolds(
 and associated meta-data}
 
 \item{stype}{column name that represents sample type (by default, it will be used
-in the interaction term). Only 2 categories are currently supported.}
+in the interaction term). Only 2 categories and continuous data are currently supported.}
 
 \item{outcome}{'1' or '2' must be set as outcome/independent variable
 (default is '1')}

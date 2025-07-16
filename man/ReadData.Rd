@@ -15,7 +15,7 @@ ReadData(
 )
 }
 \arguments{
-\item{inputFile}{input file in CSV format (see Despcription)}
+\item{inputFile}{input file in CSV format (see Description)}
 
 \item{analyteType1id}{name of column from Analyte Type 1 meta data to be used as id
 (required if an Analyte Type 1 meta data file is present, 

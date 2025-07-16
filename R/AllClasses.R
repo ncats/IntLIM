@@ -34,11 +34,10 @@ methods::setClass(
 #' @slot covariate.pvalues data frame of p-values for each covariate
 #' @slot covariate.adj.pvalues data frame of adjusted p-values for each covariate
 #' @slot model.rsquared matrix of r-squared values
-#' @slot corr matrix of correlations in group 1 and 2
 #' @slot filt.results data frame of filtered results
 #' @slot warnings a message of whether analytes have 0 standard deviation
 #' @slot stype column name that represents sample type (by default, it will be used
-#' in the interaction term). Only 2 categories are currently supported.
+#' in the interaction term). Only 2 categories and continuous data are currently supported.
 #' @slot outcome outcome is either '1' or '2'
 #' @slot independent.var.type independent variable type (either '1 or '2')
 #' @slot covar describing additional variables and the class they form
@@ -52,7 +51,6 @@ methods::setClass(
 		covariate.pvalues = "data.frame",
 		covariate.adj.pvalues = "data.frame",
 		covariate.coefficients = "data.frame",
-		corr="data.frame",
 		filt.results="data.frame",
 		warnings="list",
 		stype="character",

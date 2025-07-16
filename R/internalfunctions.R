@@ -13,7 +13,7 @@ RemovePlusInCovars <- function(covar=c(), sampleDataColnames){
   # Find which covariates have plus signs.
   which_plus <- which(grepl("+", covar, fixed = TRUE) == TRUE)
   oldCovars <- covar
-  
+
   # Replace each plus sign with "plus".
   covar <- unlist(lapply(1:length(covar), function(i){
     retval <- covar[i]
@@ -23,7 +23,7 @@ RemovePlusInCovars <- function(covar=c(), sampleDataColnames){
     }
     return(retval)
   }))
-  
+
   # Replace the plus signs in the sampleMetaData column names as well.
   sampleDataColnames <- unlist(lapply(1:length(sampleDataColnames),
                                                      function(i){
@@ -78,15 +78,22 @@ RunLM <- function(incommon, outcome=1, independentVariable = 2, type="", covar=c
     colnames(incommon@sampleMetaData) <- adjNames$sampleDataColnames
     
     # Convert covariates to matrix. Ensure that matrix is one-hot encoded.
-    f <- paste('~ 0 + ', paste(covar, collapse = ' + '))
+    f <- paste('~ ', paste(covar, collapse = ' + '))
     dat <- incommon@sampleMetaData[,covar]
     if(length(covar) == 1){
       dat <- data.frame(V1 = incommon@sampleMetaData[,covar])
       colnames(dat) <- covar[1]
     }
     covarMatrix <- stats::model.matrix(stats::as.formula(f), data = dat)
+    # Remove the intercept.
+    covarMatrix <- covarMatrix[,2:ncol(covarMatrix)]
+    if(length(covar) == 1){
+      dat <- data.frame(V1 = covarMatrix)
+      colnames(dat) <- covar[1]
+      covarMatrix <- dat
+    }
     covar <- colnames(covarMatrix)
-    
+
     # Since names will be changed now, we need to remove plus signs again. For example,
     # if we have a variable 'treatment' that has values 'med1', 'med2', and 'med1+med2',
     # the column names will now include 'treatmentmed1' and 'treatmentmed1+med2'.
@@ -207,12 +214,11 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnin
   p <- dim(X)[2]
   # Create a contrast matrix.
   XtX <- t(X) %*% X
-  ixtx <- MASS::ginv(XtX)
   # Use the pseudoinverse if the inverse cannot be found.
   # Print out correlated covariates in this case.
   
   # Initialize warnings. We will later remove if needed.
-  pinv_message <- paste("Using pseudoinverse for", analytename)
+  pinv_message <- paste("Could not compute model for", analytename)
   cutoff = 0.9
   covariate_msg1 <- paste("The following covariates have correlation >", cutoff, ":")
   covariate_msg2 <- paste("The following covariates have correlation <", -1 * cutoff, ":")
@@ -252,8 +258,44 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnin
   }
   warnings <- c(pinv_message, covariate_msg1, covariate_msg2)
   
+  # Initialize all values to return with NA.
+  bhat <- matrix(rep(NA, nrow(XtX) * ncol(YY)), nrow = nrow(XtX))
+  rownames(bhat) <- colnames(X)
+  colnames(bhat) <- colnames(YY)
+  p.val.coeff <- matrix(rep(NA, nrow(XtX) * ncol(YY)), nrow = nrow(XtX))
+  rownames(p.val.coeff) <- colnames(X)
+  colnames(p.val.coeff) <- colnames(YY)
+  r.squared <- rep(NA, ncol(YY))
+  names(r.squared) <- colnames(YY)
+  
+  # Now calculate the actual values.
   tryCatch({
     ixtx <- solve(XtX)
+    bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
+    yhat <- X %*% bhat                      # Figure out what is predicted by the model
+    # Now we partition the sum-of-square errors
+    rdf <- ncol(X)-1                        # number of parameters in the model
+    edf <- nrow(YY)-rdf-1                   # additional degrees of freedom
+    errors <- YY - yhat                     # difference between observed and model predictions
+    sse <- apply(errors^2, 2, sum)  # sum of squared errors over the samples
+    mse <- sse/edf                  # mean squared error
+    ssr <- SYY - sse                        # regression error
+    msr <- ssr/rdf                  # mean regression error
+    fval <- msr/mse                 # f-test for the overall regression
+    pfval <- 1-stats::pf(fval, rdf, edf)           # f-test p-values
+    
+    stderror.coeff <- sapply(mse,function(x){sqrt(diag(ixtx)*x)})
+    t.coeff <- bhat/stderror.coeff
+    p.val.coeff <- 2*stats::pt(-abs(t.coeff),df = (N-p))
+    y.dev <- lapply(1:(dim(YY)[2]), function(i){
+      return(YY[,i]-EY[i])
+    })
+    var.y <- unlist(lapply(y.dev, function(i){
+      return(sum(i^2))
+    }))
+    r.squared <- 1 - (sse / var.y)
+    rownames(bhat) <- colnames(X)
+    rownames(p.val.coeff) <- colnames(X)
     warnings <- list()
   }, error=function(e){
     if(suppressWarnings == FALSE){
@@ -266,33 +308,7 @@ getstatsOneLM <- function(form, clindata, arraydata, analytename, suppressWarnin
       warning(covariate_msg2)
     }
   })
-  bhat <- NULL
-  
-  bhat <- ixtx %*% t(X) %*% YY            # Use the pseudo-inverse to estimate the parameters
-  yhat <- X %*% bhat                      # Figure out what is predicted by the model
-  # Now we partition the sum-of-square errors
-  rdf <- ncol(X)-1                        # number of parameters in the model
-  edf <- nrow(YY)-rdf-1                   # additional degrees of freedom
-  errors <- YY - yhat                     # difference between observed and model predictions
-  sse <- apply(errors^2, 2, sum)  # sum of squared errors over the samples
-  mse <- sse/edf                  # mean squared error
-  ssr <- SYY - sse                        # regression error
-  msr <- ssr/rdf                  # mean regression error
-  fval <- msr/mse                 # f-test for the overall regression
-  pfval <- 1-stats::pf(fval, rdf, edf)           # f-test p-values
-  
-  stderror.coeff <- sapply(mse,function(x){sqrt(diag(ixtx)*x)})
-  t.coeff <- bhat/stderror.coeff
-  p.val.coeff <- 2*stats::pt(-abs(t.coeff),df = (N-p))
-  y.dev <- lapply(1:(dim(YY)[2]), function(i){
-    return(YY[,i]-EY[i])
-  })
-  var.y <- unlist(lapply(y.dev, function(i){
-    return(sum(i^2))
-  }))
-  r.squared <- 1 - (sse / var.y)
-  rownames(bhat) <- colnames(X)
-  rownames(p.val.coeff) <- colnames(X)
+
   return(list("mlin" = list(coefficients=bhat,
               p.value.coeff = p.val.coeff, # interaction p-value
               r.squared.val = r.squared),# r-squared value
@@ -388,7 +404,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
     warnings <- c(warnings, mlin[["warnings"]])
     mlin <- mlin[["mlin"]]
     term.pvals <- rownames(mlin$p.value.coeff)
-    
+
     # Return the primary p-values and coefficients.
     index.interac <- grep(interactionTerm, term.pvals)
     term.coefficient <- rownames(mlin$coefficients)
@@ -572,7 +588,7 @@ getStatsAllLM <- function(outcome, independentVariable, type1, type2, type, cova
 }
 
 #' Function that gets numeric cutoffs from percentile
-#' @param interactionCoeffPercentile percentile cutoff for interaction coefficient (default bottom 10 percent (high negative coefficients) and top 10 percent (high positive coefficients))
+#' @param interactionCoeffPercentile percentile cutoff for absolute value of interaction coefficient
 #' @param tofilter dataframe for percentile filtering
 #' @return vector with numeric cutoffs
 getQuantileForCoefficient<-function(tofilter, interactionCoeffPercentile){
